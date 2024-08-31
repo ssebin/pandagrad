@@ -1,0 +1,315 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: 'Roboto', sans-serif;
+}
+
+.login-container {
+    display: flex;
+    height: 100vh; 
+    width: 100vw;
+}
+
+.left-section {
+    flex: 2;
+    background-color: #CBE2FB; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    padding-top: 60px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.right-section {
+    flex: 1;
+    background-color: #192E59;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.logo {
+    position: absolute;
+    top: 34px;
+    left: 50px;
+    width: 46px;
+}
+
+.faculty-logo {
+    position: absolute;
+    top: 34px;
+    left: 270px;
+    width: 150px;
+}
+
+.logo-text {
+    font-weight: 200;
+    font-size: 1.5em;
+    position: absolute;
+    top: 20px;
+    left: 116px;
+    color: #000;
+}
+
+h1 {
+    font-size: 2em;
+    color: #000;
+    margin-top: 10px;
+}
+
+.welcome{
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 30px;
+    width: 100%; 
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 20px;
+    width: 300px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 400; 
+    font-size: 0.9em;
+}
+
+input, select, .login-button {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #000000;
+    border-radius: 10px;
+    background-color: #CBE2FB; 
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+input, select {
+    font-size: 1em;
+}
+
+select {
+    appearance: none; 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #CBE2FB;
+    padding-right: 30px;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="%23888888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,4 6,8 10,4"/></svg>'); /* Custom V-shaped arrow */
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+}
+
+.login-button {
+    background-color: #192E59; 
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 10px;
+    padding: 10px;
+}
+
+.login-button:hover {
+    background-color: rgb(1, 1, 75); 
+}
+
+.forgot-password {
+    margin-top: 30px;
+    font-size: 0.9em;
+    width: 100%;
+    text-align: center;
+}
+
+.forgot-password a {
+    color: #192E59;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.login-3d {
+    position: absolute;
+    left: -260px;
+    width: 500px;
+    height: 100%;
+    object-fit: scale-down;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 5px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    opacity: 0;
+    position: absolute;
+    width: 0;
+    height: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.checkbox-custom {
+    width: 14px;
+    height: 14px;
+    background-color: #CBE2FB;
+    border: 1.5px solid #000000;
+    border-radius: 5px;
+    position: relative;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center; 
+}
+
+.checkbox-custom::after {
+    content: "";
+    position: absolute;
+    display: none;
+    width: 4px;
+    height: 7px;
+    border: solid #CBE2FB;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkbox-custom {
+    background-color: #192E59;  
+    border-color: #192E59;  
+}
+
+.checkbox-container input[type="checkbox"]:checked + .checkbox-custom::after {
+    display: block;
+}
+
+.checkbox-label {
+    margin-left: 10px;
+    font-size: 0.9em;
+    color: #000;
+    display: flex;
+    align-items: center;
+}
+
+
+/* Media Queries for Responsiveness */
+
+/* Tablet */
+@media (max-width: 1024px) {
+    .left-section {
+        padding: 20px 50px; 
+        align-items: center;
+        justify-content: center; 
+    }
+
+    .faculty-logo {
+        left: 260px;
+    }
+
+    .welcome {
+        transform: none; 
+        text-align: center; 
+        margin-bottom: 30px; 
+    }
+
+    .form-group {
+        width: 140%; 
+        text-align: center; 
+        margin-bottom: 30px;
+        margin-left: -30px;
+    }
+
+    .form-group label {
+        text-align: left; 
+        width: 100%; 
+    }
+
+    .forgot-password {
+        transform: none; 
+        text-align: center; 
+        margin-top: 20px; 
+    }
+
+    .login-button {
+        width: 140%; 
+        margin-top: 10px;
+        padding: 10px;
+        margin-left: -30px;
+    }
+
+    .login-3d {
+        display: none; 
+    }
+}
+
+
+/* Mobile */
+@media (max-width: 540px) {
+    .left-section {
+        flex: 1;
+        padding: 20px;
+        align-items: center;
+        text-align: center;
+        padding-top: 40px;
+    }
+
+    .right-section {
+        display: none; 
+    }
+
+    .logo {
+        position: static;
+        margin-bottom: 0px; 
+    }
+
+    .logo-text {
+        position: static;
+        margin-bottom: 20px;
+    }
+
+    .welcome {
+        transform: none;
+        margin-bottom: 30px;
+    }
+
+    .form-group {
+        width: 140%;
+    }
+
+    label {
+        text-align: left; 
+        width: 100%; 
+    }
+
+    .forgot-password {
+        transform: none;
+        margin-bottom: 20px;
+    }
+
+    .faculty-logo {
+        position: static;
+        margin-bottom: 10px;
+        width: 140px; 
+    }
+
+    .login-3d {
+        display: none; 
+    }
+
+    .left-section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+}
+

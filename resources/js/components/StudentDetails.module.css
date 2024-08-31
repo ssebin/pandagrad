@@ -1,0 +1,223 @@
+.studentDetails {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+    max-width: 1200px;
+    margin: auto;
+}
+
+.breadcrumbs {
+    font-size: 0.9em;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.breadcrumbs a {
+    text-decoration: none;
+    color: #666;
+}
+
+.breadcrumbs a:hover {
+    text-decoration: underline;
+}
+
+.breadcrumbSeparator {
+    margin: 0 10px; 
+}
+
+.studentHeader {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    margin-bottom: 40px;
+    font-size: 0.8em;
+}
+
+.profilePic {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-right: 40px; 
+    margin-top: 10px;
+    object-fit: cover;
+}
+
+.studentInfo {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.studentNameStatus {
+    display: flex;
+    align-items: center;
+}
+
+.status {
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    background-color: green;
+    font-size: 0.8em;
+    margin-left: 20px;
+    font-weight: 300;
+    margin-top: -5px;
+}
+
+.status-active {
+    background-color: #78C552; 
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    font-size: 1em;
+    margin-left: 20px;
+    font-weight: 300;
+    margin-top: -5px;
+}
+
+.status-inactive {
+    background-color: #FFBF08; 
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    font-size: 1em;
+    margin-left: 20px;
+    font-weight: 300;
+    margin-top: -5px;
+}
+
+.progressBarContainer {
+    margin-top: -10px;
+    display: flex;
+    align-items: center;
+}
+
+.progressBar {
+    background-color: #ccc;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progressCompleted {
+    height: 10px;
+    border-radius: 10px;
+}
+
+.editButton {
+    background-color: #192E59;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin-left: 20px; 
+}
+
+.editButton .icon {
+    margin-right: 10px; 
+}
+
+.studentDetailsContainer {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.studentDetailsContent {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    width: 100%;
+    line-height: 30px;
+}
+
+.studentInfoBlock {
+    display: flex;
+    flex-direction: column;
+    margin-right: 20px;
+    flex: 1;
+}
+
+.studentInfoBlockLeft {
+    margin-right: 10px;
+    flex: 1.2; 
+}
+
+.studentInfoBlockCenter {
+    margin-right: 10px;
+    flex: 2; 
+}
+
+.infoItem {
+    display: flex;
+    margin-bottom: 10px;
+    align-items: flex-start;
+}
+
+.infoItemTitle {
+    font-weight: bold;
+    width: 150px; /* Fixed width for titles to align content */
+    flex-shrink: 0;
+}
+
+.infoItemValue {
+    flex-grow: 1;
+}
+
+.studentActions {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    align-self: flex-start;
+}
+
+.viewFilesButton,
+.updateInfoButton {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.viewFilesButton {
+    background-color: white;
+    color: #192E59;
+    border: 2px solid #192E59;
+}
+
+.updateInfoButton {
+    background-color: #192E59;
+    color: white;
+}
+
+.verticalLine {
+    border-left: 1px solid #ccc;
+    margin: 0 20px;
+    height: 100%;
+}
+
+.multilineText {
+    white-space: pre-line;
+}
+
+.trackStatus {
+    color: inherit;
+}
+
+.workshopsList {
+    margin: 0;
+    padding: 0;
+}
+
+.workshopsList li {
+    margin-bottom: -5px; 
+}

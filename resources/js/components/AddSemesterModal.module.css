@@ -1,0 +1,102 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modalContent {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 350px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-size: 0.9em;
+}
+
+.modalContent form {
+    display: flex;
+    flex-direction: column;
+}
+
+.modalContent label {
+    margin-bottom: 5px;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.modalContent input,
+.modalContent select {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    font-size: 0.9em;
+    background-color: white;
+    font-family: 'Roboto', sans-serif;
+}
+
+.modalContent input[type="date"] {
+    font-family: 'Roboto', sans-serif;
+}
+
+.buttons {
+    padding: 10px 0px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.cancelButton,
+.addButton {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.cancelButton {
+    background-color: transparent;
+    color: #192E59;
+    border: none;
+    cursor: pointer;
+}
+
+.deleteButton {
+    background-color: #E91E25;
+    color: white;
+    padding: 10px 40px;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.saveButton {
+    background-color: #192E59;
+    color: white;
+    padding: 10px 50px;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.addButton {
+    background-color: #192E59;
+    color: white;
+    padding: 10px 50px;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}

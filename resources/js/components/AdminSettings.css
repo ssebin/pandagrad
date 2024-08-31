@@ -1,0 +1,38 @@
+.page-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 600px; 
+}
+
+h1 {
+    margin-bottom: 30px;
+}
+
+.settings-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.settings-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #E2E8F0;
+    text-decoration: none;
+    color: #333;
+    font-size: 1em;
+    transition: background-color 0.3s;
+    height: 40px;
+}
+
+.settings-item:hover {
+    background-color: #F0F4F8;
+}
+
+.right-arrow {
+    font-size: 1.2em;
+    color: #666;
+}
