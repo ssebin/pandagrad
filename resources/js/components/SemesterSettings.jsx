@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from './axiosConfig.js';
 import './SemesterSettings.css';
 import { Link } from 'react-router-dom';
 import AddSemesterModal from './AddSemesterModal.jsx';
@@ -85,7 +85,7 @@ function SemesterSettings() {
     return (
         <div className="semester-settings-container">
             <nav className="breadcrumbs">
-                <Link to="/admin-settings">Admin Settings</Link>
+                <Link to="/admin/admin-settings">Admin Settings</Link>
                 <span className="breadcrumbSeparator">&gt;</span>
                 <span>Semester Settings</span>
             </nav>

@@ -13,7 +13,7 @@
 .page-content {
     flex-grow: 1;
     padding: 20px;
-    overflow-y: hidden;
+    /* overflow-y: hidden; */
     height: calc(100vh);
     overflow-x: auto;
 }

@@ -5,15 +5,21 @@
         "build": "vite build"
     },
     "devDependencies": {
+        "@types/react": "^18.3.5",
         "@vitejs/plugin-react": "^4.2.1",
         "axios": "^1.1.2",
         "laravel-vite-plugin": "^0.7.2",
         "vite": "^4.0.0"
     },
     "dependencies": {
+        "@react-oauth/google": "^0.12.1",
+        "d3": "^7.9.0",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
+        "react-flow-renderer": "^10.3.17",
         "react-icons": "^5.2.1",
+        "react-mermaid2": "^0.1.4",
+        "react-oauth2-login": "^1.0.3",
         "react-router-dom": "^6.23.1"
     }
 }

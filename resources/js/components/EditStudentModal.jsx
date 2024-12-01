@@ -1,40 +1,57 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useContext } from 'react';
+import axios from './axiosConfig.js';
 import styles from './EditStudentModal.module.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { StudentContext } from './StudentContext';
 
 function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemester }) {
     const navigate = useNavigate();
-    const [student, setStudent] = useState({
-        first_name: '',
-        last_name: '',
-        siswamail: '',
-        supervisor: '',
-        status: '',
-        intake: '',
-        semester: '',
-        program: '',
-        research: '',
-        task: '',
-        profile_pic: '',
-        progress: '',
-        track_status: '',
-        cgpa: '',
-        matric_number: '',
-        remarks: ''
-    });
+    // const [student, setStudent] = useState({
+    //     first_name: '',
+    //     last_name: '',
+    //     siswamail: '',
+    //     supervisor: '',
+    //     status: '',
+    //     intake: '',
+    //     semester: '',
+    //     program: '',
+    //     research: '',
+    //     task: '',
+    //     profile_pic: '',
+    //     progress: '',
+    //     track_status: '',
+    //     cgpa: '',
+    //     matric_number: '',
+    //     remarks: ''
+    // });
+    const { id } = useParams();
+    const { studentsData, supervisors } = useContext(StudentContext);
+
+    // Flatten the studentsData object (merge all semester arrays into one array)
+    const allStudents = Object.values(studentsData).flat();
+
+    // Find the student by ID
+    const initialStudent = allStudents.find(s => s.id === parseInt(id));
+
+    const [student, setStudent] = useState(initialStudent);
 
     useEffect(() => {
-        if (isOpen) {
-            axios.get(`/api/students/${studentId}`)
-                .then(response => {
-                    setStudent(response.data);
-                })
-                .catch(error => {
-                    console.error("There was an error fetching the student data!", error);
-                });
-        }
-    }, [isOpen, studentId]);
+        // Update the local state if the `initialStudent` changes
+        setStudent(initialStudent);
+    }, [initialStudent]);
+
+
+    // useEffect(() => {
+    //     if (isOpen) {
+    //         axios.get(`/api/students/${studentId}`)
+    //             .then(response => {
+    //                 setStudent(response.data);
+    //             })
+    //             .catch(error => {
+    //                 console.error("There was an error fetching the student data!", error);
+    //             });
+    //     }
+    // }, [isOpen, studentId]);
 
     const calculateStudentSemester = (intake) => {
         const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
@@ -59,23 +76,33 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        const updatedStudent = { ...student, [name]: value };
 
-        if (name === 'intake') {
-            updatedStudent.semester = calculateStudentSemester(value);
-        }
+        setStudent((prevStudent) => {
+            // Create a copy of the current student state
+            const updatedStudent = { ...prevStudent, [name]: value };
 
-        setStudent(updatedStudent);
+            // Handle special cases
+            if (name === 'intake') {
+                // Update the semester based on the intake value
+                updatedStudent.semester = calculateStudentSemester(value);
+            } else if (name === 'supervisor_id') {
+                // Update both supervisor_id and supervisor (first name only)
+                const selectedSupervisor = supervisors.find(supervisor => supervisor.id === parseInt(value));
+                updatedStudent.supervisor_id = selectedSupervisor ? selectedSupervisor.id : null;
+                updatedStudent.supervisor = selectedSupervisor ? selectedSupervisor.first_name : null;
+            }
+
+            return updatedStudent;
+        });
     };
 
     const handleSave = () => {
         if (!window.confirm("Are you sure you want to save the changes?")) {
-        return;
-    }
-        
+            return;
+        }
         axios.put(`/api/students/${studentId}`, student)
             .then(response => {
-                onUpdate();
+                onUpdate(studentId);
                 onClose();
             })
             .catch(error => {
@@ -91,7 +118,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
         try {
             await axios.delete(`/api/students/${studentId}`);
             onClose(); // Close the modal
-            navigate('/all-students'); // Redirect to all students page
+            navigate('/admin/all-students'); // Redirect to all students page
         } catch (error) {
             console.error('Error deleting student:', error);
         }
@@ -126,6 +153,12 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                     <select className={styles.select} name="status" value={student.status} onChange={handleChange} required>
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
+                        <option value="GoT">GoT</option>
+                        <option value="Non-GoT">Non-GoT</option>
+                        <option value="Personal Leave">Personal Leave</option>
+                        <option value="Withdrawn">Withdrawn</option>
+                        <option value="Terminated (I)">Terminated (I)</option>
+                        <option value="Terminated (F)">Terminated (F)</option>
                     </select>
 
                     <label className={styles.label}>Intake</label>
@@ -150,14 +183,39 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                         <option value="MCS (AC)">MCS (AC)</option>
                     </select>
 
+                    {/* <label className={styles.label}>Supervisor</label>
+                    <select className={styles.select} name="supervisor" value={student.supervisor} onChange={handleChange} required>                        
+                        {supervisors.map(supervisor => (
+                            <option
+                                key={supervisor.id}
+                                value={JSON.stringify({
+                                    id: supervisor.id,
+                                    name: `${supervisor.first_name} ${supervisor.last_name}`
+                                })}
+                            >
+                                Dr. {supervisor.first_name} {supervisor.last_name}
+                            </option>
+                        ))}
+                        <option value="null">N/A</option>
+                    </select> */}
+
                     <label className={styles.label}>Supervisor</label>
-                    <select className={styles.select} name="supervisor" value={student.supervisor} onChange={handleChange} required>
-                        <option value="Green">Dr. Green</option>
-                        <option value="Blue">Dr. Blue</option>
-                        <option value="Yellow">Dr. Yellow</option>
-                        <option value="Red">Dr. Red</option>
-                        <option value="Pink">Dr. Pink</option>
-                        <option value="Orange">Dr. Orange</option>
+                    <select
+                        className={styles.select}
+                        name="supervisor_id"
+                        value={student.supervisor_id || "null"} // Use `student.supervisor_id` to match the `value` of the option
+                        onChange={handleChange}
+                        required
+                    >
+                        {supervisors.map(supervisor => (
+                            <option
+                                key={supervisor.id}
+                                value={supervisor.id} // Use `id` as the `value` for simplicity
+                            >
+                                Dr. {supervisor.first_name} {supervisor.last_name}
+                            </option>
+                        ))}
+                        <option value="null">N/A</option>
                     </select>
 
                     <label className={styles.label}>Research Topic</label>

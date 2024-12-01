@@ -1,32 +1,51 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const UserContext = createContext();
 
-export const UserProvider = ({ children }) => {
+export function useUser() {
+    return useContext(UserContext);
+}
+
+export function UserProvider({ children }) {
     const [user, setUser] = useState(null);
+    const [token, setToken] = useState(null);
+    const [loading, setLoading] = useState(true); // Loading state
 
     useEffect(() => {
-        const savedUser = JSON.parse(sessionStorage.getItem('user'));
-        if (savedUser) {
-            setUser(savedUser);
+        const savedUser = localStorage.getItem('user');
+        const savedToken = localStorage.getItem('token');
+
+        if (savedUser && savedToken) {
+            setUser(JSON.parse(savedUser));
+            setToken(savedToken);
         }
+        setLoading(false); // Mark loading as done once data is retrieved
     }, []);
 
-    const login = (userData) => {
-        setUser(userData);
-        sessionStorage.setItem('user', JSON.stringify(userData));
+    const login = (userData, token, role) => {
+        setUser({ ...userData, role });
+        setToken(token);
+        localStorage.setItem('user', JSON.stringify({ ...userData, role }));
+        localStorage.setItem('token', token);
     };
 
     const logout = () => {
         setUser(null);
-        sessionStorage.removeItem('user');
+        setToken(null);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('has_study_plan');
     };
 
+    // Prevent rendering children while loading
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
     return (
-        <UserContext.Provider value={{ user, login, logout }}>
+        <UserContext.Provider value={{ user, token, login, logout, loading }}>
             {children}
         </UserContext.Provider>
     );
-};
-
-export const useUser = () => useContext(UserContext);
+}

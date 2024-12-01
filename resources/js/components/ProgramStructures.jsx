@@ -6,7 +6,7 @@ function ProgramStructures() {
     return (
         <div className="page-container">
             <div className="breadcrumbs">
-                <Link to="/admin-settings">Admin Settings</Link>
+                <Link to="/admin/admin-settings">Admin Settings</Link>
                 <span className="breadcrumbSeparator">&gt;</span>
                 <span>Program Structures</span>
             </div>

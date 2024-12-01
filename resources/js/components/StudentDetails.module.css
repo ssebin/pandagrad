@@ -5,6 +5,11 @@
     padding: 20px;
     max-width: 1200px;
     margin: auto;
+    overflow: visible;
+}
+
+.flowchartContainer {
+    height: 100%; /* Ensures the entire container is scrollable */
 }
 
 .breadcrumbs {
@@ -58,8 +63,7 @@
     padding: 5px 10px;
     border-radius: 20px;
     color: white;
-    background-color: green;
-    font-size: 0.8em;
+    font-size: 1em;
     margin-left: 20px;
     font-weight: 300;
     margin-top: -5px;
@@ -78,6 +82,72 @@
 
 .status-inactive {
     background-color: #FFBF08; 
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    font-size: 1em;
+    margin-left: 20px;
+    font-weight: 300;
+    margin-top: -5px;
+}
+
+.status-got {
+    background-color: #43a1ff;
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    font-size: 1em;
+    margin-left: 20px;
+    font-weight: 300;
+    margin-top: -5px;
+}
+
+.status-non-got {
+    background-color: #6A1B9A; 
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    font-size: 1em;
+    margin-left: 20px;
+    font-weight: 300;
+    margin-top: -5px;
+}
+
+.status-personal-leave {
+    background-color: #fe4cd7; 
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    font-size: 1em;
+    margin-left: 20px;
+    font-weight: 300;
+    margin-top: -5px;
+}
+
+.status-withdrawn {
+    background-color: #ff6637; 
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    font-size: 1em;
+    margin-left: 20px;
+    font-weight: 300;
+    margin-top: -5px;
+}
+
+.status-terminated-i {
+    background-color: #424242;     
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    font-size: 1em;
+    margin-left: 20px;
+    font-weight: 300;
+    margin-top: -5px;
+}
+
+.status-terminated-f {
+    background-color: #D32F2F; 
     padding: 5px 10px;
     border-radius: 20px;
     color: white;

@@ -1,15 +1,17 @@
 .editStudentPopup {
-    position: fixed;
+    position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%); /* Center both horizontally and vertically */
     width: 350px;
     background: white;
     border: 1px solid #E2E8F0;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     padding: 20px;
     z-index: 1000;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 .form {
@@ -19,7 +21,7 @@
 
 .label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 0px;
     font-size: 0.7em;
     color: #666;
     margin-left: 10px;
@@ -30,7 +32,7 @@
     align-items: center;
     width: calc(100% - 20px);
     padding: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
     border: 1px solid #E2E8F0;
     border-radius: 10px;
     font-size: 0.8em;

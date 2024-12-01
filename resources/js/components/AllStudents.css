@@ -1,8 +1,10 @@
 .all-students {
-    padding: 20px;
+    padding-top: 20px;
+    padding-right: 20px;
+    padding-left: 20px;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    overflow: auto;
 }
 
 .header {
@@ -12,7 +14,7 @@
     margin-bottom: 20px;
     position: sticky;
     top: 0;
-    background: white;
+    background: none;
     z-index: 10;
 }
 
@@ -39,7 +41,7 @@
     padding-left: 10px;
     border: 1px solid #f0e2e5;
     background-color: #fff;
-    font-size: 0.9rem;
+    font-size: 0.9rem;    
 }
 
 .search-bar input {
@@ -49,6 +51,7 @@
     box-shadow: none;
     font-size: 0.9rem;
     flex-grow: 1;
+    margin-top: 0;
 }
 
 .search-bar .search {
@@ -91,7 +94,6 @@
     overflow-y: auto;
     flex-grow: 1;
     white-space: nowrap; 
-    margin-bottom: 110px;
 }
 
 .student-columns {
@@ -162,6 +164,36 @@
 
 .card-header .status.inactive {
     background-color: #FFBF08;
+    color: white;
+}
+
+.card-header .status.got {
+    background-color: #43a1ff;
+    color: white;
+}
+
+.card-header .status.non-got {
+    background-color: #6A1B9A; 
+    color: white;
+}
+
+.card-header .status.personal-leave {
+    background-color: #fe4cd7; 
+    color: white;
+}
+
+.card-header .status.withdrawn {
+    background-color: #ff6637; 
+    color: white;
+}
+
+.card-header .status.terminated-i {
+    background-color: #424242;     
+    color: white;
+}
+
+.card-header .status.terminated-f {
+    background-color: #D32F2F; 
     color: white;
 }
 
@@ -299,13 +331,14 @@
     color: #192E59;
     cursor: pointer;
     text-align: end;
+    padding: 0;
 }
 
 .add-student-popup {
-    position: fixed;
-    top: 50%;
+    position: absolute;
+    top: 50px; /* Adjust to where the popup starts */
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%); /* Center horizontally */
     width: 350px;
     background: white;
     border: 1px solid #E2E8F0;
@@ -314,6 +347,8 @@
     padding: 20px;
     z-index: 1000;
     margin-bottom: 10px;
+    max-height: 80vh;
+    overflow-y: auto;
 }
 
 .add-student-popup form {
@@ -324,7 +359,7 @@
 
 .add-student-popup label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
     font-size: 0.7em;
     color: #666;
     margin-left: 10px;
@@ -335,7 +370,7 @@
     align-items: center;
     width: calc(100% - 20px);
     padding: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
     border: 1px solid #E2E8F0;
     border-radius: 10px;
     font-size: 0.8em;
