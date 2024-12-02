@@ -23,7 +23,7 @@ class AuthenticateJWT
     {
         try {
             // Log the authorization header for debugging
-            Log::info('Token:', ['token' => $request->header('Authorization')]);
+            //Log::info('Token:', ['token' => $request->header('Authorization')]);
 
             // Attempt to authenticate the token
             $user = JWTAuth::parseToken()->authenticate();

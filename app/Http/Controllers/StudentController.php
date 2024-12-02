@@ -24,6 +24,8 @@ class StudentController extends Controller
     {
         $user = $request->user(); // Get the authenticated user
 
+        // log::info('User:', [$user]);
+
         // Start the query with the supervisor relationship
         $query = Student::query()->with([
             'supervisor' => function ($query) {
@@ -31,9 +33,13 @@ class StudentController extends Controller
             }
         ]);
 
+        // log::info('Initial Query:', [$query]);
+        // Log::info('User Role:', ['role' => $user->role]);
+
         // Apply role-based filtering
         if ($user->role === 'admin') {
             // Admin: No filters, can view all students
+            $query->whereNotNull('id');
         } elseif ($user->role === 'supervisor') {
             // Supervisor: Filter students they directly supervise
             $query->where('supervisor_id', $user->id);
@@ -47,6 +53,9 @@ class StudentController extends Controller
 
         // Execute the query and get the results
         $students = $query->get();
+        
+        // Log::info('Query Built:', ['query' => $query->toSql()]);
+        // log::info('Students:', [$students]);
 
         // Return the filtered students as JSON
         return response()->json($students);
@@ -296,7 +305,7 @@ class StudentController extends Controller
         $student = Auth::user(); // This is already the Student instance
 
         // Log authenticated user info
-        Log::info('Authenticated User:', [$student]);
+        //Log::info('Authenticated User:', [$student]);
 
         // Validate request data
         $validatedData = $request->validate([
@@ -883,8 +892,8 @@ class StudentController extends Controller
                 return; // No study plan, nothing to calculate
             }
 
-            Log::info('Study Plan:', [$studyPlan]);
-            Log::info('Current Semester:', [$currentSemester]);
+            // Log::info('Study Plan:', [$studyPlan]);
+            // Log::info('Current Semester:', [$currentSemester]);
 
             // Get the intake
             $intake = $studyPlan->student->intake;
@@ -964,8 +973,8 @@ class StudentController extends Controller
 
             // Calculate progress percentage
             $progressPercentage = $totalTasks > 0 ? intval(($fullyCompletedTasks / $totalTasks) * 100) : 0;
-            log::info('fullyCompletedTasks:', [$fullyCompletedTasks]);
-            log::info('totalTasks:', [$totalTasks]);
+            // log::info('fullyCompletedTasks:', [$fullyCompletedTasks]);
+            // log::info('totalTasks:', [$totalTasks]);
 
             // Update the student's progress and track_status
             Student::where('id', $studentId)->update([

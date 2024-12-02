@@ -35,12 +35,13 @@
     background-color: #ffffff;
     width: 94%;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    border-radius: 12px;
+    border-radius: 10px;
     z-index: 1;
     text-align: left;
     padding: 10px;
     max-height: 240px;
     overflow-y: auto;
+    font-size: 0.95em;
 }
 
 .dropdown.show .dropdown-content {

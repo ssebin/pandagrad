@@ -107,7 +107,7 @@ class AuthController extends Controller
 
             // Capture the authorization code
             $authCode = request('code');
-            Log::info('Authorization code', ['code' => $authCode]);
+            // Log::info('Authorization code', ['code' => $authCode]);
 
             if (!$authCode) {
                 throw new Exception('Authorization code is missing');
@@ -212,11 +212,11 @@ class AuthController extends Controller
 
         // Try to authenticate the user based on role
         try {
-            Log::info('Login attempt', [
-                'email' => $request->UMEmail,
-                'role' => $request->role,
-                'credentials' => $credentials,
-            ]);
+            // Log::info('Login attempt', [
+            //     'email' => $request->UMEmail,
+            //     'role' => $request->role,
+            //     'credentials' => $credentials,
+            // ]);
 
             if ($request->role === 'admin') {
                 $admin = Admin::where('UMEmail', $request->UMEmail)->first();
@@ -236,7 +236,7 @@ class AuthController extends Controller
                     $role = $lecturer->role;
                     
                     $lecturerRole = $this->getLecturerRole($role); // Helper method to get role
-                    Log::info('lecturerRole: ', [$lecturerRole]);
+                    //Log::info('lecturerRole: ', [$lecturerRole]);
                     $token = $lecturer->createToken('lecturer-token')->plainTextToken;
                     return response()->json([
                         'token' => $token,

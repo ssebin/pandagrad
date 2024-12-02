@@ -20,7 +20,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
         semesters_no: "",
         semesters: [],
     });
-    const { tasks, nationalities, supervisors, studentsData } = useContext(StudentContext);
+    const { tasks, nationalities, supervisors, studentsData, currentSemester } = useContext(StudentContext);
 
     useEffect(() => {
         if (isOpen) {
@@ -58,6 +58,8 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                 acc[task.category].push(task);
                 return acc;
             }, {});
+
+            console.log('Categorized tasks:', categorizedTasks);
 
             setTasksOptions(categorizedTasks); // Set categorized tasks
         }
@@ -135,6 +137,14 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
             setTempSelectedTasks([]); // Clear temporary selected tasks
             setExtraFields({}); // Reset extra fields (status, grade, etc.)
         }
+
+        setNumSemesters(0);
+        setFormData({ ...formData, semesters: [] });
+        setExtraFields({});
+
+        // Reset other form-related states
+        setSelectedTasks([]);
+        setTempSelectedTasks([]);
     }, [updateType]);
 
     // const fetchSupervisors = async () => {
@@ -772,21 +782,21 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                             type="text"
                             className={styles.input}
                             placeholder="Enter Residential College"
-                            onChange={(e) => handleExtraFieldChange('residential_college', e.target.value)} 
+                            onChange={(e) => handleExtraFieldChange('residential_college', e.target.value)}
                         />
 
                         <label className={styles.label}>Start Date<span style={{ color: 'red' }}> *</span></label>
                         <input
                             type="date"
                             className={styles.input}
-                            onChange={(e) => handleExtraFieldChange('start_date', e.target.value)} 
+                            onChange={(e) => handleExtraFieldChange('start_date', e.target.value)}
                         />
 
                         <label className={styles.label}>End Date<span style={{ color: 'red' }}> *</span></label>
                         <input
                             type="date"
                             className={styles.input}
-                            onChange={(e) => handleExtraFieldChange('end_date', e.target.value)} 
+                            onChange={(e) => handleExtraFieldChange('end_date', e.target.value)}
                         />
                     </>
                 );
@@ -853,15 +863,22 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                     <label className={styles.label}>Update<span style={{ color: 'red' }}> *</span></label>
                     <select className={styles.input} value={updateType} onChange={(e) => setUpdateType(e.target.value)} required>
                         <option value="">Select an update</option>
-                        {/* Student Information Category */}
                         <optgroup label="Student Information">
                             <option value="update_status">Update Status</option>
                             <option value="workshops_attended">Workshops Attended</option>
                             <option value="change_study_plan">Change Study Plan</option>
                             <option value="extension_candidature_period">Extension of Candidature Period</option>
                         </optgroup>
-
-                        {/* Courses Category */}
+                        {Object.keys(tasksOptions).map((category) => (
+                            <optgroup key={category} label={category}>
+                                {tasksOptions[category].map((task) => (
+                                    <option key={task.id} value={task.unique_identifier}>
+                                        {task.name}
+                                    </option>
+                                ))}
+                            </optgroup>
+                        ))}
+                        {/*                         
                         <optgroup label="Courses">
                             <option value="bahasa_melayu_course">Bahasa Melayu Course</option>
                             <option value="english_language_course">English Language Course</option>
@@ -870,18 +887,18 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                             <option value="research_methodology_course">Research Methodology Course</option>
                         </optgroup>
 
-                        {/* Other Requirements Category */}
+                        
                         <optgroup label="Other Requirements">
                             <option value="appointment_supervisor_form">Submission of Appointment of Supervisor Form</option>
                             <option value="residential_requirement">Residential Requirement</option>
                         </optgroup>
 
-                        {/* Proposal Defence Category */}
+                       
                         <optgroup label="Proposal Defence">
                             <option value="proposal_defence">Proposal Defence</option>
                         </optgroup>
 
-                        {/* Dissertation Category */}
+                       
                         <optgroup label="Dissertation">
                             <option value="dissertation_chapters_1_2_3">Chapters 1, 2, and 3 of Dissertation</option>
                             <option value="dissertation_all_chapters">All Chapters of Dissertation</option>
@@ -889,21 +906,21 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                             <option value="dissertation_submission_correction">Dissertation Submission After Correction</option>
                         </optgroup>
 
-                        {/* Candidature Defence Category */}
+                        
                         <optgroup label="Candidature Defence">
                             <option value="candidature_defence">Candidature Defence</option>
                         </optgroup>
 
-                        {/* Progress Meetings Category */}
+                        
                         <optgroup label="Progress Meetings">
                             <option value="committee_meeting">Committee Meeting</option>
                         </optgroup>
 
-                        {/* Other Approval */}
+                        
                         <optgroup label="Approval">
                             <option value="jkit_correction_approval">JKIT Correction Approval</option>
                             <option value="senate_approval">Senate Approval</option>
-                        </optgroup>
+                        </optgroup> */}
                     </select>
 
                     {renderExtraFields()}
