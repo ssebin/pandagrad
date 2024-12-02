@@ -454,7 +454,7 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
 
     useEffect(() => {
         if (studyPlan) {
-            console.log(studyPlan); // Inspect the structure of studyPlan
+            //console.log(studyPlan); // Inspect the structure of studyPlan
             generateFlowchart(studyPlan);
         }
     }, [studyPlan]);
@@ -626,11 +626,11 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                     const lastSemesterEndDates = getLastSemesterEndDates(studyPlan, semesterData);
                                     // Determine the status with the updated logic
                                     const status = determineStatus(taskData, lastSemesterEndDates);
-                                    console.log(`Task "${taskData.name}" status:`, status);
+                                    //console.log(`Task "${taskData.name}" status:`, status);
 
                                     // console.log("Task Data:", taskData);
                                     // console.log("Semester End Date:", semesterEndDate);
-                                    console.log("Status:", status);
+                                    //console.log("Status:", status);
 
                                     return (
                                         <div
@@ -809,11 +809,11 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                     const lastSemesterEndDates = getLastSemesterEndDates(studyPlan, semesterData);
                                     // Determine the status with the updated logic
                                     const status = determineStatus(taskData, lastSemesterEndDates);
-                                    console.log(`Task "${taskData.name}" status:`, status);
+                                    //console.log(`Task "${taskData.name}" status:`, status);
 
                                     // console.log("Task Data:", taskData);
                                     // console.log("Semester End Date:", semesterEndDate);
-                                    console.log("Status:", status);
+                                    //console.log("Status:", status);
 
                                     return (
                                         <div

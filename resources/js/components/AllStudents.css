@@ -67,6 +67,7 @@
     cursor: pointer;
     display: flex;
     align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .filter-button {
@@ -177,7 +178,7 @@
     color: white;
 }
 
-.card-header .status.personal-leave {
+.card-header .status.pl {
     background-color: #fe4cd7; 
     color: white;
 }
@@ -187,12 +188,12 @@
     color: white;
 }
 
-.card-header .status.terminated-i {
+.card-header .status.ti {
     background-color: #424242;     
     color: white;
 }
 
-.card-header .status.terminated-f {
+.card-header .status.tf {
     background-color: #D32F2F; 
     color: white;
 }

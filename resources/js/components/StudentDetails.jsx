@@ -186,8 +186,8 @@ function StudentDetails() {
                         </h1>
                         <span className={styles[`status-${student.status
                             .toLowerCase()
-                            .replace(/terminated\s*\(i\)/g, 'terminated-i')
-                            .replace(/terminated\s*\(f\)/g, 'terminated-f')
+                            // .replace(/terminated\s*\(i\)/g, 'terminated-i')
+                            // .replace(/terminated\s*\(f\)/g, 'terminated-f')
                             .replace(/\s+/g, '-')
                             .trim()}`]}>
                             {student.status}
@@ -248,8 +248,8 @@ function StudentDetails() {
                         </div>
                         <div className={styles.infoItem}>
                             <div className={styles.infoItemTitle}>Supervisor</div>
-                            {student.supervisor && (
-                                <div className={styles.infoItemValue}>Dr. {student.supervisor}</div>
+                            {student.supervisor_name && (
+                                <div className={styles.infoItemValue}>Dr. {student.supervisor?.first_name} {student.supervisor?.last_name}</div>
                             )}
                         </div>
                         <div className={styles.infoItem}>

@@ -25,7 +25,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
     //     remarks: ''
     // });
     const { id } = useParams();
-    const { studentsData, supervisors } = useContext(StudentContext);
+    const { studentsData, supervisors, fetchStudentsData, semesters } = useContext(StudentContext);
 
     // Flatten the studentsData object (merge all semester arrays into one array)
     const allStudents = Object.values(studentsData).flat();
@@ -118,6 +118,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
         try {
             await axios.delete(`/api/students/${studentId}`);
             onClose(); // Close the modal
+            fetchStudentsData(); // Fetch the updated student data
             navigate('/admin/all-students'); // Redirect to all students page
         } catch (error) {
             console.error('Error deleting student:', error);
@@ -155,27 +156,39 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                         <option value="Inactive">Inactive</option>
                         <option value="GoT">GoT</option>
                         <option value="Non-GoT">Non-GoT</option>
-                        <option value="Personal Leave">Personal Leave</option>
+                        <option value="PL">Personal Leave</option>
                         <option value="Withdrawn">Withdrawn</option>
-                        <option value="Terminated (I)">Terminated (I)</option>
-                        <option value="Terminated (F)">Terminated (F)</option>
+                        <option value="TI">Terminated (I)</option>
+                        <option value="TF">Terminated (F)</option>
                     </select>
 
                     <label className={styles.label}>Intake</label>
-                    <select className={styles.select} name="intake" value={student.intake} onChange={handleChange} required>
-                        <option value="Sem 1, 2021/2022">Sem 1, 2021/2022</option>
-                        <option value="Sem 2, 2021/2022">Sem 2, 2021/2022</option>
-                        <option value="Sem 1, 2022/2023">Sem 1, 2022/2023</option>
-                        <option value="Sem 2, 2022/2023">Sem 2, 2022/2023</option>
-                        <option value="Sem 1, 2023/2024">Sem 1, 2023/2024</option>
-                        <option value="Sem 2, 2023/2024">Sem 2, 2023/2024</option>
+                    <select
+                        className={styles.select}
+                        name="intake"
+                        value={student?.intake || ''}
+                        onChange={handleChange}
+                        required
+                    >
+                        {semesters &&
+                            Array.from(
+                                new Set(
+                                    semesters.map(
+                                        semester => `Sem ${semester.semester}, ${semester.academic_year}`
+                                    )
+                                )
+                            ).map(intake => (
+                                <option key={intake} value={intake}>
+                                    {intake}
+                                </option>
+                            ))}
                     </select>
 
                     <label className={styles.label}>Matric Number</label>
                     <input className={styles.input} type="text" name="matric_number" value={student.matric_number} onChange={handleChange} required />
 
                     <label className={styles.label}>CGPA</label>
-                    <input className={styles.input} type="number" step="0.01" name="cgpa" value={student.cgpa} onChange={handleChange} required />
+                    <input className={styles.input} type="number" step="0.01" name="cgpa" value={student.cgpa || ''} onChange={handleChange} />
 
                     <label className={styles.label}>Program</label>
                     <select className={styles.select} name="program" value={student.program} onChange={handleChange} required>
@@ -219,7 +232,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                     </select>
 
                     <label className={styles.label}>Research Topic</label>
-                    <input className={styles.input} type="text" name="research" value={student.research} onChange={handleChange} required />
+                    <input className={styles.input} type="text" name="research" value={student.research || ''} onChange={handleChange} />
 
                     <div className={styles.buttons}>
                         <button type="button" className={styles.cancelButton} onClick={onClose}>Cancel</button>

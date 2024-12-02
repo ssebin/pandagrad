@@ -14,21 +14,20 @@ class Student extends Authenticatable
     protected $fillable = [
         'first_name',
         'last_name',
-        'siswamail',
-        'supervisor',   //
-        'status',       //
-        'intake',       
-        'semester',     //
+        'siswamail', 
+        'status',       
+        'intake',
+        'semester',     
         'program',
-        'research',     //
-        'task',         //
-        'profile_pic',  
-        'progress',     //
-        'track_status', //
-        'cgpa',         //
+        'research',     
+        'task',         
+        'profile_pic',
+        'progress',     
+        'track_status', 
+        'cgpa',         
         'matric_number',
-        'remarks',      //
-        'supervisor_id',//
+        'remarks',      
+        'supervisor_id', 
         'has_study_plan',
         'nationality',
         'password',
@@ -36,9 +35,11 @@ class Student extends Authenticatable
         'max_sem',
     ];
 
+    protected $appends = ['supervisor_name'];
+
     public function studyPlan()
     {
-        return $this->hasOne(StudyPlan::class);
+        return $this->hasOne(StudyPlan::class)->withDefault()->cascadeOnDelete();
     }
 
     // Defining the relationship with Lecturer (Supervisor)
@@ -48,8 +49,15 @@ class Student extends Authenticatable
     }
 
     // Method to return the supervisor name for display
+    // public function getSupervisorNameAttribute()
+    // {
+    //     return $this->supervisor;
+    // }
+
     public function getSupervisorNameAttribute()
     {
-        return $this->supervisor;
+        return $this->supervisor
+            ? $this->supervisor->first_name . ' ' . $this->supervisor->last_name
+            : null;
     }
 }

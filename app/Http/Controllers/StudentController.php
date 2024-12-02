@@ -20,9 +20,35 @@ use Carbon\Carbon;
 
 class StudentController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $students = Student::all();
+        $user = $request->user(); // Get the authenticated user
+
+        // Start the query with the supervisor relationship
+        $query = Student::query()->with([
+            'supervisor' => function ($query) {
+                $query->select('id', 'first_name', 'last_name');
+            }
+        ]);
+
+        // Apply role-based filtering
+        if ($user->role === 'admin') {
+            // Admin: No filters, can view all students
+        } elseif ($user->role === 'supervisor') {
+            // Supervisor: Filter students they directly supervise
+            $query->where('supervisor_id', $user->id);
+        } elseif (in_array($user->role, ['coordinator', 'both'])) {
+            // Coordinator and "both" roles: Filter by program
+            $query->where('program', $user->program); // Fetch all students in the program
+        } else {
+            // Unauthorized role
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        // Execute the query and get the results
+        $students = $query->get();
+
+        // Return the filtered students as JSON
         return response()->json($students);
     }
 
@@ -38,11 +64,11 @@ class StudentController extends Controller
             $validatedData['supervisor_id'] = $request->supervisor_id;
             $lecturer = Lecturer::find($request->supervisor_id);
             if ($lecturer) {
-                $validatedData['supervisor'] = $lecturer->first_name;
+                //$validatedData['supervisor'] = $lecturer->first_name;
             }
         } else {
             $validatedData['supervisor_id'] = null; // N/A case
-            $validatedData['supervisor'] = null;
+            //$validatedData['supervisor'] = null;
         }
 
         // Create the student record
@@ -57,12 +83,34 @@ class StudentController extends Controller
         return response()->json(['message' => 'Student added successfully', 'student' => $student], 201);
     }
 
-    public function show($id)
+    public function show($id, Request $request)
     {
+        $user = $request->user(); // Get the authenticated user
         $student = Student::find($id);
 
         if (!$student) {
             return response()->json(['message' => 'Student not found'], 404);
+        }
+
+        // Admins can access all student details
+        if ($user->role === 'admin') {
+            return response()->json($student);
+        }
+
+        // Role-based restrictions
+        if ($user->role === 'supervisor') {
+            // Supervisors can only view students they supervise
+            if ($student->supervisor_id !== $user->id) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+        } elseif (in_array($user->role, ['coordinator', 'both'])) {
+            // Coordinators and both roles can only view students in their program
+            if ($student->program !== $user->program) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+        } else {
+            // Unauthorized role
+            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         return response()->json($student);
@@ -130,7 +178,7 @@ class StudentController extends Controller
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
             'siswamail' => 'nullable|string|email|max:255',
-            'supervisor' => 'nullable|string|max:255',
+            'supervisor_id' => 'nullable|integer',
             'status' => 'nullable|string|max:255',
             'intake' => 'nullable|string|max:255',
             'semester' => 'nullable|integer',
@@ -1123,7 +1171,6 @@ class StudentController extends Controller
             'grade_3' => 'nullable|string|max:10',
             'grade_4' => 'nullable|string|max:10',
             'grade_5' => 'nullable|string|max:10',
-            'supervisor_name' => 'nullable|string',
             'supervisor_id' => 'nullable|exists:lecturers,id',
             'progress_status' => 'nullable|string',
             'num_semesters' => 'nullable|integer',
@@ -1212,8 +1259,7 @@ class StudentController extends Controller
             // Get the supervisor's first name
             $supervisor = Lecturer::find($validatedData['supervisor_id']);
             if ($supervisor) {
-                $student->supervisor = $supervisor->first_name; // Update supervisor's first name
-                $supervisorName = $student->supervisor; // Include supervisor name in progress update
+                $supervisorName = $supervisor->first_name . ' ' . $supervisor->last_name; // Include supervisor name in progress update
                 $student->supervisor_id = $validatedData['supervisor_id']; // Update supervisor_id
             }
 

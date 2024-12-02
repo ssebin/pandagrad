@@ -230,7 +230,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
     const [selectedTasks, setSelectedTasks] = useState([]); // Track selected tasks
 
     const handleTaskChange = (task) => {
-        console.log('Task selected/deselected:', task);
+        //console.log('Task selected/deselected:', task);
         setTempSelectedTasks((prevTasks) => {
             if (prevTasks.includes(task.id)) {
                 return prevTasks.filter((id) => id !== task.id);
@@ -256,7 +256,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
             semesters: updatedSemesters,
         }));
 
-        console.log('Number of Semesters Updated:', num, updatedSemesters);
+        //console.log('Number of Semesters Updated:', num, updatedSemesters);
     };
 
     const handleApplyButton = (index) => {
@@ -272,7 +272,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                 return semester;
             });
             const newFormData = { ...prevFormData, semesters: updatedSemesters };
-            console.log('FormData after applying tasks:', newFormData);
+            //console.log('FormData after applying tasks:', newFormData);
             return { ...prevFormData, semesters: updatedSemesters };
         });
 

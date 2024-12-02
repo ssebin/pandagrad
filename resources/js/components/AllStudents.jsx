@@ -87,7 +87,7 @@ function AllStudents() {
     const [showAddStudentPopup, setShowAddStudentPopup] = useState(false);
     const { user } = useUser();
     const filterPopupRef = useRef(null);
-    const { studentsData, isLoading, currentSemester, supervisors, tasks, fetchTasks } = useContext(StudentContext);
+    const { studentsData, isLoading, currentSemester, supervisors, tasks, fetchTasks, fetchStudentsData, semesters } = useContext(StudentContext);
     const [taskColors, setTaskColors] = useState({});
 
     let basePath = "";
@@ -196,7 +196,7 @@ function AllStudents() {
             const fetchIfNeeded = async () => {
                 await fetchTasks();
             };
-    
+
             fetchIfNeeded();
         }
     }, [tasks]); // Dependency on tasks only
@@ -254,18 +254,40 @@ function AllStudents() {
         setShowFilterPopup(false);
     };
 
+    const mappedStudentsData = studentsData
+        ? Object.keys(studentsData).reduce((mappedData, intake) => {
+            const mappedStudents = studentsData[intake].map((student) => {
+                // Find the task object for the student's current task
+                const task = tasks.find((t) => t.name === student.task);
+
+                // Add taskCategory to each student
+                return {
+                    ...student,
+                    taskCategory: task ? task.category : 'Unknown', // Default to 'Unknown' if no matching task
+                };
+            });
+
+            return { ...mappedData, [intake]: mappedStudents };
+        }, {})
+        : {};
+
     const filterStudents = (students) => {
-        return students.filter(student =>
-            (searchKeyword === "" ||
-                (student.first_name && student.first_name.toLowerCase().includes(searchKeyword)) ||
-                (student.last_name && student.last_name.toLowerCase().includes(searchKeyword)) ||
-                (student.supervisor && student.supervisor.toLowerCase().includes(searchKeyword)) ||
-                (student.matric_number && student.matric_number.toLowerCase().includes(searchKeyword)) ||
-                (student.research && student.research.toLowerCase().includes(searchKeyword))) &&
-            (filters.programs.length === 0 || filters.programs.includes(student.program)) &&
-            (filters.tasks.length === 0 || filters.tasks.includes(student.task)) &&
-            (filters.progress.length === 0 || filters.progress.includes(student.track_status))
-        );
+        return students.filter((student) => {
+            const taskCategory = student.taskCategory;
+
+            return (
+                (searchKeyword === "" ||
+                    (student.first_name && student.first_name.toLowerCase().includes(searchKeyword.toLowerCase())) ||
+                    (student.last_name && student.last_name.toLowerCase().includes(searchKeyword.toLowerCase())) ||
+                    (student.supervisor && student.supervisor.first_name && student.supervisor.first_name.toLowerCase().includes(searchKeyword.toLowerCase())) || // Access supervisor's first_name
+                    (student.supervisor && student.supervisor.last_name && student.supervisor.last_name.toLowerCase().includes(searchKeyword.toLowerCase())) || // Access supervisor's last_name
+                    (student.matric_number && student.matric_number.toLowerCase().includes(searchKeyword.toLowerCase())) ||
+                    (student.research && student.research.toLowerCase().includes(searchKeyword.toLowerCase()))) &&
+                (filters.programs.length === 0 || filters.programs.includes(student.program)) &&
+                (filters.tasks.length === 0 || filters.tasks.includes(taskCategory)) &&
+                (filters.progress.length === 0 || filters.progress.includes(student.track_status))
+            );
+        });
     };
 
     // const handleStudentClick = (studentId) => {
@@ -290,7 +312,7 @@ function AllStudents() {
             first_name: event.target.first_name.value,
             last_name: event.target.last_name.value,
             siswamail: event.target.siswamail.value,
-            supervisor: selectedSupervisor.name, // Save supervisor's name
+            //supervisor: selectedSupervisor.name, // Save supervisor's name
             supervisor_id: selectedSupervisor.id, // Save supervisor's ID
             status: event.target.status.value,
             intake: event.target.intake.value,
@@ -323,8 +345,19 @@ function AllStudents() {
         return null;
     };
 
+    // Extract unique categories
+    // Extract unique categories sorted by task ID
+    const uniqueTaskCategories = tasks
+        ? [...new Map(tasks.sort((a, b) => a.id - b.id).map(task => [task.category, task])).values()]
+            .map(task => task.category)
+        : [];
+
     if (isLoading) return <p>Loading students...</p>;
     if (!studentsData) return <p>No student data available.</p>;
+    if (!tasks) {
+        console.error("Data not available: studentsData or tasks is undefined");
+        return <p>Loading...</p>; // Render a fallback UI
+    }
 
     return (
         <div className="all-students-container">
@@ -357,67 +390,39 @@ function AllStudents() {
                 </div>
                 {showFilterPopup && (
                     <div className="filter-popup" ref={filterPopupRef}>
-                        <div className="filter-category">
-                            <h4>Program</h4>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={tempFilters.programs.includes('MSE (ST)')}
-                                    onChange={() => handleTempFilterChange('programs', 'MSE (ST)')}
-                                />
-                                MSE (ST)
-                            </label>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={tempFilters.programs.includes('MCS (AC)')}
-                                    onChange={() => handleTempFilterChange('programs', 'MCS (AC)')}
-                                />
-                                MCS (AC)
-                            </label>
-                        </div>
+                        {user?.role === 'admin' && (
+                            <div className="filter-category">
+                                <h4>Program</h4>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        checked={tempFilters.programs.includes('MSE (ST)')}
+                                        onChange={() => handleTempFilterChange('programs', 'MSE (ST)')}
+                                    />
+                                    MSE (ST)
+                                </label>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        checked={tempFilters.programs.includes('MCS (AC)')}
+                                        onChange={() => handleTempFilterChange('programs', 'MCS (AC)')}
+                                    />
+                                    MCS (AC)
+                                </label>
+                            </div>
+                        )}
                         <div className="filter-category">
                             <h4>Current Task</h4>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={tempFilters.tasks.includes('Core Courses')}
-                                    onChange={() => handleTempFilterChange('tasks', 'Core Courses')}
-                                />
-                                Core Courses
-                            </label>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={tempFilters.tasks.includes('Proposal Defence')}
-                                    onChange={() => handleTempFilterChange('tasks', 'Proposal Defence')}
-                                />
-                                Proposal Defence
-                            </label>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={tempFilters.tasks.includes('Draft of Dissertation')}
-                                    onChange={() => handleTempFilterChange('tasks', 'Draft of Dissertation')}
-                                />
-                                Draft of Dissertation
-                            </label>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={tempFilters.tasks.includes('Candidature Defence')}
-                                    onChange={() => handleTempFilterChange('tasks', 'Candidature Defence')}
-                                />
-                                Candidature Defence
-                            </label>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={tempFilters.tasks.includes('Dissertation')}
-                                    onChange={() => handleTempFilterChange('tasks', 'Dissertation')}
-                                />
-                                Dissertation
-                            </label>
+                            {uniqueTaskCategories.map((category, index) => (
+                                <label key={index}>
+                                    <input
+                                        type="checkbox"
+                                        checked={tempFilters.tasks.includes(category)}
+                                        onChange={() => handleTempFilterChange('tasks', category)}
+                                    />
+                                    {category}
+                                </label>
+                            ))}
                         </div>
                         <div className="filter-category">
                             <h4>Progress</h4>
@@ -453,19 +458,19 @@ function AllStudents() {
                 {showAddStudentPopup && (
                     <div className="add-student-popup">
                         <form onSubmit={handleAddStudent}>
-                            <label>First Name</label>
+                            <label>First Name<span style={{ color: 'red' }}> *</span></label>
                             <input type="text" name="first_name" placeholder="First Name" required />
 
-                            <label>Last Name</label>
+                            <label>Last Name<span style={{ color: 'red' }}> *</span></label>
                             <input type="text" name="last_name" placeholder="Last Name" required />
 
-                            <label>Siswamail</label>
+                            <label>Siswamail<span style={{ color: 'red' }}> *</span></label>
                             <input type="email" name="siswamail" placeholder="Siswamail" required />
 
-                            <label>Matric Number</label>
+                            <label>Matric Number<span style={{ color: 'red' }}> *</span></label>
                             <input type="text" name="matric_number" placeholder="Matric Number" required />
 
-                            <label>Intake</label>
+                            {/* <label>Intake<span style={{ color: 'red' }}> *</span></label>
                             <select name="intake" required>
                                 <option value="Sem 1, 2021/2022">Sem 1, 2021/2022</option>
                                 <option value="Sem 2, 2021/2022">Sem 2, 2021/2022</option>
@@ -473,27 +478,43 @@ function AllStudents() {
                                 <option value="Sem 2, 2022/2023">Sem 2, 2022/2023</option>
                                 <option value="Sem 1, 2023/2024">Sem 1, 2023/2024</option>
                                 <option value="Sem 2, 2023/2024">Sem 2, 2023/2024</option>
+                            </select> */}
+
+                            <label>Intake<span style={{ color: 'red' }}> *</span></label>
+                            <select name="intake" required>
+                                {semesters &&
+                                    Array.from(
+                                        new Set(
+                                            semesters.map(
+                                                semester => `Sem ${semester.semester}, ${semester.academic_year}`
+                                            )
+                                        )
+                                    ).map(intake => (
+                                        <option key={intake} value={intake}>
+                                            {intake}
+                                        </option>
+                                    ))}
                             </select>
 
-                            <label>Program</label>
+                            <label>Program<span style={{ color: 'red' }}> *</span></label>
                             <select name="program" required>
                                 <option value="MSE (ST)">MSE (ST)</option>
                                 <option value="MCS (AC)">MCS (AC)</option>
                             </select>
 
-                            <label>Status</label>
+                            <label>Status<span style={{ color: 'red' }}> *</span></label>
                             <select name="status" required>
                                 <option value="Active">Active</option>
                                 <option value="Inactive">Inactive</option>
                                 <option value="GoT">GoT</option>
                                 <option value="Non-GoT">Non-GoT</option>
-                                <option value="Personal Leave">Personal Leave</option>
+                                <option value="PL">Personal Leave</option>
                                 <option value="Withdrawn">Withdrawn</option>
-                                <option value="Terminated (I)">Terminated (I)</option>
-                                <option value="Terminated (F)">Terminated (F)</option>
+                                <option value="TI">Terminated (I)</option>
+                                <option value="TF">Terminated (F)</option>
                             </select>
 
-                            <label>Supervisor</label>
+                            <label>Supervisor<span style={{ color: 'red' }}> *</span></label>
                             <select name="supervisor" required>
                                 <option value="null">N/A</option>
                                 {supervisors.map(supervisor => (
@@ -501,7 +522,7 @@ function AllStudents() {
                                         key={supervisor.id}
                                         value={JSON.stringify({
                                             id: supervisor.id,
-                                            name: `${supervisor.first_name}`
+                                            name: `${supervisor.first_name} ${supervisor.last_name}`
                                         })}
                                     >
                                         Dr. {supervisor.first_name} {supervisor.last_name}
@@ -519,57 +540,63 @@ function AllStudents() {
 
                 <div className="student-columns-container">
                     <div className="student-columns">
-                        {Object.keys(studentsData).reverse().map((intake, index) => (
+                        {Object.keys(mappedStudentsData).reverse().map((intake, index) => (
                             <div className="column" key={index}>
                                 <div className="column-header">
                                     <h2>{intake}</h2>
                                     <span className="student-count">
-                                        {studentsData[intake] ? filterStudents(studentsData[intake]).length : 0}
+                                        {mappedStudentsData[intake] ? filterStudents(mappedStudentsData[intake]).length : 0}
                                     </span>
                                 </div>
                                 <hr style={{ borderColor: getColor(index) }} />
-                                {studentsData[intake] && filterStudents(studentsData[intake]).map((student, idx) => (
-                                    <Link to={`${basePath}/student/${student.id}`} key={idx} className="student-link">
-                                        <div className="student-card" key={idx}>
-                                            <div className="card-header">
-                                                <h3>
-                                                    {student.first_name}{" "}
-                                                    {student.supervisor && (
-                                                        <span className="supervisor">(Dr. {student.supervisor})</span>
-                                                    )}
-                                                </h3>
-                                                <span className={`status ${student.status
-                                                    .toLowerCase()
-                                                    .replace(/terminated\s*\(i\)/g, 'terminated-i')
-                                                    .replace(/terminated\s*\(f\)/g, 'terminated-f')
-                                                    .replace(/\s+/g, '-')
-                                                    .trim()}`}>
-                                                    {student.status}
-                                                </span>
-                                            </div>
-                                            <p className="semester">Semester {student.currentSemester} - {student.program}</p>
-                                            <p className="research">{student.research}</p>
-                                            <div className="task-profile">
-                                                <div className="task" style={{ backgroundColor: `${getTaskColor(student.task, 0.2)}`, color: `${getTaskColor(student.task, 1)}`, padding: '3px 8px', borderRadius: '5px' }}>{student.task}</div>
-                                                <img
-                                                    src={student.profile_pic.includes('profile-pic.png')
-                                                        ? student.profile_pic
-                                                        : `/storage/${student.profile_pic}`}
-                                                    alt="Profile"
-                                                    className="profile-pic"
-                                                />
-                                            </div>
-                                            <div className="progress">
-                                                <span className="track-status" style={{ color: getProgressColor(student.track_status) }}>
-                                                    {student.progress}% ({student.track_status})
-                                                </span>
-                                                <div className="progress-bar">
-                                                    <div className="progress-completed" style={{ width: `${student.progress}%`, backgroundColor: getProgressColor(student.track_status) }}></div>
+                                {mappedStudentsData[intake] &&
+                                    filterStudents(mappedStudentsData[intake]).map((student, idx) => {
+                                        const task = tasks.find(t => t.name === student.task);
+                                        const taskCategory = task ? task.category : 'Unknown';
+
+                                        return (
+                                            <Link to={`${basePath}/student/${student.id}`} key={idx} className="student-link">
+                                                <div className="student-card" key={idx}>
+                                                    <div className="card-header">
+                                                        <h3>
+                                                            {student.first_name}{" "}
+                                                            {student.supervisor?.first_name && (
+                                                                <span className="supervisor">(Dr. {student.supervisor?.first_name})</span>
+                                                            )}
+                                                        </h3>
+                                                        <span className={`status ${student.status
+                                                            .toLowerCase()
+                                                            // .replace(/terminated\s*\(i\)/g, 'ti')
+                                                            // .replace(/terminated\s*\(f\)/g, 'tf')
+                                                            .replace(/\s+/g, '-')
+                                                            .trim()}`}>
+                                                            {student.status}
+                                                        </span>
+                                                    </div>
+                                                    <p className="semester">Semester {student.currentSemester} - {student.program}</p>
+                                                    <p className="research">{student.research}</p>
+                                                    <div className="task-profile">
+                                                        <div className="task" style={{ backgroundColor: `${getTaskColor(student.task, 0.2)}`, color: `${getTaskColor(student.task, 1)}`, padding: '3px 8px', borderRadius: '5px' }}>{student.taskCategory || 'Unknown'}</div>
+                                                        <img
+                                                            src={student.profile_pic.includes('profile-pic.png')
+                                                                ? student.profile_pic
+                                                                : `/storage/${student.profile_pic}`}
+                                                            alt="Profile"
+                                                            className="profile-pic"
+                                                        />
+                                                    </div>
+                                                    <div className="progress">
+                                                        <span className="track-status" style={{ color: getProgressColor(student.track_status) }}>
+                                                            {student.progress}% ({student.track_status})
+                                                        </span>
+                                                        <div className="progress-bar">
+                                                            <div className="progress-completed" style={{ width: `${student.progress}%`, backgroundColor: getProgressColor(student.track_status) }}></div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </div>
-                                    </Link>
-                                ))}
+                                            </Link>
+                                        );
+                                    })}
                             </div>
                         ))}
                     </div>

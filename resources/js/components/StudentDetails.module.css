@@ -113,7 +113,7 @@
     margin-top: -5px;
 }
 
-.status-personal-leave {
+.status-pl {
     background-color: #fe4cd7; 
     padding: 5px 10px;
     border-radius: 20px;
@@ -135,7 +135,7 @@
     margin-top: -5px;
 }
 
-.status-terminated-i {
+.status-ti {
     background-color: #424242;     
     padding: 5px 10px;
     border-radius: 20px;
@@ -146,7 +146,7 @@
     margin-top: -5px;
 }
 
-.status-terminated-f {
+.status-tf {
     background-color: #D32F2F; 
     padding: 5px 10px;
     border-radius: 20px;
