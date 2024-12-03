@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from 'react-router-dom';
 import './Registration.css';
+import { StudentContext } from './StudentContext';
+import { useUser } from './UserContext';
 
 const Registration = () => {
     const navigate = useNavigate();
@@ -13,6 +15,8 @@ const Registration = () => {
         nationality: "",
         profile_pic: null,
     });
+    const { semesters } = useContext(StudentContext);
+    const { setUser } = useUser();
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -23,60 +27,121 @@ const Registration = () => {
         setFormData({ ...formData, profile_pic: e.target.files[0] });
     };
 
-    const handleSubmit = (e) => {
+    // const handleSubmit = (e) => {
+    //     e.preventDefault();
+
+    //     // Log the current form data state
+    //     console.log('Current formData:', formData);
+
+    //     // Create a FormData object to handle file uploads
+    //     const formDataObj = new FormData();
+    //     Object.keys(formData).forEach(key => {
+    //         formDataObj.append(key, formData[key]);
+    //     });
+
+    //     // Log the FormData object contents
+    //     console.log('FormData before sending:', [...formDataObj]);
+
+    //     // Get the user object from localStorage
+    //     const user = JSON.parse(localStorage.getItem('user'));
+
+    //     // Check if user exists and retrieve Siswamail
+    //     if (user && user.siswamail) {
+    //         // Append Siswamail to formDataObj
+    //         formDataObj.append('siswamail', user.siswamail);
+    //     } else {
+    //         // Handle the case where user or siswamail is not available
+    //         console.error('User not found in localStorage or Siswamail is missing');
+    //         return;
+    //     }
+
+    //     // Save nationality in localStorage
+    //     localStorage.setItem('nationality', formData.nationality);
+
+    //     fetch('http://127.0.0.1:8000/api/student/register', {
+    //         method: 'POST',
+    //         headers: {
+    //             'Authorization': `Bearer ${localStorage.getItem('token')}`,
+    //         },
+    //         body: formDataObj
+    //     })
+    //         .then(response => {
+    //             // Check if the response is JSON
+    //             if (response.headers.get('content-type')?.includes('application/json')) {
+    //                 return response.json();
+    //             } else {
+    //                 throw new Error('Non-JSON response received');
+    //             }
+    //         })
+    //         .then(data => {
+    //             console.log('Registration successful:', data);
+    //             // Redirect to study plan registration
+    //             navigate('/student/register-study-plan');
+    //         })
+    //         .catch(error => {
+    //             console.error('Error during registration:', error);
+    //         });
+    // };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Log the current form data state
-        console.log('Current formData:', formData);
-
-        // Create a FormData object to handle file uploads
-        const formDataObj = new FormData();
-        Object.keys(formData).forEach(key => {
-            formDataObj.append(key, formData[key]);
-        });
-
-        // Log the FormData object contents
-        console.log('FormData before sending:', [...formDataObj]);
-
-        // Get the user object from localStorage
-        const user = JSON.parse(localStorage.getItem('user'));
-
-        // Check if user exists and retrieve Siswamail
-        if (user && user.siswamail) {
-            // Append Siswamail to formDataObj
-            formDataObj.append('siswamail', user.siswamail);
-        } else {
-            // Handle the case where user or siswamail is not available
-            console.error('User not found in localStorage or Siswamail is missing');
-            return;
-        }
-
-        // Save nationality in localStorage
-        localStorage.setItem('nationality', formData.nationality);
-
-        fetch('http://127.0.0.1:8000/api/student/register', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
-            },
-            body: formDataObj
-        })
-            .then(response => {
-                // Check if the response is JSON
-                if (response.headers.get('content-type')?.includes('application/json')) {
-                    return response.json();
-                } else {
-                    throw new Error('Non-JSON response received');
-                }
-            })
-            .then(data => {
-                console.log('Registration successful:', data);
-                // Redirect to study plan registration
-                navigate('/student/register-study-plan');
-            })
-            .catch(error => {
-                console.error('Error during registration:', error);
+    
+        try {
+            // Log the current form data state
+            console.log('Current formData:', formData);
+    
+            // Create a FormData object to handle file uploads
+            const formDataObj = new FormData();
+            Object.keys(formData).forEach(key => {
+                formDataObj.append(key, formData[key]);
             });
+    
+            // Get the user object from localStorage
+            const user = JSON.parse(localStorage.getItem('user'));
+    
+            if (user && user.siswamail) {
+                // Append Siswamail to formDataObj
+                formDataObj.append('siswamail', user.siswamail);
+            } else {
+                console.error('User not found in localStorage or Siswamail is missing');
+                return;
+            }
+    
+            // Save nationality in localStorage
+            localStorage.setItem('nationality', formData.nationality);
+    
+            // Send registration request
+            const response = await fetch('http://127.0.0.1:8000/api/student/register', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                },
+                body: formDataObj
+            });
+    
+            // Check for a successful response
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+    
+            // Parse the JSON response
+            const data = await response.json();
+            console.log('Registration successful:', data);
+    
+            // Update user context or localStorage with the new data
+            const updatedUser = {
+                ...user,
+                profile_pic: data.profile_pic, // Update the profile picture
+            };
+            setUser(updatedUser);
+    
+            localStorage.setItem('user', JSON.stringify(updatedUser)); // Update localStorage            
+    
+            // Redirect to study plan registration
+            navigate('/student/register-study-plan');
+        } catch (error) {
+            console.error('Error during registration:', error);
+        }
     };
 
     return (
@@ -130,7 +195,7 @@ const Registration = () => {
                         />
                     </div>
                     <div className="form-group">
-                        <label htmlFor="intake">Intake<span style={{ color: 'red' }}> *</span></label>
+                        {/* <label htmlFor="intake">Intake<span style={{ color: 'red' }}> *</span></label>
                         <select
                             name="intake"
                             id="intake"
@@ -139,12 +204,34 @@ const Registration = () => {
                             required
                         >
                             <option value="">Select Intake</option>
-                            <option value="Sem 1, 2023/2024">Sem 1, 2021/2022</option>
-                            <option value="Sem 2, 2023/2024">Sem 2, 2021/2022</option>
-                            <option value="Sem 1, 2023/2024">Sem 1, 2022/2023</option>
-                            <option value="Sem 2, 2023/2024">Sem 2, 2022/2023</option>
+                            <option value="Sem 1, 2021/2022">Sem 1, 2021/2022</option>
+                            <option value="Sem 2, 2021/2022">Sem 2, 2021/2022</option>
+                            <option value="Sem 1, 2022/2023">Sem 1, 2022/2023</option>
+                            <option value="Sem 2, 2022/2023">Sem 2, 2022/2023</option>
                             <option value="Sem 1, 2023/2024">Sem 1, 2023/2024</option>
                             <option value="Sem 2, 2023/2024">Sem 2, 2023/2024</option>
+                        </select> */}
+
+                        <label>Intake<span style={{ color: 'red' }}> *</span></label>
+                        <select
+                            name="intake"
+                            id="intake"
+                            value={formData.intake}
+                            onChange={handleInputChange}
+                            required
+                        >
+                            {semesters &&
+                                Array.from(
+                                    new Set(
+                                        semesters.map(
+                                            semester => `Sem ${semester.semester}, ${semester.academic_year}`
+                                        )
+                                    )
+                                ).map(intake => (
+                                    <option key={intake} value={intake}>
+                                        {intake}
+                                    </option>
+                                ))}
                         </select>
                     </div>
                     <div className="form-group">

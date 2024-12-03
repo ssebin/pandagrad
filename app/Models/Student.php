@@ -33,13 +33,14 @@ class Student extends Authenticatable
         'password',
         'workshops_attended',
         'max_sem',
+        'role',
     ];
 
     protected $appends = ['supervisor_name'];
 
     public function studyPlan()
     {
-        return $this->hasOne(StudyPlan::class)->withDefault()->cascadeOnDelete();
+        return $this->hasOne(StudyPlan::class);
     }
 
     // Defining the relationship with Lecturer (Supervisor)

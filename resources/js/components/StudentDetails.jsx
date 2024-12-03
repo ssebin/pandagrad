@@ -146,10 +146,11 @@ function StudentDetails() {
 
     // Flatten the studentsData object (merge all semester arrays into one array)
     const allStudents = Object.values(studentsData).flat();
+    console.log(allStudents);
 
-    // Find the student by ID
-    const student = allStudents.find(s => s.id === parseInt(id));
+    const student = user.role === 'student' ? allStudents.find(s => s.id === parseInt(user.id)) : allStudents.find(s => s.id === parseInt(id));
 
+    console.log(student);
 
     if (!student) return <p>Student not found.</p>;
 

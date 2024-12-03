@@ -1,14 +1,41 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate for navigation
+import { useUser } from "./UserContext"; // Import the UserContext
+import { StudentContext } from './StudentContext';
+import axios from "./axiosConfig"; // Import axios instance
 import './RegistrationComplete.css';
 
 const RegistrationComplete = () => {
-    const navigate = useNavigate(); // Use useNavigate instead of useHistory
+    const navigate = useNavigate(); 
+    const { fetchStudentsData } = useContext(StudentContext);
+    const { setUser } = useUser();
 
-    // Set has_study_plan in local storage when component mounts
     useEffect(() => {
-        localStorage.setItem('has_study_plan', 'true'); // Set to true when registration is complete
-    }, []);
+        // Set has_study_plan in local storage
+        localStorage.setItem('has_study_plan', 'true');
+
+        // Fetch the updated user details
+        const fetchUserData = async () => {
+            try {
+                const token = localStorage.getItem('token'); // Get the token from localStorage
+                const headers = { Authorization: `Bearer ${token}` };
+
+                const response = await axios.get('/api/me', { headers }); // API endpoint to fetch user details
+                const updatedUser = response.data;
+
+                // Update the user context and localStorage
+                setUser(updatedUser);
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+
+                console.log('Updated user data fetched:', updatedUser);
+            } catch (error) {
+                console.error('Failed to fetch updated user data:', error);
+            }
+        };
+
+        fetchUserData(); 
+        fetchStudentsData();
+    }, [setUser]);
 
     return (
         <div className="registration-complete-container">

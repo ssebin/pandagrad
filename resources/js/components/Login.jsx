@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import './Login.css';
 import axios from './axiosConfig.js'; // Ensure this is correctly configured
 import { useNavigate } from 'react-router-dom';
+import { StudentContext } from './StudentContext';
 import { useUser } from './UserContext';
 
 function Login() {
@@ -11,6 +12,7 @@ function Login() {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
     const { login } = useUser();
+    const { fetchStudentsData } = useContext(StudentContext);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -63,6 +65,7 @@ function Login() {
                     } else {
                         console.error('Unknown user role:', returnedRole);
                     }
+                    fetchStudentsData();
                 } else {
                     console.error('Token or user data is missing in response data');
                 }

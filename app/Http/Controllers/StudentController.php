@@ -53,7 +53,7 @@ class StudentController extends Controller
 
         // Execute the query and get the results
         $students = $query->get();
-        
+
         // Log::info('Query Built:', ['query' => $query->toSql()]);
         // log::info('Students:', [$students]);
 
@@ -97,12 +97,25 @@ class StudentController extends Controller
         $user = $request->user(); // Get the authenticated user
         $student = Student::find($id);
 
+        log::info('User:', [$user]);
+        log::info('Student:', [$student]);
+
         if (!$student) {
             return response()->json(['message' => 'Student not found'], 404);
         }
 
         // Admins can access all student details
         if ($user->role === 'admin') {
+            return response()->json($student);
+        }
+
+        // Allow students to access only their own details
+        if ($user->role === 'student') {
+            log::info('Student ID:', [$student->id]);
+            log::info('User ID:', [$user->id]);
+            if ($user->id !== $student->id) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
             return response()->json($student);
         }
 

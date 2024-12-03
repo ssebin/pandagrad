@@ -11,8 +11,6 @@ export const StudentProvider = ({ children }) => {
     const [tasks, setTasks] = useState([]);
     const [semesters, setSemesters] = useState([]);
     const [nationalities, setNationalities] = useState({});
-    // const [currentTasks, setCurrentTasks] = useState({});
-    //const [studyPlans, setStudyPlans] = useState({});
 
     const fetchStudentsData = async () => {
         try {
@@ -28,70 +26,69 @@ export const StudentProvider = ({ children }) => {
             const currentSem = calculateCurrentSemester(semesters);
             setCurrentSemester(currentSem);
 
-            // Fetch students with details
-            const studentResponse = await axios.get('/api/students?includeDetails=true', { headers });
-            const students = studentResponse.data;
+            // Fetch the current user's role
+            const userResponse = await axios.get('/api/me', { headers });
+            const user = userResponse.data;
+            console.log('Logged-in User:', user);
 
-            // Fetch all study plans in one API call
-            // const studyPlansById = await fetchAndStoreStudyPlans(headers);
-            // setStudyPlans(studyPlansById);  
+            let students;
 
-            const nationalitiesById = students.reduce((acc, student) => {
-                acc[student.id] = student.nationality;
-                return acc;
-            }, {});
-            setNationalities(nationalitiesById);
+            if (user.role === 'student') {
+                // Fetch details for the logged-in student
+                //const studentResponse = await axios.get(`/api/students/${user.id}`, { headers });
+                students = [user];
 
-            // const currentTasksById = students.reduce((acc, student) => {
-            //     acc[student.id] = student.task;
-            //     return acc;
-            // }, {});
-            // setCurrentTasks(currentTasksById);
+            } else {
+                // Fetch students with details
+                const studentResponse = await axios.get('/api/students?includeDetails=true', { headers });
+                students = studentResponse.data;
+            }
 
-            // // Fetch and store all study plans
-            // const studyPlansById = await fetchAndStoreStudyPlans(students, headers);
+                const nationalitiesById = students.reduce((acc, student) => {
+                    acc[student.id] = student.nationality;
+                    return acc;
+                }, {});
+                setNationalities(nationalitiesById);
 
-            // setStudyPlans(studyPlansById); // Save all study plans to state or context
+                students.forEach(student => {
+                    student.currentSemester = calculateStudentSemester(student.intake, currentSem);
+                });
 
-            // Calculate current semester for each student
-            students.forEach(student => {
-                student.currentSemester = calculateStudentSemester(student.intake, currentSem);
-            });
+                // Group students by intake
+                const groupedStudents = students.reduce((acc, student) => {
+                    const intake = student.intake;
+                    if (!acc[intake]) {
+                        acc[intake] = [];
+                    }
+                    acc[intake].push(student);
+                    return acc;
+                }, {});
 
-            // Group students by intake
-            const groupedStudents = students.reduce((acc, student) => {
-                const intake = student.intake;
-                if (!acc[intake]) {
-                    acc[intake] = [];
-                }
-                acc[intake].push(student);
-                return acc;
-            }, {});
+                // Sort intakes in descending order (oldest to newest)
+                const sortedIntakes = Object.keys(groupedStudents).sort((a, b) => {
+                    const [aSem, aYearRange] = a.split(', ');
+                    const [bSem, bYearRange] = b.split(', ');
+                    const [aYearStart] = aYearRange.split('/').map(Number);
+                    const [bYearStart] = bYearRange.split('/').map(Number);
+                    const aSemNumber = parseInt(aSem.split(' ')[1]);
+                    const bSemNumber = parseInt(bSem.split(' ')[1]);
 
-            // Sort intakes in descending order (oldest to newest)
-            const sortedIntakes = Object.keys(groupedStudents).sort((a, b) => {
-                const [aSem, aYearRange] = a.split(', ');
-                const [bSem, bYearRange] = b.split(', ');
-                const [aYearStart] = aYearRange.split('/').map(Number);
-                const [bYearStart] = bYearRange.split('/').map(Number);
-                const aSemNumber = parseInt(aSem.split(' ')[1]);
-                const bSemNumber = parseInt(bSem.split(' ')[1]);
+                    if (aYearStart === bYearStart) {
+                        return bSemNumber - aSemNumber;
+                    }
+                    return bYearStart - aYearStart;
+                });
 
-                if (aYearStart === bYearStart) {
-                    return bSemNumber - aSemNumber;
-                }
-                return bYearStart - aYearStart;
-            });
+                const sortedGroupedStudents = {};
+                sortedIntakes.forEach(intake => {
+                    sortedGroupedStudents[intake] = groupedStudents[intake].sort((a, b) =>
+                        `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
+                    );
+                });
 
-            const sortedGroupedStudents = {};
-            sortedIntakes.forEach(intake => {
-                sortedGroupedStudents[intake] = groupedStudents[intake].sort((a, b) =>
-                    `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
-                );
-            });
-
-            setStudentsData(sortedGroupedStudents);
-            console.log('Students Data:', sortedGroupedStudents);
+                setStudentsData(sortedGroupedStudents);
+                console.log('Students Data:', sortedGroupedStudents);
+            
         } catch (error) {
             console.error('Failed to fetch students:', error);
         } finally {
@@ -194,7 +191,7 @@ export const StudentProvider = ({ children }) => {
     const fetchSemesters = async () => {
         const token = localStorage.getItem('token');
         const headers = { Authorization: `Bearer ${token}` };
-    
+
         try {
             const response = await axios.get('/api/semesters', { headers });
             setSemesters(response.data); // Save semesters to state

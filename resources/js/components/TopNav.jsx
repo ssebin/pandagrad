@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import "./TopNav.css";
+import { StudentContext } from './StudentContext';
 
 function TopNav({ userName, profilePic, updateProfilePicture }) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const dropdownRef = useRef(null);
+    const { fetchStudentsData } = useContext(StudentContext);
 
     // Determine the profile picture URL
     const userProfilePic =
@@ -49,10 +51,12 @@ function TopNav({ userName, profilePic, updateProfilePicture }) {
                     alert("Profile picture updated successfully!");
 
                     updateProfilePicture(data.profile_pic); // Update profile picture in the parent component      
+                    fetchStudentsData(); // Fetch the updated student data
                 } else {
                     const errorData = await response.json();
                     alert(errorData.message || "Failed to upload profile picture.");
                 }
+                setDropdownOpen(false);
             } catch (error) {
                 console.error("Error uploading profile picture:", error);
                 alert("Error: Please ensure you have chosen jpeg, jpg, png, webp, or gif files only.");

@@ -36,6 +36,7 @@ export function UserProvider({ children }) {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
         localStorage.removeItem('has_study_plan');
+        localStorage.removeItem('nationality');
     };
 
     // Prevent rendering children while loading
@@ -44,7 +45,7 @@ export function UserProvider({ children }) {
     }
 
     return (
-        <UserContext.Provider value={{ user, token, login, logout, loading }}>
+        <UserContext.Provider value={{ user, token, setUser, login, logout, loading }}>
             {children}
         </UserContext.Provider>
     );

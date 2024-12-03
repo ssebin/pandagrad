@@ -29,6 +29,10 @@ function MainLayout() {
         };
     }, []);
 
+    useEffect(() => {
+        setProfilePic(user?.profile_pic || "");
+    }, [user]);
+
     // Set the username based on the role
     const userName = user?.role === 'admin' ? user?.Name : `${user?.first_name}`;
 

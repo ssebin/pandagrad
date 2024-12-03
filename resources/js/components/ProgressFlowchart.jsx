@@ -426,9 +426,9 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
 
         // If no matching semester is found, return null
         if (!matchingSemester) {
-            console.error(
-                `No matching semester found for Semester ${semesterNumber}. Academic Year: ${academicYearStart}/${academicYearStart + 1}, Semester Type: ${semesterType}`
-            );
+            // console.error(
+            //     `No matching semester found for Semester ${semesterNumber}. Academic Year: ${academicYearStart}/${academicYearStart + 1}, Semester Type: ${semesterType}`
+            // );
             return null;
         }
 
@@ -529,7 +529,7 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
         // Get the last semester's end date for the task
         const semesterEndDate = lastSemesterEndDates[taskData.name];
         if (!semesterEndDate || isNaN(new Date(semesterEndDate))) {
-            console.warn(`Semester end date unavailable for task "${taskData.name}"; defaulting to onTrackPending.`);
+            //console.warn(`Semester end date unavailable for task "${taskData.name}"; defaulting to onTrackPending.`);
             return 'onTrackPending';
         }
     
