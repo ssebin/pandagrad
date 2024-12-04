@@ -21,6 +21,8 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
         semesters: [],
     });
     const { tasks, nationalities, supervisors, studentsData, currentSemester } = useContext(StudentContext);
+    const fileInputRef = useRef(null);
+    const dateInputRef = useRef(null);
 
     useEffect(() => {
         if (isOpen) {
@@ -42,7 +44,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
 
             // Filter tasks and group them based on nationality
             const studentNationality = nationalities[studentId] || 'Unknown'; // Default to 'Unknown'
-            console.log('Fetched student nationality:', studentNationality);
+            //console.log('Fetched student nationality:', studentNationality);
 
             // Filter tasks based on nationality
             const filteredTasks = tasks.filter(task => {
@@ -59,7 +61,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                 return acc;
             }, {});
 
-            console.log('Categorized tasks:', categorizedTasks);
+            //console.log('Categorized tasks:', categorizedTasks);
 
             setTasksOptions(categorizedTasks); // Set categorized tasks
         }
@@ -139,13 +141,32 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
         }
 
         setNumSemesters(0);
-        setFormData({ ...formData, semesters: [] });
+        setFormData(prev => ({
+            ...prev,
+            semesters_no: '',
+            semesters: [] // Clear the semester fields
+        }));
         setExtraFields({});
 
         // Reset other form-related states
         setSelectedTasks([]);
         setTempSelectedTasks([]);
+
+        setEvidence(null);
+        setLink('');
+        setDescription('');
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ''; 
+        }
+        if (dateInputRef.current) {
+            dateInputRef.current.value = '';
+        }
     }, [updateType]);
+
+    useEffect(() => {
+        //console.log('Evidence state updated:', evidence);
+    }, [evidence]);
 
     // const fetchSupervisors = async () => {
     //     try {
@@ -298,7 +319,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
         console.log('Updated tasks for semester:', index + 1, sortedTasks);
     };
 
-    const handleSave = async () => {
+    const handleSave = async (currentEvidence) => {
         if (!updateType) {
             alert("Please choose an update type.");
             return;
@@ -460,10 +481,16 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
         const formData2 = new FormData();
         formData2.append('update_type', updateType);
 
-        // Conditionally append 'evidence', 'link', and 'description'
-        if (evidence) {
-            formData2.append('evidence', evidence);
+        // console.log('Evidence before appending:', evidence);
+        // console.log('Current Evidence:', currentEvidence);
+
+        if (currentEvidence) {
+            //console.log('Appending evidence file:', currentEvidence);
+            formData2.append('evidence', currentEvidence);
+        } else {
+            //console.log('No evidence file selected.');
         }
+
         if (link) {
             formData2.append('link', link);
         }
@@ -489,9 +516,13 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
         // }
         // console.log("Semesters JSON:", JSON.stringify(extraFields.semesters, null, 2));
         const adminName = JSON.parse(localStorage.getItem('user')).Name;
-        console.log('Admin Name:', adminName);
         formData2.append('admin_name', adminName);
         formData2.append('currentSemester', student.currentSemester);
+
+        // for (let [key, value] of formData2.entries()) {
+        //     console.log(`${key}:`, value);
+        // }
+
         try {
             await axios.post(`/api/students/${studentId}/update-progress`, formData2, {
                 headers: {
@@ -508,7 +539,9 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
     };
 
     const handleFileChange = (e) => {
-        setEvidence(e.target.files[0]);
+        const selectedFile = e.target.files[0];
+        //console.log('Selected File:', selectedFile);
+        setEvidence(selectedFile);
     };
 
     const handleExtraFieldChange = (field, value) => {
@@ -789,6 +822,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                         <input
                             type="date"
                             className={styles.input}
+                            ref={dateInputRef}
                             onChange={(e) => handleExtraFieldChange('start_date', e.target.value)}
                         />
 
@@ -796,6 +830,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                         <input
                             type="date"
                             className={styles.input}
+                            ref={dateInputRef}
                             onChange={(e) => handleExtraFieldChange('end_date', e.target.value)}
                         />
                     </>
@@ -929,6 +964,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                     <input
                         className={styles.input}
                         type="date"
+                        ref={dateInputRef}
                         onChange={(e) => handleExtraFieldChange('completion_date', e.target.value)}
                     />
 
@@ -938,6 +974,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                         type="file"
                         accept="image/*, application/pdf"
                         onChange={handleFileChange}
+                        ref={fileInputRef}
                     />
 
                     <label className={styles.label}>Link (Optional)</label>
@@ -955,7 +992,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                     />
 
                     <div className={styles.buttons}>
-                        <button type="button" onClick={handleSave} className={styles.saveButton}>Save</button>
+                        <button type="button" onClick={() => handleSave(evidence)} className={styles.saveButton}>Save</button>
                         <button type="button" onClick={handleFormClose} className={styles.closeButton}>Cancel</button>
                     </div>
                 </form>

@@ -45,10 +45,10 @@ class Task extends Model
         // Get the most recent valid update
         $latestUpdate = $this->progressUpdates
             ->filter(function ($update) {
-                return $update->completion_date !== null && strtotime($update->completion_date) !== false;
+                return $update->updated_at !== null && strtotime($update->updated_at) !== false;
             })
             ->sortByDesc(function ($update) {
-                return strtotime($update->completion_date);
+                return strtotime($update->updated_at);
             })
             ->first();
 
@@ -57,7 +57,12 @@ class Task extends Model
         }
 
         $progressStatus = $latestUpdate->progress_status ?? null;
-        $completionDate = new DateTime($latestUpdate->completion_date);
+        $completionDate = $latestUpdate->completion_date
+            ? new DateTime($latestUpdate->completion_date)
+            : null;
+        // Log::info('Latest Update: ' . json_encode($latestUpdate)); // Log as JSON for better debugging
+        // Log::info('Completion Date: ' . ($completionDate ? $completionDate->format('Y-m-d H:i:s') : 'null'));
+        // Log::info('Semester End Date: ' . $semesterEnd->format('Y-m-d H:i:s'));
 
         // Special case: tasks with specific progress statuses
         if (in_array($progressStatus, ['Pending', 'In Progress'])) {

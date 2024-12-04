@@ -257,6 +257,10 @@
     font-weight: bold; /* Differentiate grade from course name */
 }
 
+.description {
+    white-space: pre-line;
+}
+
 /* Evidence and Links */
 /* .evidence,
 .link {

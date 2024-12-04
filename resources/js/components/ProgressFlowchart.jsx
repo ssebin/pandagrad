@@ -541,12 +541,17 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
     
         // Get the most recent update
         const latestUpdate = taskData.progress_updates
-            .map(update => ({ ...update, completion_date: new Date(update.completion_date) }))
-            .filter(update => !isNaN(update.completion_date)) // Keep only valid dates
-            .sort((a, b) => b.completion_date - a.completion_date)[0]; // Most recent update
+            .map(update => ({ ...update, updated_at: new Date(update.updated_at) }))
+            .filter(update => !isNaN(update.updated_at)) // Keep only valid dates
+            .sort((a, b) => b.updated_at - a.updated_at)[0]; // Most recent update
+
+        //console.log("Latest Update:", latestUpdate);
     
         const progressStatus = latestUpdate?.progress_status || null;
         const completionDate = latestUpdate?.completion_date || null;
+        // console.log("Completion Date:", completionDate);
+        // console.log("Semester End Date:", semesterEnd);
+        // console.log("Completion Date Object:", new Date(completionDate));
     
         // For special tasks, check progress status explicitly
         if (progressStatus === "Pending" || progressStatus === "In Progress") {
@@ -555,7 +560,13 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
     
         // For all tasks, check completion date
         if (completionDate) {
-            return completionDate <= semesterEnd ? 'onTrackCompleted' : 'delayedCompleted';
+            const completionDateObj = new Date(completionDate);
+            if (isNaN(completionDateObj)) {
+                console.log("Invalid completion date:", completionDate);
+                return currentDate <= semesterEnd ? 'onTrackPending' : 'delayedPending';
+            }
+        
+            return completionDateObj <= semesterEnd ? 'onTrackCompleted' : 'delayedCompleted';
         }
     
         // Default: pending
@@ -928,7 +939,7 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                                                     <div className={styles.residentialRequirement}>
                                                                         <p>College: {update.residential_college || "N/A"}</p>
                                                                         <p>
-                                                                            {/* From{" "} */}
+                                                                            Period:{" "}
                                                                             {update.start_date
                                                                                 ? new Date(update.start_date).toLocaleDateString("en-GB", {
                                                                                     year: "numeric",
@@ -979,7 +990,7 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                                                             target="_blank"
                                                                             rel="noopener noreferrer"
                                                                             style={{ color: '#0043CE', textDecoration: 'underline', fontSize: '12px', marginTop: '0px' }}>
-                                                                            Attached Link
+                                                                            {update.link}
                                                                         </a>
                                                                     </div>
                                                                 )}
