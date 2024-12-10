@@ -7,6 +7,8 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\LecturerController;
 use App\Http\Controllers\SemesterController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\ProgressUpdateController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AdminController;
 
 // Routes for authenticated users only
@@ -22,8 +24,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/students/{id}/study-plan', [StudentController::class, 'getStudyPlan']);
     //Route::get('/students/study-plans', [StudentController::class, 'getAllStudyPlans']);
     Route::put('/students/{id}/update-progress', [StudentController::class, 'updateProgress']);
-    Route::post('/students/{id}/update-progress', [StudentController::class, 'updateProgress']);
+    Route::post('/students/{studentId}/update-progress', [StudentController::class, 'updateProgress']);
     Route::get('/tasks', [TaskController::class, 'index']);
+    Route::get('/progress-updates', [ProgressUpdateController::class, 'index']);
+    Route::post('/progress-updates/{progressUpdateId}/approve', [StudentController::class, 'approveUpdate']);
+    Route::post('/progress-updates/{progressUpdateId}/reject', [StudentController::class, 'rejectUpdate']);
+    Route::post('/progress-updates/{progressUpdateId}/pending', [StudentController::class, 'pendingUpdate']);
+    //Route::post('/progress-updates/{id}/mark-as-read', [ProgressUpdateController::class, 'markAsRead']);
+    Route::post('/notifications/mark-as-read/{progressUpdateId}', [NotificationController::class, 'markNotificationAsRead']);
+    Route::post('/notifications/mark-as-unread/{progressUpdateId}', [NotificationController::class, 'markNotificationAsUnread']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
     // Route::get('/students/{studentId}/progress', [StudentController::class, 'getStudentProgress']);
     //Route::get('/students/{id}/nationality', [StudentController::class, 'getNationality']);
     //Route::get('/students/nationalities', [StudentController::class, 'getAllNationalities']);

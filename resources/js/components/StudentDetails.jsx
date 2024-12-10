@@ -37,7 +37,9 @@ function StudentDetails() {
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+    const [isViewFilesModalOpen, setIsViewFilesModalOpen] = useState(false);
     const [studyPlan, setStudyPlan] = useState(null);
+    const [files, setFiles] = useState([]);
     // const [studentProgress, seStudentProgress] = useState(null);
     const { studentsData, currentSemester, fetchStudentsData, semesters } = useContext(StudentContext);
     //const [studentCurrentTask, setStudentCurrentTask] = useState('Unknown');
@@ -57,9 +59,37 @@ function StudentDetails() {
         try {
             const response = await axios.get(`/api/students/${studentId}/study-plan`);
 
-            // Check if the response contains the study plan data
             if (response.data) {
-                setStudyPlan(response.data);
+                const studyPlan = response.data;
+                setStudyPlan(studyPlan);
+                console.log('Study plan:', studyPlan);
+
+                // Extract evidence files along with their original file names
+                const files = studyPlan.flatMap((semester, semesterIndex) => {
+                    //console.log(`Semester ${semesterIndex + 1}:`, semester);
+
+                    // Convert tasks object to an array
+                    const tasks = semester.tasks ? Object.values(semester.tasks) : [];
+                    //console.log(`Semester ${semesterIndex + 1} Tasks:`, tasks);
+
+                    return tasks.flatMap((task, taskIndex) => {
+                        //console.log(`Task ${taskIndex + 1} in Semester ${semesterIndex + 1}:`, task);
+
+                        // Ensure progress_updates is an array
+                        const progressUpdates = Array.isArray(task.progress_updates) ? task.progress_updates : [];
+                        //console.log(`Task ${taskIndex + 1} Progress Updates:`, progressUpdates);
+
+                        return progressUpdates
+                            .filter((update) => update && update.evidence) // Ensure evidence exists
+                            .map((update) => ({
+                                evidence: update.evidence, // File path
+                                originalFileName: update.original_file_name || update.evidence.split('/').pop(), // Fallback to file path
+                            }));
+                    });
+                });
+
+                //console.log('Extracted files:', files);
+                setFiles(files); // Set the extracted files
             } else {
                 console.log('Study plan not found for this student.');
             }
@@ -137,6 +167,9 @@ function StudentDetails() {
         setIsUpdateModalOpen(false);
     };
 
+    const handleViewFilesModalOpen = () => setIsViewFilesModalOpen(true);
+    const handleViewFilesModalClose = () => setIsViewFilesModalOpen(false);
+
     if (error) {
         return <div>{error}</div>;
     }
@@ -146,11 +179,11 @@ function StudentDetails() {
 
     // Flatten the studentsData object (merge all semester arrays into one array)
     const allStudents = Object.values(studentsData).flat();
-    console.log(allStudents);
+    //console.log(allStudents);
 
-    const student = user.role === 'student' ? allStudents.find(s => s.id === parseInt(user.id)) : allStudents.find(s => s.id === parseInt(id));
-
-    console.log(student);
+    const student = user.role === 'student'
+        ? allStudents.find(s => s.id === parseInt(user.id))
+        : allStudents.find(s => s.id === parseInt(id));
 
     if (!student) return <p>Student not found.</p>;
 
@@ -207,9 +240,42 @@ function StudentDetails() {
                             <FaPencilAlt className={styles.icon} /> Edit
                         </button>
                     )}
-                    <button className={styles.viewFilesButton}>
-                        <FaFileAlt /> View Submitted Files
-                    </button>
+                    <>
+                        <button className={styles.viewFilesButton} onClick={handleViewFilesModalOpen}>
+                            <FaFileAlt /> View Submitted Files
+                        </button>
+                        {isViewFilesModalOpen && (
+                            <>
+                                <div className={styles.modalOverlay} onClick={handleViewFilesModalClose}></div>
+                                <div className={styles.updateProgressPopup}>
+                                    <h2 style={{ marginBottom: "30px", textAlign: "center" }}>Submitted Files</h2>
+                                    <div className={styles.filesContainer}>
+                                        {files.length > 0 ? (
+                                            files.map((file, index) => (
+                                                <div key={index} className={styles.fileItem}>
+                                                    <a
+                                                        href={`/storage/${file.evidence}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{ color: "#0043CE", textDecoration: "underline" }}
+                                                    >
+                                                        {file.originalFileName}
+                                                    </a>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p style={{ textAlign: "center" }}>No files submitted.</p>
+                                        )}
+                                    </div>
+                                    <div className={styles.buttons}>
+                                        <button className={styles.closeButton} onClick={handleViewFilesModalClose}>
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </>
                     {user.role !== 'lecturer_supervisor' && user.role !== 'lecturer_coordinator' && user.role !== 'lecturer_both' && (
                         <button className={styles.updateInfoButton} onClick={handleUpdateModalOpen}>
                             <FaPlus /> {user.role === 'student' ? 'Request Update' : 'Update Progress'}
@@ -283,7 +349,7 @@ function StudentDetails() {
             </div>
 
             <div className={styles.flowchartContainer}>
-                <h2>Study Plan</h2>
+                <h2 className='studyplan'>Study Plan</h2>
                 {studyPlan && Object.keys(studyPlan).length > 0 ? (
                     <ProgressFlowchart
                         studyPlan={studyPlan}
@@ -311,6 +377,7 @@ function StudentDetails() {
                     fetchStudentsData();
                     fetchStudyPlan(id);
                 }}
+                user={user}
             />
         </div>
     );

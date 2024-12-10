@@ -76,13 +76,14 @@
 
 .textarea {
     margin-top: 10px;
-    width: calc(100% - 40px);
+    width: calc(100% - 42px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     resize: vertical; /* Allow vertical resizing */
     overflow-wrap: break-word; /* Ensure long text wraps */
-    height: 100px;
+    height: 80px;
     text-align: left;
     vertical-align: top;  /* Ensure the text starts at the top */
+    font-family: 'Roboto', sans-serif;
 }
 
 .buttons {

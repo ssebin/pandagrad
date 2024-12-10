@@ -4,7 +4,7 @@ import styles from './UpdateProgressModal.module.css';
 import { StudentContext } from './StudentContext';
 import { useParams } from 'react-router-dom';
 
-function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
+function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
     const { id } = useParams();
     const [updateType, setUpdateType] = useState('');
     const [evidence, setEvidence] = useState(null);
@@ -15,6 +15,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
     const [numSemesters, setNumSemesters] = useState(0);
     const [dropdownVisible, setDropdownVisible] = useState({});
     const [tempSelectedTasks, setTempSelectedTasks] = useState([]);
+    const [progressStatus, setProgressStatus] = useState(""); // For proposal and candidature defence
     const dropdownRefs = useRef({});
     const [formData, setFormData] = useState({
         semesters_no: "",
@@ -157,7 +158,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
         setDescription('');
 
         if (fileInputRef.current) {
-            fileInputRef.current.value = ''; 
+            fileInputRef.current.value = '';
         }
         if (dateInputRef.current) {
             dateInputRef.current.value = '';
@@ -204,8 +205,11 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
 
     const allStudents = Object.values(studentsData).flat();
 
-    // Find the student by ID
-    const student = allStudents.find(s => s.id === parseInt(id));
+    const student = user.role === 'student'
+        ? allStudents.find(s => s.id === parseInt(user.id))
+        : allStudents.find(s => s.id === parseInt(id));
+
+    console.log("Student:", student);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -380,7 +384,37 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                 }
                 break;
             case 'proposal_defence':
-            case 'candidature_defence':
+            case 'candidature_defence': {
+                // Common fields for both proposal_defence and candidature_defence
+                if (!extraFields.progress_status) {
+                    alert("Please select a progress status.");
+                    return;
+                }
+                if (extraFields.progress_status === "In Progress") {
+                    if (!extraFields.panels) {
+                        alert("Please provide the panel members.");
+                        return;
+                    }
+                    if (!extraFields.chairperson) {
+                        alert("Please provide the chairperson.");
+                        return;
+                    }
+                    const defenseLabel = updateType === 'proposal_defence' ? "pd" : "cd";
+                    if (!extraFields[`${defenseLabel}_date`]) {
+                        alert(`Please provide the ${defenseLabel.toUpperCase()} Date.`);
+                        return;
+                    }
+                    if (!extraFields[`${defenseLabel}_time`]) {
+                        alert(`Please provide the ${defenseLabel.toUpperCase()} Time.`);
+                        return;
+                    }
+                    if (!extraFields[`${defenseLabel}_venue`]) {
+                        alert(`Please provide the ${defenseLabel.toUpperCase()} Venue.`);
+                        return;
+                    }
+                }
+                break;
+            }
             case 'committee_meeting':
             case 'jkit_correction_approval':
             case 'senate_approval':
@@ -468,7 +502,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
         }
 
         if (!extraFields.completion_date) {
-            alert("Please select the Date of Change.");
+            alert("Please select the Date of Update.");
             return;
         }
 
@@ -518,6 +552,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
         const adminName = JSON.parse(localStorage.getItem('user')).Name;
         formData2.append('admin_name', adminName);
         formData2.append('currentSemester', student.currentSemester);
+        console.log("Student ID:", studentId);
 
         // for (let [key, value] of formData2.entries()) {
         //     console.log(`${key}:`, value);
@@ -529,7 +564,9 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                     'Content-Type': 'multipart/form-data',
                 },
             });
-            onUpdate(studentId);
+            if (user.role !== 'student') {
+                onUpdate(studentId);
+            }
             onClose();
         } catch (error) {
             console.error('Error updating progress:', error);
@@ -858,7 +895,69 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
                     </>
                 );
             case 'proposal_defence':
-            case 'candidature_defence':
+            case 'candidature_defence': {
+                const isProposalDefence = updateType === 'proposal_defence';
+                const defenseLabel = isProposalDefence ? "PD" : "CD";
+
+                return (
+                    <>
+                        <label className={styles.label}>Progress Status<span style={{ color: 'red' }}> *</span></label>
+                        <select
+                            className={styles.input}
+                            value={progressStatus}
+                            onChange={(e) => {
+                                setProgressStatus(e.target.value); // Update progress status state
+                                handleExtraFieldChange('progress_status', e.target.value); // Store value in extra fields
+                            }}
+                        >
+                            <option value="">Select Progress Status</option>
+                            <option value="Completed">Completed</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+
+                        {/* Render additional fields if "In Progress" is selected */}
+                        {progressStatus === "In Progress" && (
+                            <>
+                                <label className={styles.label}>Panels<span style={{ color: 'red' }}> *</span></label>
+                                <textarea
+                                    className={styles.textarea}
+                                    placeholder="Enter panel members"
+                                    onChange={(e) => handleExtraFieldChange('panels', e.target.value)}
+                                />
+
+                                <label className={styles.label}>Chairperson<span style={{ color: 'red' }}> *</span></label>
+                                <textarea
+                                    className={styles.textarea}
+                                    placeholder="Enter chairperson"
+                                    onChange={(e) => handleExtraFieldChange('chairperson', e.target.value)}
+                                />
+
+                                <label className={styles.label}>{defenseLabel} Date<span style={{ color: 'red' }}> *</span></label>
+                                <input
+                                    type="date"
+                                    className={styles.input}
+                                    onChange={(e) => handleExtraFieldChange(`${defenseLabel.toLowerCase()}_date`, e.target.value)}
+                                />
+
+                                <label className={styles.label}>{defenseLabel} Time<span style={{ color: 'red' }}> *</span></label>
+                                <input
+                                    type="time"
+                                    className={styles.input}
+                                    onChange={(e) => handleExtraFieldChange(`${defenseLabel.toLowerCase()}_time`, e.target.value)}
+                                />
+
+                                <label className={styles.label}>{defenseLabel} Venue<span style={{ color: 'red' }}> *</span></label>
+                                <textarea
+                                    className={styles.textarea}
+                                    placeholder="Enter venue"
+                                    onChange={(e) => handleExtraFieldChange(`${defenseLabel.toLowerCase()}_venue`, e.target.value)}
+                                />
+                            </>
+                        )}
+                    </>
+                );
+            }
             case 'committee_meeting':
             case 'jkit_correction_approval':
             case 'senate_approval':
@@ -960,7 +1059,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate }) {
 
                     {renderExtraFields()}
 
-                    <label className={styles.label}>Date of Completion / Change<span style={{ color: 'red' }}> *</span></label>
+                    <label className={styles.label}>Date of Update<span style={{ color: 'red' }}> *</span></label>
                     <input
                         className={styles.input}
                         type="date"

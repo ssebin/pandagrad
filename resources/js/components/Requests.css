@@ -4,3 +4,130 @@
     flex-direction: column;
     height: 100vh;
 }
+
+.requests-container {
+    padding: 20px;
+}
+
+.filter-button:hover {
+    background-color: #0F1E42;
+}
+
+.requests-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+
+.requests-table th, .requests-table td {
+    border-bottom: 1px solid #E2E8F0; 
+    padding: 20px 10px;
+    text-align: center;
+}
+
+/* Customize column widths */
+.requests-table th:nth-child(3), .requests-table td:nth-child(3) {
+    width: 200px; /* Wider column for student name */
+}
+
+.requests-table th:nth-child(4), .requests-table td:nth-child(4) {
+    width: 200px; /* Wider column for update name */
+}
+
+.requests-table th:nth-child(5), .requests-table td:nth-child(5) {
+    width: 150px; /* Limit width for the Evidence column */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.requests-table th:nth-child(6), .requests-table td:nth-child(6) {
+    width: 150px; /* Limit width for the Link column */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.requests-table th:nth-child(7), .requests-table td:nth-child(7) {
+    width: 120px; 
+}
+
+.requests-table tbody tr {
+    cursor: pointer;
+}
+
+/* Hover effect for table rows */
+.requests-table tbody tr:hover {
+    background-color: #f9f9f9;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.pagination button {
+    background-color: #f0f0f0;
+    border: none;
+    margin: 0 5px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.pagination button.active {
+    background-color: #192e59;
+    color: white;
+    font-weight: bold;
+}
+
+.pagination button:disabled {
+    background-color: #e2e8f0;
+    cursor: not-allowed;
+}
+
+.pagination button:disabled:hover {
+    background-color: #e2e8f0;
+}
+
+.pagination .ellipsis {
+    background: none;
+    border: none;
+    cursor: default;
+    font-size: 14px;
+    margin: 0 5px;
+    padding: 5px 10px;
+    color: #999;
+}
+
+.status-badge {
+    border-radius: 4px;
+    display: inline-block;
+    font-size: 0.8em; 
+    border: 1px solid; 
+}
+
+.status-pending {
+    padding: 3px 18px; 
+    background-color: #FFBF0850;
+    border-color: #FFBF08;
+    color: #B58200;
+}
+
+.status-approved {
+    padding: 3px 14px; 
+    background-color: #16C09850;
+    border-color: #00B087; 
+    color: #008767; 
+}
+
+.status-rejected {
+    padding: 3px 16px; 
+    background-color: #FFC5C5;
+    border-color: #DF0404; 
+    color: #DF0404; 
+}

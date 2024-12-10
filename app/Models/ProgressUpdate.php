@@ -43,6 +43,17 @@ class ProgressUpdate extends Model
         'start_date',
         'end_date',
         'admin_name',
+        'original_file_name',
+        'approved',
+        'reason',
+        'panels',
+        'chairperson',
+        'pd_date',
+        'pd_time',
+        'pd_venue',
+        'cd_date',
+        'cd_time',
+        'cd_venue',
     ];
 
     public function task()

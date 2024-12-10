@@ -1,142 +1,3 @@
-/* .flowchartContainer {
-    display: flex;
-    gap: 40px;
-    overflow-x: auto;
-    padding: 0px;
-    width: 100%;
-
-    border: 1px solid #ccc; /* Optional: Add a border for visual clarity 
-    overflow: hidden; /* Prevent overflow if necessary 
-    margin: 0 auto; /* Center the flowchart 
-}
-
-.semesterChart {
-    background-color: rgba(217, 217, 217, 0.125); /* Grey with 20% opacity 
-    padding: 20px;
-    flex: none; /* Prevents shrinking 
-    min-width: 300px; /* Adjust the width as needed 
-    display: flex;
-    justify-content: left;
-    padding-top: 60px;
-    border-radius: 50px;
-}
-
-.flowchart {
-    width: 100%;
-    height: auto;
-}
-
-.semester {
-    flex: none;
-    width: auto;
-    margin-right: 20px;
-}
-
-.semesterCard {
-    background-color: #D9D9D920;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    flex-shrink: 0; /* Prevents cards from shrinking 
-    width: 300px; /* Width of each semester card 
-    min-height: 400px; /* Ensures a minimum height for each card 
-    display: flex;
-    flex-direction: column;
-    justify-content: left;
-    align-items: center;
-    position: relative;
-}
-
-.date {
-    font-size: 0.9em;
-    color: #757575;
-    margin-top: 5px;
-}
-
-.semesterTitle {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #192E59;
-    margin-bottom: 20px;
-}
-
-.taskContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.taskItem {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-    gap: 20px;
-    position: relative;
-}
-
-.dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: #0043CE;
-}
-
-.taskItem.completed .dot {
-    color: #4CAF50;
-}
-
-.taskItem.pending .dot {
-    color: #FFC107;
-}
-
-.taskItem.delayed .dot {
-    color: #CE6F00;
-}
-
-.taskItem .dot.completed {
-    background-color: #4CAF50;
-}
-
-.taskItem .dot.pending {
-    background-color: #FFC107;
-}
-
-.taskItem .dot.delayed {
-    background-color: #CE6F00;
-}
-
-.line {
-    width: 3px;
-    height: calc(60% - 20px); /* Adjusted to connect dots within the box 
-    background-color: #0043CE;
-    position: absolute;
-    left: 75px;
-    top: 86px;
-}
-
-.legend {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
-    background-color: white;
-    border-radius: 5px;
-    padding: 10px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    display: flex;
-    flex-direction: column;
-}
-
-.legend .legendItem {
-    display: flex;
-    align-items: center;
-    margin-bottom: 5px;
-}
-
-.legend .dot {
-    margin-right: 5px;
-} */
-
-/* Define the container for the flowchart */
 .flowchartWrapper {
     display: flex;
     flex-direction: column; /* Stacks semesters and legend vertically */
@@ -158,14 +19,16 @@
 .semesterCard {
     background-color: #D9D9D920;
     border-radius: 50px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     padding: 20px 50px;
-    width: 300px;
+    width: 320px;
     height: fit-content;
     display: flex;
     flex-direction: column;
     align-items: flex-start; /* Left align for the items */
     position: relative;
+    word-wrap: break-word; /* Allow text wrapping */
+    overflow-wrap: break-word;
 }
 
 .semesterTitle {
@@ -183,6 +46,9 @@
     position: relative;
     padding-left: 40px; /* Adjust to align with dots */
     color: #0f3d9a;
+    width: 100%; /* Ensure it doesn't limit content width */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .dot {
@@ -215,6 +81,9 @@
 .updateContainer {
     margin-top: 10px; /* Add space between updates */
     line-height: 1.5; /* Improve line height for readability */
+    width: 100%; /* Allow full container width */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 /* General Task Details */
@@ -236,7 +105,8 @@
 .cgpa,
 .courseGrade,
 .supervisorDetails,
-.residentialRequirement {
+.residentialRequirement,
+.defenceDetails {
     background-color: #f9f9f9; /* Consistent background */
     margin-bottom: 5px; /* Spacing between sections */
     font-size: 12px; /* Unified font size */
@@ -259,6 +129,18 @@
 
 .description {
     white-space: pre-line;
+}
+
+.link,
+.evidence {
+    word-wrap: break-all;
+    overflow-wrap: break-all;
+    overflow: hidden;
+    color: '#0043CE';
+    text-decoration: 'underline';
+    margin-bottom: 0px;
+    font-size: 12px; 
+    white-space: normal;
 }
 
 /* Evidence and Links */
@@ -286,11 +168,28 @@
     /* padding: 4px 10px; */
     /*border-left: 3px solid #0043CE80; /* Green line for residential requirement */
     margin-bottom: 5px;
+    word-wrap: break-word; /* Ensures long words or URLs wrap to the next line */
+    overflow-wrap: break-word; /* Alternative for broader browser support */
+    word-break: break-all;
+    overflow: hidden; 
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-right: 20px;
 }
 
 .taskGroup p {
     margin: 5px 0;
     font-size: 12px;
+}
+
+.taskGroup a {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%; /* Ensures the link respects the container's width */
+    display: inline-block; /* Ensures wrapping works properly */
+    text-overflow: ellipsis; /* Optional: if you want to truncate long links */
+    white-space: normal;
 }
 
 .date {
@@ -300,7 +199,7 @@
 
 .admin, .recordDate {
     font-size: 12px;
-    margin-top: 5px;
+    margin-top: 0px;
     margin-bottom: 5px;
     color: #333;
 }
@@ -323,20 +222,21 @@
 
 /* Legend styling */
 .legend {
-    margin-top: 50px; /* Spacing from the last semester card */
-    align-self: flex-end; /* Aligns to the left of the flowchart container */
+    margin-bottom: 20px; 
+    margin-top: 20px;
+    align-self: flex-start;
     background-color: #D9D9D920;
     border-radius: 50px;
-    padding: 40px;
+    padding: 20px 40px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    width: auto; /* Adjust width to accommodate text */
-    text-align: center; /* Center align text */
+    width: auto;
+    text-align: center; 
     margin-right: 20px;
 }
 
 .legendTitle {
-    font-size: 1.2em;
-    margin-bottom: 30px;
+    font-size: 1em;
+    margin-bottom: 20px;
     font-weight: bold;
 }
 
@@ -345,7 +245,8 @@
     align-items: center;
     justify-content: flex-start; /* Center-align items */
     margin-bottom: 10px;
-    line-height: 30px; /* Add spacing between dot and text */
+    line-height: 20px; /* Add spacing between dot and text */
+    font-size: 0.8em;
 }
 
 .legendDot {

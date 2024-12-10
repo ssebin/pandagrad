@@ -3,10 +3,12 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import './SideNav.css';
 import { FaUsers, FaChartLine, FaEnvelope, FaCog, FaSignOutAlt, FaBook } from 'react-icons/fa';
 import { useUser } from './UserContext';
+import { useNotifications } from "./NotificationContext";
 
 function SideNav() {
     const { user, logout, loading } = useUser();
     const navigate = useNavigate();
+    const { unreadCount } = useNotifications();
 
     const handleLogout = () => {
         logout();
@@ -46,7 +48,7 @@ function SideNav() {
                         </NavLink>
                         <NavLink to="/admin/requests" className="menu-item">
                             <FaEnvelope className="menu-icon" />
-                            <span>Requests</span>
+                            <span>Requests {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}</span>
                         </NavLink>
                         <NavLink to="/admin/admin-settings" className="menu-item">
                             <FaCog className="menu-icon" />
@@ -64,7 +66,7 @@ function SideNav() {
                         </NavLink>
                         <NavLink to="/lecturer/supervisor/requests" className="menu-item">
                             <FaEnvelope className="menu-icon" />
-                            <span>Requests</span>
+                            <span>Requests {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}</span>
                         </NavLink>
                     </>
                 )}
@@ -96,7 +98,7 @@ function SideNav() {
                         </NavLink>
                         <NavLink to="/lecturer/both/requests" className="menu-item">
                             <FaEnvelope className="menu-icon" />
-                            <span>Requests</span>
+                            <span>Requests {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}</span>
                         </NavLink>
                     </>
                 )}
@@ -110,7 +112,7 @@ function SideNav() {
                         </NavLink>
                         <NavLink to="/student/requests" className="menu-item">
                             <FaEnvelope className="menu-icon" />
-                            <span>Requests</span>
+                            <span>Requests {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}</span>
                         </NavLink>
                     </>
                 )}

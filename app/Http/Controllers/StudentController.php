@@ -9,6 +9,9 @@ use App\Models\Admin;
 use App\Models\StudyPlan;
 use App\Models\Task;
 use App\Models\Semester;
+use App\Models\ProgressUpdate;
+use App\Models\Notification;
+use App\Events\RequestNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -380,7 +383,8 @@ class StudentController extends Controller
                         ->orderBy('spt.task_id', 'asc'); // Order by the task_id from the pivot table
                 },
                 'tasks.progressUpdates' => function ($query) use ($id) {
-                    $query->where('student_id', $id); // Filter updates by student ID
+                    $query->where('student_id', $id) // Filter updates by student ID
+                        ->where('approved', 1); // Only include approved updates
                 },
                 'tasks.progressUpdates.admin'
             ])
@@ -410,6 +414,7 @@ class StudentController extends Controller
                                     'update_type' => $update->update_type,
                                     'status' => $update->status,
                                     'evidence' => $update->evidence,
+                                    'original_file_name' => $update->original_file_name,
                                     'link' => $update->link,
                                     'description' => $update->description,
                                     'completion_date' => $update->completion_date,
@@ -437,6 +442,15 @@ class StudentController extends Controller
                                     'start_date' => $update->start_date,
                                     'end_date' => $update->end_date,
                                     'admin_name' => $update->admin_name,
+                                    'reason' => $update->reason,
+                                    'panels' => $update->panels,
+                                    'chairperson' => $update->chairperson,
+                                    'pd_date' => $update->pd_date,
+                                    'pd_time' => $update->pd_time,
+                                    'pd_venue' => $update->pd_venue,
+                                    'cd_date' => $update->cd_date,
+                                    'cd_time' => $update->cd_time,
+                                    'cd_venue' => $update->cd_venue,
                                 ];
                             })
                         ];
@@ -1167,7 +1181,515 @@ class StudentController extends Controller
     //     }
     // }
 
+    public function broadcastRequestUpdate($progressUpdate, $message = null)
+    {
+        $student = Student::find($progressUpdate->student_id);
+        $lecturer = Lecturer::where('id', $student->supervisor_id)->first();
+
+        $currentUser = Auth::user();
+        $currentUserId = $currentUser->role === 'admin' ? "shared" : $currentUser->id;
+        $currentUserRole = $currentUser->role;
+
+        $recipients = [
+            [
+                'role' => 'student',
+                'id' => $student->id,
+            ],
+            [
+                'role' => 'admin', // Shared identifier for all admins
+                'id' => 'shared',  // Use 'shared' or similar identifier
+            ],
+        ];
+
+        // Normalize roles
+        $roleMapping = [
+            'lecturer_both' => 'both',
+            'lecturer_supervisor' => 'supervisor',
+        ];
+
+        if ($lecturer) {
+            $normalizedRole = $roleMapping[$lecturer->role] ?? $lecturer->role; // Normalize lecturer role
+            if (in_array($normalizedRole, ['supervisor', 'both'])) {
+                $recipients[] = [
+                    'role' => $normalizedRole,
+                    'id' => $lecturer->id,
+                ];
+            }
+        }
+
+        logger('Broadcasting request update:', [
+            'progressUpdateId' => $progressUpdate->id,
+            'studentId' => $student->id,
+            'recipients' => $recipients,
+        ]);
+
+        foreach ($recipients as $recipient) {
+            $isCreatedByUser = ($recipient['id'] == $currentUserId && $recipient['role'] === $currentUserRole);
+
+            $notificationData = [
+                'progress_update_id' => $progressUpdate->id,
+                'user_id' => $progressUpdate->student_id,
+                'recipient_id' => $recipient['id'],
+                'role' => $recipient['role'],
+                'message' => $message ?? 'Request updated',
+                'status' => $progressUpdate->status ?? 'Pending',
+                'reason' => $progressUpdate->reason ?? null,
+                'read_at' => $isCreatedByUser ? now() : null,
+            ];
+
+            Notification::create($notificationData);
+
+            $eventData = [
+                'id' => $progressUpdate->id,
+                'status' => $progressUpdate->status ?? 'Pending',
+                'reason' => $progressUpdate->reason ?? '',
+                'progress_update_id' => $progressUpdate->id,
+                'user_id' => $progressUpdate->student_id,
+                'recipient_id' => $recipient['id'],
+                'role' => $recipient['role'],
+                'message' => $message ?? 'Request updated',
+            ];
+
+            event(new RequestNotification($eventData));
+        }
+    }
+
     public function updateProgress(Request $request, $studentId)
+    {
+        //Log::info('Request Data:', $request->all());
+        // Validate the incoming request, including new fields
+        $validatedData = $request->validate([
+            'update_type' => 'required|string',
+            'evidence' => 'nullable|file|mimes:jpeg,png,pdf,docx',
+            'link' => 'nullable|string',
+            'description' => 'nullable|string',
+            'status' => 'nullable|string',
+            'completion_date' => 'nullable|date',
+            'cgpa' => 'nullable|numeric|min:0|max:4.00',
+            'grade' => 'nullable|string|max:10',
+            'research_topic' => 'nullable|string',
+            'workshop_name' => 'nullable|string',
+            'num_courses' => 'nullable|integer|min:1|max:5',
+            'course_name_1' => 'nullable|string',
+            'course_name_2' => 'nullable|string',
+            'course_name_3' => 'nullable|string',
+            'course_name_4' => 'nullable|string',
+            'course_name_5' => 'nullable|string',
+            'grade_1' => 'nullable|string|max:10',
+            'grade_2' => 'nullable|string|max:10',
+            'grade_3' => 'nullable|string|max:10',
+            'grade_4' => 'nullable|string|max:10',
+            'grade_5' => 'nullable|string|max:10',
+            'supervisor_id' => 'nullable|exists:lecturers,id',
+            'progress_status' => 'nullable|string',
+            'num_semesters' => 'nullable|integer',
+            'semesters' => 'required_if:update_type,change_study_plan|nullable|string',
+            'max_sem' => 'required_if:update_type,extension_candidature_period|string',
+            'residential_college' => 'nullable|string',
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date',
+            'panels' => 'nullable|string',
+            'chairperson' => 'nullable|string',
+            'pd_date' => 'nullable|date',
+            'pd_time' => 'nullable|string',
+            'pd_venue' => 'nullable|string',
+            'cd_date' => 'nullable|date',
+            'cd_time' => 'nullable|string',
+            'cd_venue' => 'nullable|string',
+        ]);
+
+        // Determine the user's role
+        $user = $request->user();
+        $isAdmin = $user->role === 'admin';
+        $isStudent = $user->role === 'student';
+        log::info('User Role:', [$user->role]);
+
+        $studentID = $isStudent ? $user->id : $studentId;
+
+        $approvalStatus = $isAdmin ? 1 : null;
+        log::info('Approval Status:', [$approvalStatus]);
+        log::info('Student ID from Route:', [$studentID]);
+
+        $adminName = $request->input('admin_name', 'Admin');
+
+        if ($request->hasFile('evidence')) {
+            $file = $request->file('evidence'); // Get the file
+            $evidencePath = $file->store('evidence', 'public'); // Save the file to storage
+
+            // Capture the original file name
+            $originalFileName = $file->getClientOriginalName();
+
+            // Add both the file path and original name to the validated data
+            $validatedData['evidence'] = $evidencePath;
+            $validatedData['original_file_name'] = $originalFileName;
+        }
+
+        // Define the mapping of update types to task IDs
+        $taskMap = [
+            'bahasa_melayu_course' => 2,
+            'core_courses' => 3,
+            'elective_courses' => 4,
+            'research_methodology_course' => 5,
+            'proposal_defence' => 6,
+            'candidature_defence' => 7,
+            'dissertation_chapters_1_2_3' => 8,
+            'dissertation_all_chapters' => 9,
+            'dissertation_submission_examination' => 10,
+            'dissertation_submission_correction' => 11,
+            'committee_meeting' => 12,
+            'jkit_correction_approval' => 13,
+            'senate_approval' => 14,
+            'appointment_supervisor_form' => 15,
+            'residential_requirement' => 16,
+            'update_status' => null, // No task ID
+            'workshops_attended' => null, // No task ID
+            'change_study_plan' => null, // No task ID
+            'extension_candidature_period' => null, // No task ID
+        ];
+
+        // Determine task ID based on update type
+        $taskId = $taskMap[$validatedData['update_type']] ?? null;
+
+        // Insert progress update into the progress_updates table with the new fields
+        $progressUpdate = ProgressUpdate::create([
+            'student_id' => $studentID,
+            'update_type' => $validatedData['update_type'],
+            'task_id' => $taskId, // Include the task ID
+            'status' => $validatedData['status'] ?? null,
+            'evidence' => $validatedData['evidence'] ?? null,
+            'link' => $validatedData['link'] ?? null,
+            'description' => $validatedData['description'] ?? null,
+            'completion_date' => $validatedData['completion_date'] ?? null,
+            'cgpa' => $validatedData['cgpa'] ?? null,
+            'grade' => $validatedData['grade'] ?? null,
+            'research_topic' => $validatedData['research_topic'] ?? null,
+            'workshop_name' => $validatedData['workshop_name'] ?? null,
+            'num_courses' => $validatedData['num_courses'] ?? null,
+            'course_name_1' => $validatedData['course_name_1'] ?? null,
+            'course_name_2' => $validatedData['course_name_2'] ?? null,
+            'course_name_3' => $validatedData['course_name_3'] ?? null,
+            'course_name_4' => $validatedData['course_name_4'] ?? null,
+            'course_name_5' => $validatedData['course_name_5'] ?? null,
+            'grade_1' => $validatedData['grade_1'] ?? null,
+            'grade_2' => $validatedData['grade_2'] ?? null,
+            'grade_3' => $validatedData['grade_3'] ?? null,
+            'grade_4' => $validatedData['grade_4'] ?? null,
+            'grade_5' => $validatedData['grade_5'] ?? null,
+            'supervisor_name' => $supervisorName ?? null,
+            'progress_status' => $validatedData['progress_status'] ?? null,
+            'updated_study_plan' => $validatedData['semesters'] ?? null,
+            'max_sem' => $validatedData['max_sem'] ?? null,
+            'residential_college' => $validatedData['residential_college'] ?? null,
+            'start_date' => $validatedData['start_date'] ?? null,
+            'end_date' => $validatedData['end_date'] ?? null,
+            'admin_name' => $adminName,
+            'original_file_name' => $validatedData['original_file_name'] ?? null,
+            'approved' => $approvalStatus ?? null,
+            'panels' => $validatedData['panels'] ?? null,
+            'chairperson' => $validatedData['chairperson'] ?? null,
+            'pd_date' => $validatedData['pd_date'] ?? null,
+            'pd_time' => $validatedData['pd_time'] ?? null,
+            'pd_venue' => $validatedData['pd_venue'] ?? null,
+            'cd_date' => $validatedData['cd_date'] ?? null,
+            'cd_time' => $validatedData['cd_time'] ?? null,
+            'cd_venue' => $validatedData['cd_venue'] ?? null,
+        ]);
+
+        // // Always recalculate the current task
+        // $this->updateCurrentTask($studentId);
+        // $currentSemester = $request->input('currentSemester');
+        // // Recalculate and update progress percentage
+        // $this->calculateAndUpdateProgress($studentId, $currentSemester);
+
+        // // Return success response
+        // return response()->json(['message' => 'Progress updated successfully']);
+
+        $currentSemester = $request->input('currentSemester');
+
+        // Admin-specific actions (only update related models if admin is updating)
+        if ($isAdmin) {
+            $student = Student::find($progressUpdate->student_id);
+            // Construct the message
+            $message = "{$adminName} updated {$student->first_name} {$student->last_name}'s progress";
+            $this->broadcastRequestUpdate((object) $progressUpdate, $message);
+
+            $this->processAdminUpdate($validatedData, $studentID, $currentSemester);
+
+            return response()->json(['message' => 'Progress update data created successfully']);
+        }
+
+        // If it's a student request, return a pending message
+        if ($isStudent) {
+            $studentName = "{$user->first_name} {$user->last_name}";
+            $this->broadcastRequestUpdate($progressUpdate, "New request submitted by {$studentName}");
+            return response()->json(['message' => 'Progress update request submitted successfully and is pending approval.']);
+        }
+
+        // Default fallback (should not be reached)
+        return response()->json(['message' => 'Invalid request'], 400);
+    }
+
+    private function processAdminUpdate(array $validatedData, $studentId, $currentSemester)
+    {
+        $student = Student::find($studentId);
+        if (!$student) {
+            throw new \Exception('Student not found.');
+        }
+
+        if ($validatedData['update_type'] === 'change_study_plan') {
+            // Validate that the study plan has the correct structure
+            if (!isset($validatedData['semesters']) || empty($validatedData['semesters'])) {
+                return response()->json(['message' => 'Semesters data is required for changing the study plan.'], 400);
+            }
+
+            $updatedStudyPlan = json_decode($validatedData['semesters'], true);
+
+            if (!is_array($updatedStudyPlan) || empty($updatedStudyPlan)) {
+                return response()->json(['message' => 'Invalid semesters structure'], 400);
+            }
+
+            // Optional: Validate that each semester object contains 'semester' and 'tasks' (if needed)
+            foreach ($updatedStudyPlan as $semester) {
+                if (!isset($semester['semester']) || !isset($semester['tasks']) || !is_array($semester['tasks'])) {
+                    return response()->json(['message' => 'Invalid semester structure'], 400);
+                }
+            }
+
+            // Find the student's study plan
+            $studyPlan = StudyPlan::where('student_id', $studentId)->first();
+            if (!$studyPlan) {
+                return response()->json(['message' => 'Study plan not found'], 404);
+            }
+
+            // Update the study plan
+            $studyPlan->semesters = json_encode($updatedStudyPlan); // Convert array to JSON
+            $studyPlan->save();
+        }
+
+        // Handle `extension_candidature_period` updates
+        if ($validatedData['update_type'] === 'extension_candidature_period') {
+            if (!isset($validatedData['max_sem']) || empty($validatedData['max_sem'])) {
+                return response()->json(['message' => 'New Max. Period of Candidature is required.'], 400);
+            }
+
+            // Update the student's `max_sem` field
+            $student->max_sem = $validatedData['max_sem'];
+            $student->save();
+        }
+
+        // Update supervisor information if a new supervisor has been selected
+        if (isset($validatedData['supervisor_id'])) {
+            // Get the supervisor's first name
+            $supervisor = Lecturer::find($validatedData['supervisor_id']);
+            if ($supervisor) {
+                $supervisorName = $supervisor->first_name . ' ' . $supervisor->last_name; // Include supervisor name in progress update
+                $student->supervisor_id = $validatedData['supervisor_id']; // Update supervisor_id
+            }
+
+            $student->save();
+            log::info('Supervisor Updated:', [$supervisorName]);
+        }
+
+        // Update status if 'update_status' type
+        if ($validatedData['update_type'] === 'update_status' && isset($validatedData['status'])) {
+            $student->status = $validatedData['status'];
+            $student->save();
+        }
+
+        // Update CGPA if 'core_courses' or 'elective_courses' type
+        if (in_array($validatedData['update_type'], ['core_courses', 'elective_courses']) && isset($validatedData['cgpa'])) {
+            $student->cgpa = $validatedData['cgpa'];
+            $student->save();
+        }
+
+        // Update research topic if 'appointment_supervisor_form' type
+        if ($validatedData['update_type'] === 'appointment_supervisor_form' && isset($validatedData['research_topic'])) {
+            $student->research = $validatedData['research_topic'];
+            $student->save();
+        }
+
+        // Update the workshops_attended column if a new workshop_name is provided
+        if (isset($validatedData['workshop_name'])) {
+            // Get the current workshops (if any) and append the new one
+            $currentWorkshops = $student->workshops_attended ? explode(', ', $student->workshops_attended) : [];
+
+            // Add the new workshop name to the list
+            $currentWorkshops[] = $validatedData['workshop_name'];
+
+            // Save the updated list back to the workshops_attended column
+            $student->workshops_attended = implode(', ', $currentWorkshops);
+            $student->save();
+        }
+
+        $this->updateCurrentTask($studentId);
+        $this->calculateAndUpdateProgress($studentId, $currentSemester);
+
+        return response()->json(['message' => 'Progress updated by admin successfully']);
+    }
+
+    private function calculateCurrentSemester()
+    {
+        // Get the current date
+        $today = now();
+
+        // Fetch all semesters from the database
+        $semesters = Semester::all();
+
+        // Find the semester that matches the current date
+        $currentSemester = $semesters->first(function ($semester) use ($today) {
+            return $today >= $semester->start_date && $today <= $semester->end_date;
+        });
+
+        if (!$currentSemester) {
+            return null; // No current semester found
+        }
+
+        return [
+            'semester' => $currentSemester->semester,
+            'academic_year' => $currentSemester->academic_year,
+        ];
+    }
+
+    private function calculateStudentSemester($intake, $currentSemester)
+    {
+        if (!$currentSemester || !$intake) {
+            return null; // Missing data, return null
+        }
+
+        // Parse current semester and academic year
+        $currentSem = $currentSemester['semester']; // 1 or 2
+        $currentYearRange = $currentSemester['academic_year']; // E.g., "2024/2025"
+        [$currentYearStart] = explode('/', $currentYearRange);
+
+        // Parse intake semester and academic year
+        [$intakeSem, $intakeYearRange] = explode(', ', $intake);
+        [$intakeYearStart] = explode('/', $intakeYearRange);
+        $intakeSemNumber = (int) filter_var($intakeSem, FILTER_SANITIZE_NUMBER_INT); // Extract number from "Sem 1" or "Sem 2"
+
+        // Calculate the number of semesters completed
+        $semesterCount = ($currentYearStart - $intakeYearStart) * 2;
+
+        if ($currentSem === 2) {
+            $semesterCount += 1; // Add one if we are in the second semester of the current year
+        }
+
+        if ($intakeSemNumber === 2) {
+            $semesterCount -= 1; // Subtract one if the intake semester is the second semester
+        }
+
+        return $semesterCount + 1; // Add 1 to convert from 0-based index
+    }
+
+    public function approveUpdate($progressUpdateId)
+    {
+        $progressUpdate = ProgressUpdate::find($progressUpdateId);
+
+        if (!$progressUpdate) {
+            return response()->json(['message' => 'Invalid request.'], 400);
+        }
+
+        $admin = auth()->user();
+        log::info('Admin:', [$admin]);
+        $adminName = $admin->Name ?? 'Admin';
+
+        // Update the approval status
+        $progressUpdate->approved = 1;
+        $progressUpdate->reason = null;
+        $progressUpdate->admin_name = $adminName;
+        $progressUpdate->save();
+
+        // Calculate the current semester
+        $currentSemesterData = $this->calculateCurrentSemester();
+        $currentSemester = $currentSemesterData['semester'] ?? null;
+
+        if (!$currentSemester) {
+            return response()->json(['message' => 'Could not determine the current semester.'], 400);
+        }
+
+        // Fetch the student
+        $student = Student::find($progressUpdate->student_id);
+        if (!$student) {
+            return response()->json(['message' => 'Student not found.'], 404);
+        }
+        $studentName = "{$student->first_name} {$student->last_name}";
+
+        // Calculate the student's current semester
+        $studentSemester = $this->calculateStudentSemester($student->intake, $currentSemesterData);
+
+        // Process admin-specific updates
+        $this->processAdminUpdate($progressUpdate->toArray(), $progressUpdate->student_id, $studentSemester);
+
+        $this->broadcastRequestUpdate(
+            $progressUpdate,
+            "{$adminName} approved {$studentName}'s update request."
+        );
+        return response()->json(['message' => 'Request approved and progress updated.']);
+    }
+
+    public function rejectUpdate($progressUpdateId, Request $request)
+    {
+        log::info('Rejecting update for ID: ' . $progressUpdateId);
+        log::info('Request Data: ', $request->all());
+
+        $validatedData = $request->validate([
+            'reason' => 'required|string',
+        ]);
+
+        $progressUpdate = ProgressUpdate::find($progressUpdateId);
+
+        if (!$progressUpdate) {
+            return response()->json(['message' => 'Invalid request.'], 400);
+        }
+
+        $admin = auth()->user();
+        $adminName = $admin->name ?? 'Admin';
+
+        $student = Student::find($progressUpdate->student_id);
+        $studentName = $student ? "{$student->first_name} {$student->last_name}" : 'Student';
+
+        // Update the approval status to rejected
+        $progressUpdate->approved = 0;
+        $progressUpdate->reason = $validatedData['reason'];
+        $progressUpdate->save();
+
+        $this->broadcastRequestUpdate(
+            $progressUpdate,
+            "{$adminName} rejected {$studentName}'s update request."
+        );
+
+        return response()->json(['message' => 'Request rejected.']);
+    }
+
+    public function pendingUpdate($progressUpdateId)
+    {
+        $progressUpdate = ProgressUpdate::find($progressUpdateId);
+
+        if (!$progressUpdate) {
+            return response()->json(['message' => 'Invalid request.'], 400);
+        }
+
+        // Get the admin's name
+        $admin = auth()->user();
+        $adminName = $admin->name ?? 'Admin';
+
+        // Get the student's name
+        $student = Student::find($progressUpdate->student_id);
+        $studentName = $student ? "{$student->first_name} {$student->last_name}" : 'Student';
+
+        // Update the approval status to rejected
+        $progressUpdate->approved = null;
+        $progressUpdate->reason = null;
+        $progressUpdate->save();
+
+        $this->broadcastRequestUpdate(
+            $progressUpdate,
+            "{$adminName} marked {$studentName}'s update request as pending."
+        );
+
+        return response()->json(['message' => 'Request pending.']);
+    }
+
+    public function updateProgressOriginal(Request $request, $studentId)
     {
         //Log::info('Request Data:', $request->all());
         // Validate the incoming request, including new fields
@@ -1203,6 +1725,15 @@ class StudentController extends Controller
             'end_date' => 'nullable|date',
         ]);
 
+        // Determine the user's role
+        $user = $request->user(); // Get the authenticated user
+        $isAdmin = $user->role === 'admin'; // Adjust based on your role logic
+        $isStudent = $user->role === 'student'; // Adjust based on your role logic
+        log::info('User Role:', [$user->role]);
+
+        $approvalStatus = $isAdmin ? 1 : null;
+        log::info('Approval Status:', [$approvalStatus]);
+
         // if ($validatedData['update_type'] === 'residential_requirement') {
         //     Log::info('Updating Residential Requirement:', [
         //         'residential_college' => $validatedData['residential_college'] ?? null,
@@ -1229,9 +1760,17 @@ class StudentController extends Controller
         }
 
         // Handle the file upload for 'evidence'
+        // Handle the file upload for 'evidence'
         if ($request->hasFile('evidence')) {
-            $evidencePath = $request->file('evidence')->store('evidence', 'public');
+            $file = $request->file('evidence'); // Get the file
+            $evidencePath = $file->store('evidence', 'public'); // Save the file to storage
+
+            // Capture the original file name
+            $originalFileName = $file->getClientOriginalName();
+
+            // Add both the file path and original name to the validated data
             $validatedData['evidence'] = $evidencePath;
+            $validatedData['original_file_name'] = $originalFileName;
         }
 
         // Handle study plan updates
@@ -1347,7 +1886,7 @@ class StudentController extends Controller
         $taskId = $taskMap[$validatedData['update_type']] ?? null;
 
         // Insert progress update into the progress_updates table with the new fields
-        \App\Models\ProgressUpdate::create([
+        ProgressUpdate::create([
             'student_id' => $student->id,
             'update_type' => $validatedData['update_type'],
             'task_id' => $taskId, // Include the task ID
@@ -1379,15 +1918,35 @@ class StudentController extends Controller
             'start_date' => $validatedData['start_date'] ?? null,
             'end_date' => $validatedData['end_date'] ?? null,
             'admin_name' => $adminName,
+            'original_file_name' => $validatedData['original_file_name'] ?? null,
+            'approved' => $approvalStatus,
         ]);
 
-        // Always recalculate the current task
-        $this->updateCurrentTask($studentId);
-        $currentSemester = $request->input('currentSemester');
-        // Recalculate and update progress percentage
-        $this->calculateAndUpdateProgress($studentId, $currentSemester);
+        // // Always recalculate the current task
+        // $this->updateCurrentTask($studentId);
+        // $currentSemester = $request->input('currentSemester');
+        // // Recalculate and update progress percentage
+        // $this->calculateAndUpdateProgress($studentId, $currentSemester);
 
-        // Return success response
-        return response()->json(['message' => 'Progress updated successfully']);
+        // // Return success response
+        // return response()->json(['message' => 'Progress updated successfully']);
+
+        // Admin-specific actions (only update related models if admin is updating)
+        if ($isAdmin) {
+            // Perform actions like updating study plans, CGPA, etc.
+            $this->updateCurrentTask($studentId);
+            $currentSemester = $request->input('currentSemester');
+            $this->calculateAndUpdateProgress($studentId, $currentSemester);
+
+            return response()->json(['message' => 'Progress updated successfully']);
+        }
+
+        // If it's a student request, return a pending message
+        if ($isStudent) {
+            return response()->json(['message' => 'Progress update request submitted successfully and is pending approval.']);
+        }
+
+        // Default fallback (should not be reached)
+        return response()->json(['message' => 'Invalid request'], 400);
     }
 }

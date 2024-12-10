@@ -13,7 +13,6 @@
     align-items: center;
     margin-bottom: 20px;
     position: sticky;
-    top: 0;
     background: none;
     z-index: 10;
 }
@@ -56,6 +55,10 @@
 
 .search-bar .search {
     margin-left: 10px;
+}
+
+.search-bar :hover {
+    cursor: text;
 }
 
 .filter-button,
@@ -348,7 +351,7 @@
     padding: 20px;
     z-index: 1000;
     margin-bottom: 10px;
-    max-height: 80vh;
+    max-height: 90vh;
     overflow-y: auto;
 }
 
