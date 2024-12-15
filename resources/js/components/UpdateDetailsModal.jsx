@@ -47,7 +47,7 @@ const UpdateDetailsModal = ({ update, onClose, userRole }) => {
                 },
             });
 
-            console.log(response.data.message); // Debug API response
+            //console.log(response.data.message); // Debug API response
             onClose(); // Close the modal after success
 
         } catch (error) {

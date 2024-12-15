@@ -55,7 +55,7 @@ const Requests = () => {
 
     useEffect(() => {
         fetchRequests();
-        console.log("Notifications in Requests.jsx:", notifications);
+        //console.log("Notifications in Requests.jsx:", notifications);
     }, [notifications]);
 
     // const fetchRequests = async () => {
@@ -198,8 +198,8 @@ const Requests = () => {
         return visiblePages;
     };
 
-    console.log("Notifications:", notifications);
-    console.log("Paginated Requests:", paginatedRequests);
+    //console.log("Notifications:", notifications);
+    //console.log("Paginated Requests:", paginatedRequests);
 
     return (
         <div className="requests-container">
@@ -267,8 +267,8 @@ const Requests = () => {
 
                             const isRead = relatedNotification?.read_at !== null;
 
-                            console.log("Related Notification:", relatedNotification);
-                            console.log("Is Read:", isRead);
+                            //console.log("Related Notification:", relatedNotification);
+                            //console.log("Is Read:", isRead);
                             return (
                                 <tr
                                     key={index}

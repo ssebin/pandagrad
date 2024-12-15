@@ -203,27 +203,25 @@ function AllStudents() {
 
     const generateTaskColors = (tasks) => {
         const baseColors = [
-            '255, 99, 71',        // Tomato
-            '70, 130, 180',       // SteelBlue
-            '255, 215, 0',        // Gold
-            '32, 178, 170',       // LightSeaGreen
-            '147, 112, 219',      // MediumPurple
+            '139, 69, 19',        // SaddleBrown            
+            '0, 0, 139',          // DarkBlue            
             '255, 140, 0',        // DarkOrange
-            '255, 182, 193',      // LightPink
-            '173, 216, 230',      // LightBlue
-            '46, 139, 87',        // SeaGreen
-            '205, 92, 92',        // IndianRed
-            '210, 180, 140',      // Tan
-            '100, 149, 237',      // CornflowerBlue
-            '244, 164, 96',       // SandyBrown
-            '85, 107, 47',        // DarkOliveGreen
-            '220, 20, 60',        // Crimson
+            '184, 134, 11',       // DarkGoldenRod
+            '199, 21, 133',       // MediumVioletRed
+            '85, 107, 47',        // DarkOliveGreen            
+            '0, 139, 139',        // DarkCyan            
+            '139, 0, 139',        // DarkMagenta
+            '47, 79, 79',         // DarkSlateGray
+            '25, 25, 112',        // MidnightBlue
+            '0, 100, 0',          // DarkGreen
+            '75, 0, 130',         // Indigo
+            '139, 0, 0',          // DarkRed
         ];
 
         const taskColorMap = {};
         tasks.forEach((task, index) => {
             const color = baseColors[index % baseColors.length]; // Cycle through baseColors if tasks > colors
-            taskColorMap[task.name] = color;
+            taskColorMap[task.category] = color;
         });
 
         return taskColorMap;
@@ -576,7 +574,7 @@ function AllStudents() {
                                                     <p className="semester">Semester {student.currentSemester} - {student.program}</p>
                                                     <p className="research">{student.research}</p>
                                                     <div className="task-profile">
-                                                        <div className="task" style={{ backgroundColor: `${getTaskColor(student.task, 0.2)}`, color: `${getTaskColor(student.task, 1)}`, padding: '3px 8px', borderRadius: '5px' }}>{student.taskCategory || 'Unknown'}</div>
+                                                        <div className="task" style={{ backgroundColor: `${getTaskColor(student.taskCategory, 0.2)}`, color: `${getTaskColor(student.taskCategory, 1)}`, padding: '3px 8px', borderRadius: '5px' }}>{student.taskCategory || 'Unknown'}</div>
                                                         <img
                                                             src={student.profile_pic.includes('profile-pic.png')
                                                                 ? student.profile_pic

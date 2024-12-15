@@ -54,6 +54,7 @@ class ProgressUpdate extends Model
         'cd_date',
         'cd_time',
         'cd_venue',
+        'supervisor_id',
     ];
 
     public function task()

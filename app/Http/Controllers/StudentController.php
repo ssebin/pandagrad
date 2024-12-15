@@ -718,7 +718,8 @@ class StudentController extends Controller
                         ->orderBy('spt.task_id', 'asc'); // Ensure tasks are ordered
                 },
                 'tasks.progressUpdates' => function ($query) use ($id) {
-                    $query->where('student_id', $id); // Filter progress updates by student ID
+                    $query->where('student_id', $id) // Filter progress updates by student ID
+                        ->where('approved', 1); // Only include approved updates
                 }
             ])->where('student_id', $id)->first();
 
@@ -971,20 +972,31 @@ class StudentController extends Controller
                         continue;
                     }
 
-                    // Determine task status
-                    $taskStatus = $task->determineStatus($semesterEndDate);
+                    // Get the latest update for this task
+                    $latestUpdate = $task->progressUpdates->sortByDesc('updated_at')->first();
 
-                    // Count completed tasks
-                    if (in_array($taskStatus, ['onTrackCompleted', 'delayedCompleted'])) {
-                        $fullyCompletedTasks++;
+                    // Skip the task if there are no updates
+                    if (!$latestUpdate) {
+                        continue;
                     }
 
-                    // Check for delayed pending tasks
-                    if ($taskStatus === 'delayedPending') {
-                        if ($semesterNumber < $currentSemester - 1) {
-                            $delayedTasks['veryDelayed'] = true;
-                        } elseif ($semesterNumber === $currentSemester - 1) {
-                            $delayedTasks['slightlyDelayed'] = true;
+                    // Check the status of the latest update
+                    if ($latestUpdate->approved === 1) {
+                        // Determine task status
+                        $taskStatus = $task->determineStatus($semesterEndDate);
+
+                        // Count completed tasks
+                        if (in_array($taskStatus, ['onTrackCompleted', 'delayedCompleted'])) {
+                            $fullyCompletedTasks++;
+                        }
+
+                        // Check for delayed pending tasks
+                        if ($taskStatus === 'delayedPending') {
+                            if ($semesterNumber < $currentSemester - 1) {
+                                $delayedTasks['veryDelayed'] = true;
+                            } elseif ($semesterNumber === $currentSemester - 1) {
+                                $delayedTasks['slightlyDelayed'] = true;
+                            }
                         }
                     }
                 }
@@ -1324,6 +1336,15 @@ class StudentController extends Controller
             $validatedData['original_file_name'] = $originalFileName;
         }
 
+        if (isset($validatedData['supervisor_id'])) {
+            // Get the supervisor's first name
+            $supervisor = Lecturer::find($validatedData['supervisor_id']);
+            if ($supervisor) {
+                $supervisorName = $supervisor->first_name . ' ' . $supervisor->last_name; // Include supervisor name in progress update
+            }
+            log::info('Supervisor Updated:', [$supervisorName]);
+        }
+
         // Define the mapping of update types to task IDs
         $taskMap = [
             'bahasa_melayu_course' => 2,
@@ -1393,6 +1414,7 @@ class StudentController extends Controller
             'cd_date' => $validatedData['cd_date'] ?? null,
             'cd_time' => $validatedData['cd_time'] ?? null,
             'cd_venue' => $validatedData['cd_venue'] ?? null,
+            'supervisor_id' => $validatedData['supervisor_id'] ?? null,
         ]);
 
         // // Always recalculate the current task
@@ -1413,7 +1435,7 @@ class StudentController extends Controller
             $message = "{$adminName} updated {$student->first_name} {$student->last_name}'s progress";
             $this->broadcastRequestUpdate((object) $progressUpdate, $message);
 
-            $this->processAdminUpdate($validatedData, $studentID, $currentSemester);
+            $this->processAdminUpdate($validatedData, $studentID, $currentSemester, $progressUpdate->id);
 
             return response()->json(['message' => 'Progress update data created successfully']);
         }
@@ -1429,12 +1451,14 @@ class StudentController extends Controller
         return response()->json(['message' => 'Invalid request'], 400);
     }
 
-    private function processAdminUpdate(array $validatedData, $studentId, $currentSemester)
+    private function processAdminUpdate(array $validatedData, $studentId, $currentSemester, $progressUpdateId)
     {
         $student = Student::find($studentId);
         if (!$student) {
             throw new \Exception('Student not found.');
         }
+
+        $rollbackData = [];
 
         if ($validatedData['update_type'] === 'change_study_plan') {
             // Validate that the study plan has the correct structure
@@ -1461,6 +1485,7 @@ class StudentController extends Controller
                 return response()->json(['message' => 'Study plan not found'], 404);
             }
 
+            $rollbackData['study_plan'] = $studyPlan->semesters;
             // Update the study plan
             $studyPlan->semesters = json_encode($updatedStudyPlan); // Convert array to JSON
             $studyPlan->save();
@@ -1472,6 +1497,7 @@ class StudentController extends Controller
                 return response()->json(['message' => 'New Max. Period of Candidature is required.'], 400);
             }
 
+            $rollbackData['max_sem'] = $student->max_sem;
             // Update the student's `max_sem` field
             $student->max_sem = $validatedData['max_sem'];
             $student->save();
@@ -1483,6 +1509,7 @@ class StudentController extends Controller
             $supervisor = Lecturer::find($validatedData['supervisor_id']);
             if ($supervisor) {
                 $supervisorName = $supervisor->first_name . ' ' . $supervisor->last_name; // Include supervisor name in progress update
+                $rollbackData['supervisor_id'] = $student->supervisor_id;
                 $student->supervisor_id = $validatedData['supervisor_id']; // Update supervisor_id
             }
 
@@ -1492,18 +1519,21 @@ class StudentController extends Controller
 
         // Update status if 'update_status' type
         if ($validatedData['update_type'] === 'update_status' && isset($validatedData['status'])) {
+            $rollbackData['status'] = $student->status;
             $student->status = $validatedData['status'];
             $student->save();
         }
 
         // Update CGPA if 'core_courses' or 'elective_courses' type
         if (in_array($validatedData['update_type'], ['core_courses', 'elective_courses']) && isset($validatedData['cgpa'])) {
+            $rollbackData['cgpa'] = $student->cgpa;
             $student->cgpa = $validatedData['cgpa'];
             $student->save();
         }
 
         // Update research topic if 'appointment_supervisor_form' type
         if ($validatedData['update_type'] === 'appointment_supervisor_form' && isset($validatedData['research_topic'])) {
+            $rollbackData['research'] = $student->research;
             $student->research = $validatedData['research_topic'];
             $student->save();
         }
@@ -1512,6 +1542,7 @@ class StudentController extends Controller
         if (isset($validatedData['workshop_name'])) {
             // Get the current workshops (if any) and append the new one
             $currentWorkshops = $student->workshops_attended ? explode(', ', $student->workshops_attended) : [];
+            $rollbackData['workshops_attended'] = $currentWorkshops;
 
             // Add the new workshop name to the list
             $currentWorkshops[] = $validatedData['workshop_name'];
@@ -1519,6 +1550,12 @@ class StudentController extends Controller
             // Save the updated list back to the workshops_attended column
             $student->workshops_attended = implode(', ', $currentWorkshops);
             $student->save();
+        }
+
+        $progressUpdate = ProgressUpdate::find($progressUpdateId);
+        if ($progressUpdate) {
+            $progressUpdate->rollback_data = json_encode($rollbackData); // Save rollback data
+            $progressUpdate->save();
         }
 
         $this->updateCurrentTask($studentId);
@@ -1617,7 +1654,7 @@ class StudentController extends Controller
         $studentSemester = $this->calculateStudentSemester($student->intake, $currentSemesterData);
 
         // Process admin-specific updates
-        $this->processAdminUpdate($progressUpdate->toArray(), $progressUpdate->student_id, $studentSemester);
+        $this->processAdminUpdate($progressUpdate->toArray(), $progressUpdate->student_id, $studentSemester, $progressUpdateId);
 
         $this->broadcastRequestUpdate(
             $progressUpdate,
@@ -1641,6 +1678,12 @@ class StudentController extends Controller
             return response()->json(['message' => 'Invalid request.'], 400);
         }
 
+        $rollbackData = json_decode($progressUpdate->rollback_data, true);
+
+        if ($rollbackData) {
+            $this->rollbackChanges($rollbackData, $progressUpdate->student_id);
+        }
+
         $admin = auth()->user();
         $adminName = $admin->name ?? 'Admin';
 
@@ -1651,6 +1694,20 @@ class StudentController extends Controller
         $progressUpdate->approved = 0;
         $progressUpdate->reason = $validatedData['reason'];
         $progressUpdate->save();
+
+        // Calculate the current semester
+        $currentSemesterData = $this->calculateCurrentSemester();
+        $currentSemester = $currentSemesterData['semester'] ?? null;
+
+        if (!$currentSemester) {
+            return response()->json(['message' => 'Could not determine the current semester.'], 400);
+        }
+
+        // Calculate the student's current semester
+        $currentSemester = $this->calculateStudentSemester($student->intake, $currentSemesterData);
+
+        $this->updateCurrentTask($progressUpdate->student_id);
+        $this->calculateAndUpdateProgress($progressUpdate->student_id, $currentSemester);
 
         $this->broadcastRequestUpdate(
             $progressUpdate,
@@ -1668,6 +1725,12 @@ class StudentController extends Controller
             return response()->json(['message' => 'Invalid request.'], 400);
         }
 
+        $rollbackData = json_decode($progressUpdate->rollback_data, true);
+
+        if ($rollbackData) {
+            $this->rollbackChanges($rollbackData, $progressUpdate->student_id);
+        }
+
         // Get the admin's name
         $admin = auth()->user();
         $adminName = $admin->name ?? 'Admin';
@@ -1681,12 +1744,68 @@ class StudentController extends Controller
         $progressUpdate->reason = null;
         $progressUpdate->save();
 
+        // Calculate the current semester
+        $currentSemesterData = $this->calculateCurrentSemester();
+        $currentSemester = $currentSemesterData['semester'] ?? null;
+
+        if (!$currentSemester) {
+            return response()->json(['message' => 'Could not determine the current semester.'], 400);
+        }
+
+        // Calculate the student's current semester
+        $currentSemester = $this->calculateStudentSemester($student->intake, $currentSemesterData);
+
+        $this->updateCurrentTask($progressUpdate->student_id);
+        $this->calculateAndUpdateProgress($progressUpdate->student_id, $currentSemester);
+
         $this->broadcastRequestUpdate(
             $progressUpdate,
             "{$adminName} marked {$studentName}'s update request as pending."
         );
 
         return response()->json(['message' => 'Request pending.']);
+    }
+
+    private function rollbackChanges(array $rollbackData, $studentId)
+    {
+        $student = Student::find($studentId);
+        if (!$student) {
+            throw new \Exception('Student not found.');
+        }
+
+        if (isset($rollbackData['study_plan'])) {
+            $studyPlan = StudyPlan::where('student_id', $studentId)->first();
+            if ($studyPlan) {
+                $studyPlan->semesters = $rollbackData['study_plan'];
+                $studyPlan->save();
+            }
+        }
+
+        if (isset($rollbackData['max_sem'])) {
+            $student->max_sem = $rollbackData['max_sem'];
+        }
+
+        if (isset($rollbackData['supervisor_id'])) {
+            $student->supervisor_id = $rollbackData['supervisor_id'];
+        }
+
+        if (isset($rollbackData['status'])) {
+            $student->status = $rollbackData['status'];
+        }
+
+        if (isset($rollbackData['cgpa'])) {
+            $student->cgpa = $rollbackData['cgpa'];
+        }
+
+        if (isset($rollbackData['research'])) {
+            $student->research = $rollbackData['research'];
+        }
+
+        if (isset($rollbackData['workshops_attended'])) {
+            $student->workshops_attended = implode(', ', $rollbackData['workshops_attended']);
+        }
+
+        $student->save();
     }
 
     public function updateProgressOriginal(Request $request, $studentId)
