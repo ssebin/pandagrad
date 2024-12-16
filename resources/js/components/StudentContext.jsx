@@ -237,6 +237,11 @@ export const StudentProvider = ({ children }) => {
 
     // Fetch data on component mount
     useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.warn('Token is missing. NotificationContext not initialized.');
+            return;
+        }
         fetchStudentsData();
         fetchSupervisors();
         fetchTasks();

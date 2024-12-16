@@ -9,7 +9,7 @@ export function useUser() {
 export function UserProvider({ children }) {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(null);
-    const [loading, setLoading] = useState(true); // Loading state
+    const [loading, setLoading] = useState(true); 
 
     useEffect(() => {
         const savedUser = localStorage.getItem('user');
@@ -36,7 +36,6 @@ export function UserProvider({ children }) {
         localStorage.removeItem('token');
         localStorage.removeItem('role');
         localStorage.removeItem('has_study_plan');
-        localStorage.removeItem('nationality');
     };
 
     // Prevent rendering children while loading

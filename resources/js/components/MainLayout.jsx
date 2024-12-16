@@ -6,9 +6,10 @@ import './MainLayout.css';
 import { useUser } from './UserContext';
 import { useNotifications } from "./NotificationContext";
 import NotificationPopup from "./NotificationPopup";
+import "./NotificationPopup.css";
 
 function MainLayout() {
-    const { unreadCount, popupNotification, setPopupNotification } = useNotifications();
+    const { unreadCount, popupNotifications, removePopupNotification } = useNotifications();
     const { user } = useUser();
     const [profilePic, setProfilePic] = useState(user?.profile_pic || "");
 
@@ -36,56 +37,33 @@ function MainLayout() {
         setProfilePic(user?.profile_pic || "");
     }, [user]);
 
-    // useEffect(() => {
-    //     const fetchUnreadCount = async () => {
-    //         const token = localStorage.getItem("token");
-    //         try {
-    //             const response = await axios.get('/api/notifications/unread-count', {
-    //                 headers: {
-    //                     Authorization: `Bearer ${token}`,
-    //                 },
-    //             });
-    //             setUnreadCount(response.data.unread_count);
-    //         } catch (error) {
-    //             console.error("Error fetching unread count:", error);
-    //         }
-    //     };
-
-    //     fetchUnreadCount();
-
-    //     const userId = user.role === "admin" ? "shared" : user.id;
-    //     const channel = Pusher.subscribe(`private-RequestNotification${userId}`);
-    //     channel.bind("App\\Events\\RequestNotification", (data) => {
-    //         if (data.recipient_id !== userId) { // Skip notifications triggered by the logged-in user
-    //             setNotification(data.message); // Set the notification message
-    //             fetchUnreadCount();
-    //         }
-    //     });
-
-    //     return () => {
-    //         Pusher.unsubscribe(`private-RequestNotification${user.id}`);
-    //     };
-
-    // }, [user]);
-
     useEffect(() => {
-        if (popupNotification) {
-            const timer = setTimeout(() => setPopupNotification(null), 5000);
-            return () => clearTimeout(timer);
-        }
-    }, [popupNotification]);
+        // Set a timer for each notification to auto-dismiss after 10 seconds
+        const timers = popupNotifications.map((_, index) =>
+            setTimeout(() => removePopupNotification(index), 10000)
+        );
+
+        // Clear timers on unmount or if the notifications array changes
+        return () => timers.forEach((timer) => clearTimeout(timer));
+    }, [popupNotifications, removePopupNotification]);
 
     // Set the username based on the role
     const userName = user?.role === 'admin' ? user?.Name : `${user?.first_name}`;
 
+    const MAX_VISIBLE_NOTIFICATIONS = 5;
+
     return (
         <div className="main-layout">
-            {popupNotification && (
-                <NotificationPopup
-                    message={popupNotification}
-                    onClose={() => setPopupNotification(null)}
-                />
-            )}
+            <div className="notification-container">
+                {popupNotifications.slice(0, MAX_VISIBLE_NOTIFICATIONS).map((notification, index) => (
+                    <NotificationPopup
+                        key={index}
+                        message={notification.message}
+                        type={notification.type}
+                        onClose={() => removePopupNotification(index)}
+                    />
+                ))}
+            </div>
             <SideNav unreadCount={unreadCount} />
             <div className="content">
                 <TopNav

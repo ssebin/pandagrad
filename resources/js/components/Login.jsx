@@ -4,6 +4,7 @@ import axios from './axiosConfig.js'; // Ensure this is correctly configured
 import { useNavigate } from 'react-router-dom';
 import { StudentContext } from './StudentContext';
 import { useUser } from './UserContext';
+import { initializeEcho } from '../bootstrap';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -38,6 +39,8 @@ function Login() {
                     // Store the token and user role in localStorage
                     localStorage.setItem('token', token);
                     localStorage.setItem('role', returnedRole);
+
+                    initializeEcho();
 
                     // Store additional user information for students only
                     if (returnedRole === 'student') {

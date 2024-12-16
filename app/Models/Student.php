@@ -34,6 +34,7 @@ class Student extends Authenticatable
         'workshops_attended',
         'max_sem',
         'role',
+        'last_login_at',
     ];
 
     protected $appends = ['supervisor_name'];

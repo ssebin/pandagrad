@@ -1,15 +1,12 @@
 import React, { useState, useEffect } from "react";
-import Pusher from "./pusher.js";
 import { FaSearch } from 'react-icons/fa';
 import { useUser } from './UserContext';
-import axios from "axios";
 import "./Requests.css";
 import UpdateDetailsModal from "./UpdateDetailsModal.jsx";
 import { useNotifications } from "./NotificationContext";
 
 const Requests = () => {
     const { user } = useUser();
-    //const [requests, setRequests] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchKeyword, setSearchKeyword] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
@@ -17,101 +14,25 @@ const Requests = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUpdate, setSelectedUpdate] = useState(null);
     const [filterStatus, setFilterStatus] = useState("");
-    // const [notifications, setNotifications] = useState([]);
-    // const { setUnreadCount, notification, setNotification } = useNotifications();
     const { notifications = [], fetchRequests, requests } = useNotifications();
 
     const userRole = user.role;
 
-    // useEffect(() => {
-    //     fetchRequests();
-    //     fetchNotifications();
-
-    //     // Determine the user ID based on the role
-    //     const userId = userRole === "admin" ? "shared" : user.id;
-
-    //     // Subscribe to Pusher for real-time updates
-    //     const channel = Pusher.subscribe(`private-RequestNotification${userId}`);
-    //     channel.bind("App\\Events\\RequestNotification", (data) => {
-    //         console.log("Event Received:", data);
-    //         fetchRequests();
-    //         fetchNotification();
-    //     });
-
-    //     // Cleanup on unmount or dependency change
-    //     return () => {
-    //         Pusher.unsubscribe(`private-RequestNotification${userId}`);
-    //     };
-    // }, [userRole, user.AdminID, user.id]); // Add dependencies for role and IDs
-
     useEffect(() => {
         const loadRequests = async () => {
             setIsLoading(true);
-            await fetchRequests(); // Fetch requests globally
+            await Promise.all([fetchRequests()]);
             setIsLoading(false);
         };
         loadRequests();
-    }, [fetchRequests]);
+    }, []); // Run once when the component is mounted
 
     useEffect(() => {
-        fetchRequests();
+        if (notifications.length) {
+            fetchRequests();
+        }
         //console.log("Notifications in Requests.jsx:", notifications);
     }, [notifications]);
-
-    // const fetchRequests = async () => {
-    //     const token = localStorage.getItem('token');
-    //     try {
-    //         const response = await axios.get('/api/progress-updates', {
-    //             headers: {
-    //                 Authorization: `Bearer ${token}`,
-    //             },
-    //         });
-    //         //setRequests(response.data);
-    //         setRequests((prev) => {
-    //             const areEqual = JSON.stringify(prev) === JSON.stringify(response.data);
-    //             return areEqual ? prev : response.data;
-    //         });
-    //         setIsLoading(false);
-    //     } catch (error) {
-    //         console.error("Error fetching requests:", error);
-    //         setIsLoading(false);
-    //     }
-    // };
-
-    // const fetchNotifications = async () => {
-    //     const token = localStorage.getItem('token');
-    //     try {
-    //         const response = await axios.get('/api/notifications', {
-    //             headers: {
-    //                 Authorization: `Bearer ${token}`,
-    //             },
-    //         });
-    //         //setNotifications(response.data);
-    //         // setNotifications((prev) => {
-    //         //     const isEqual = 
-    //         //         prev.length === response.data.length && 
-    //         //         prev.every((notif, index) => notif.id === response.data[index].id);
-
-    //         //     return isEqual ? prev : response.data;
-    //         // });
-    //         const rawNotifications = response.data;
-
-    //         // Convert the raw object to an array if it's not already one
-    //         const notificationsArray = Array.isArray(rawNotifications)
-    //             ? rawNotifications
-    //             : Object.values(rawNotifications);
-
-    //         console.log("Normalized Notifications:", notificationsArray);
-
-    //         //setNotifications(notificationsArray)
-    //         setNotification((prev) => {
-    //             const areEqual = JSON.stringify(prev) === JSON.stringify(notificationsArray);
-    //             return areEqual ? prev : notificationsArray;
-    //         });
-    //     } catch (error) {
-    //         console.error("Error fetching notifications:", error);
-    //     }
-    // };
 
     const formatDate = (date) => {
         const options = { year: "numeric", month: "short", day: "numeric" };
@@ -247,19 +168,6 @@ const Requests = () => {
                     </thead>
                     <tbody>
                         {paginatedRequests.map((request, index) => {
-                            // const relatedNotification = Array.isArray(notifications)
-                            //     ? notifications.find(
-                            //         (noti) =>
-                            //             noti.progress_update_id === request.id &&
-                            //             noti.read_at // Check if it's marked as read
-                            //     )
-                            //     : null;
-
-                            // const relatedNotification = notifications.find(
-                            //     (noti) => noti.progress_update_id === request.id
-                            // );
-
-                            // const isRead = relatedNotification && relatedNotification.read_at;
 
                             const relatedNotification = Array.isArray(notifications)
                                 ? notifications.find((noti) => noti.progress_update_id === request.id)
@@ -359,10 +267,6 @@ const Requests = () => {
                     update={selectedUpdate}
                     onClose={handleCloseModal}
                     userRole={userRole}
-                // fetchRequests={fetchRequests}
-                // notification={notification}
-                // setNotification={setNotification}
-                // setUnreadCount={setUnreadCount}
                 />
             )}
         </div>

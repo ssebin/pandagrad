@@ -20,6 +20,7 @@ class Notification extends Model
         'read_at',
         'updated_at',
         'progress_update_id',
+        'type',
     ];
 
     public function progressUpdate()

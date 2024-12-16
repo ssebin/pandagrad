@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
-import Pusher from "./pusher";
+import { initializeEcho } from '../bootstrap';
 
 const NotificationContext = createContext();
 
@@ -9,8 +9,19 @@ export const useNotifications = () => useContext(NotificationContext);
 export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
-    const [popupNotification, setPopupNotification] = useState(null);
+    const [popupNotifications, setPopupNotifications] = useState([]);
     const [requests, setRequests] = useState([]);
+
+    const addPopupNotification = (notification) => {
+        setPopupNotifications((prev) => {
+            // Allow all notifications, even beyond 5
+            return [...prev, notification];
+        });
+    };
+
+    const removePopupNotification = (index) => {
+        setPopupNotifications((prev) => prev.filter((_, i) => i !== index));
+    };
 
     const normalizeNotifications = (rawNotifications) => {
         if (!rawNotifications) {
@@ -24,6 +35,10 @@ export const NotificationProvider = ({ children }) => {
 
     const fetchNotifications = async () => {
         const token = localStorage.getItem("token");
+        if (!token) {
+            console.warn('Token is missing. NotificationContext not initialized.');
+            return;
+        }
         try {
             const response = await axios.get('/api/notifications', {
                 headers: {
@@ -33,7 +48,7 @@ export const NotificationProvider = ({ children }) => {
             const normalized = normalizeNotifications(response.data);
             console.log("Fetched Notifications:", normalized);
             setNotifications(normalized);
-            fetchUnreadCount(); // Ensure unread count is also updated
+            await fetchUnreadCount(); // Ensure unread count is also updated
         } catch (error) {
             console.error("Error fetching notifications:", error);
         }
@@ -55,6 +70,10 @@ export const NotificationProvider = ({ children }) => {
 
     const fetchRequests = async () => {
         const token = localStorage.getItem('token');
+        if (!token) {
+            console.warn('Token is missing. NotificationContext not initialized.');
+            return;
+        }
         try {
             const response = await axios.get('/api/progress-updates', {
                 headers: {
@@ -66,85 +85,107 @@ export const NotificationProvider = ({ children }) => {
                 return areEqual ? prev : response.data;
             });
             console.log("Fetched Requests:", response.data);
+            fetchUnreadCount();
         } catch (error) {
             console.error("Error fetching requests:", error);
         }
     };
 
+    const fetchUnreadNotifications = async () => {
+        const token = localStorage.getItem('token');
+        try {
+            const response = await axios.get('/api/notifications/unread', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+    
+            // Assuming the nested structure is in response.data.notifications
+            const unreadNotifications = response.data;
+    
+            // Check if notifications exist and iterate through them
+            if (unreadNotifications && typeof unreadNotifications === 'object') {
+                Object.values(unreadNotifications).forEach((notification) => {
+                    addPopupNotification({
+                        message: notification.message,
+                        type: notification.type,
+                    });
+                });
+            } else {
+                console.log('No unread notifications received.');
+            }
+        } catch (error) {
+            console.error('Error fetching unread notifications:', error);
+        }
+    };
+
     useEffect(() => {
-        console.log("NotificationContext useEffect triggered");
-
-        const storedUser = localStorage.getItem("user");
-        const user = storedUser ? JSON.parse(storedUser) : null;
-        const userRole = localStorage.getItem("role");
-        const userId = userRole === "admin" ? "shared" : user?.id;
-
-        if (!userId) {
-            console.error("User ID is missing. Cannot subscribe to Pusher.");
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.warn('Token is missing. NotificationContext not initialized.');
             return;
         }
 
-        console.log("Subscribing to Pusher channel for userId:", userId);
+        fetchUnreadNotifications();
 
-        // const fetchNotificationsAndRequests = async () => {
-        //     await fetchNotifications();
-        //     // Fetch the requests only if the user is on the Requests page
-        //     //if (window.location.pathname.includes('requests')) {
-        //     await fetchRequests();
-        //     //}
-        // };
+        const initializeNotifications = async () => {
+            console.log("Initializing NotificationContext");
 
-        const channel = Pusher.subscribe(`private-RequestNotification${userId}`);
-        channel.bind("App\\Events\\RequestNotification", async (data) => {
-            console.log("Notification received via Pusher:", data);
+            // Fetch initial data
+            await Promise.all([fetchNotifications(), fetchRequests(), fetchUnreadCount()]);
 
-            const notificationData = data.data || data;
-            const notificationMessage = typeof notificationData.message === "string"
-                ? notificationData.message
-                : "Notification received";
+            // Ensure Echo is initialized
+            const echo = initializeEcho();
 
-            setPopupNotification(notificationMessage);
-
-            // Fetch updated notifications and requests
-            await fetchNotifications();
-            if (window.location.pathname.includes('requests')) {
-                await fetchRequests();
+            if (!echo) {
+                console.error('Echo instance is not initialized. Cannot subscribe to channels.');
+                return;
             }
-        });
 
-        return () => {
-            console.log("Unsubscribing from Pusher channel");
-            Pusher.unsubscribe(`private-RequestNotification${userId}`);
+            const storedUser = localStorage.getItem('user');
+            const user = storedUser ? JSON.parse(storedUser) : null;
+            const userRole = localStorage.getItem('role');
+            const userId = userRole === 'admin' ? 'shared' : user?.id;
+
+            if (!userId) {
+                console.error('User ID is missing. Cannot subscribe to Echo.');
+                return;
+            }
+
+            console.log('Subscribing to Echo channel for userId:', userId);
+
+            const channel = echo.private(`RequestNotification${userId}`);
+            //console.log('Channel:', channel);
+
+            channel.listen('RequestNotification', async (data) => {
+                console.log('Notification received via Echo:', data);
+
+                const { message, type } = data.data || {};
+
+                // Fallback for safety if type or message are missing
+                const notificationMessage = message || 'Notification received';
+                const notificationType = type || 'info'; // Default to 'info'
+
+                // Update popup notification state with message and type
+                addPopupNotification({ message: notificationMessage, type: notificationType });
+
+                // Fetch updated notifications and requests only when needed
+                await fetchNotifications();
+                if (window.location.pathname.includes('requests')) {
+                    await fetchRequests();
+                }
+            });
         };
+
+        initializeNotifications();
     }, []);
 
     useEffect(() => {
-        // Fetch notifications on component mount
-        console.log("Fetching notifications on mount");
-        fetchNotifications();
-    }, []); // Effect for fetching notifications
-
-    // useEffect(() => {
-    //     fetchNotifications();
-
-    //     const userId = localStorage.getItem("role") === "admin" ? "shared" : localStorage.getItem("id");
-    //     const channel = Pusher.subscribe(`private-RequestNotification${userId}`);
-    //     channel.bind("App\\Events\\RequestNotification", (data) => {
-    //         console.log("Notification received via Pusher:", data);
-
-    //         const notificationData = data.data || data; // Adjust based on the actual structure
-    //         const notificationMessage = typeof notificationData.message === "string"
-    //             ? notificationData.message
-    //             : "Notification received";
-
-    //         fetchNotifications(); // Refresh notifications
-    //         setPopupNotification(notificationMessage);
-    //     });
-
-    //     return () => {
-    //         Pusher.unsubscribe(`private-RequestNotification${userId}`);
-    //     };
-    // }, []);
+        const token = localStorage.getItem('token');
+        if (token) {
+            initializeEcho(); // Reinitialize Echo when token changes
+        }
+    }, [localStorage.getItem('token')]); // Watch for token changes
 
     return (
         <NotificationContext.Provider
@@ -152,8 +193,10 @@ export const NotificationProvider = ({ children }) => {
                 notifications,
                 unreadCount,
                 setUnreadCount,
-                popupNotification,
-                setPopupNotification,
+                popupNotifications,
+                addPopupNotification,
+                removePopupNotification,
+                setPopupNotifications,
                 setNotifications,
                 fetchRequests,
                 requests,
@@ -163,51 +206,3 @@ export const NotificationProvider = ({ children }) => {
         </NotificationContext.Provider>
     );
 };
-
-// const NotificationContext = createContext();
-
-// export const useNotifications = () => useContext(NotificationContext);
-
-// export const NotificationProvider = ({ children }) => {
-//     const [unreadCount, setUnreadCount] = useState(0);
-//     const [notification, setNotification] = useState(null);
-
-//     useEffect(() => {
-//         const fetchUnreadCount = async () => {
-//             const token = localStorage.getItem("token");
-//             try {
-//                 const response = await axios.get('/api/notifications/unread-count', {
-//                     headers: {
-//                         Authorization: `Bearer ${token}`,
-//                     },
-//                 });
-//                 setUnreadCount(response.data.unread_count);
-//             } catch (error) {
-//                 console.error("Error fetching unread count:", error);
-//             }
-//         };
-
-//         fetchUnreadCount();
-
-//         const userId = localStorage.getItem("role") === "admin" ? "shared" : localStorage.getItem("id");
-//         const channel = Pusher.subscribe(`private-RequestNotification${userId}`);
-//         channel.bind("App\\Events\\RequestNotification", (data) => {
-//             if (data.recipient_id !== userId) {
-//                 console.log("Notification data received:", data); 
-//                 //setNotification(data.message); // Show notification popup
-//                 setNotification(typeof data.message === "string" ? data.message : data.message.message);
-//                 fetchUnreadCount(); // Update unread count
-//             }
-//         });
-
-//         return () => {
-//             Pusher.unsubscribe(`private-RequestNotification${userId}`);
-//         };
-//     }, []);
-
-//     return (
-//         <NotificationContext.Provider value={{ unreadCount, setUnreadCount, notification, setNotification }}>
-//             {children}
-//         </NotificationContext.Provider>
-//     );
-// };

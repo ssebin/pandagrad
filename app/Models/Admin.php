@@ -28,6 +28,7 @@ class Admin extends Authenticatable implements JWTSubject
         'Remarks',
         'profile_pic',
         'role',
+        'last_login_at',
     ];
 
     /**

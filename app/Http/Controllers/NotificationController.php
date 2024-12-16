@@ -26,7 +26,7 @@ class NotificationController extends Controller
             ->get()
             ->unique('progress_update_id');
 
-            log::info($notifications);
+        log::info($notifications);
 
         return response()->json($notifications);
     }
@@ -96,5 +96,23 @@ class NotificationController extends Controller
             ->count();
 
         return response()->json(['unread_count' => $unreadCount]);
+    }
+
+    public function getUnreadNotificationsSinceLastLogin(Request $request)
+    {
+        $user = $request->user(); // Get the authenticated user
+        log::info("User: " . $user);
+        log::info("Last login at: " . $user->last_login_at);
+
+        $query = Notification::where('recipient_id', $user->id);
+
+        // Check if last_login_at is not null
+        if ($user->last_login_at) {
+            $query->where('created_at', '>', $user->last_login_at);
+        }
+
+        $notifications = $query->get();
+
+        return response()->json($notifications);
     }
 }

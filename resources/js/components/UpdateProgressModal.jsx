@@ -627,7 +627,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
             case 'update_status':
                 return (
                     <>
-                        <label className={styles.label}>Status<span style={{ color: 'red' }}> *</span></label>
+                        <label className={styles.label}>Student Status<span style={{ color: 'red' }}> *</span></label>
                         <select
                             className={styles.input}
                             onChange={(e) => handleExtraFieldChange('status', e.target.value)}
@@ -637,10 +637,10 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                             <option value="Inactive">Inactive</option>
                             <option value="GoT">GoT</option>
                             <option value="Non-GoT">Non-GoT</option>
-                            <option value="Personal Leave">Personal Leave</option>
+                            <option value="PL">Personal Leave</option>
                             <option value="Withdrawn">Withdrawn</option>
-                            <option value="Terminated (I)">Terminated (I)</option>
-                            <option value="Terminated (F)">Terminated (F)</option>
+                            <option value="TI">Terminated (I)</option>
+                            <option value="TF">Terminated (F)</option>
                         </select>
                     </>
                 );
@@ -998,7 +998,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                     <select className={styles.input} value={updateType} onChange={(e) => setUpdateType(e.target.value)} required>
                         <option value="">Select an update</option>
                         <optgroup label="Student Information">
-                            <option value="update_status">Update Status</option>
+                            <option value="update_status">Update Student Status</option>
                             <option value="workshops_attended">Workshops Attended</option>
                             <option value="change_study_plan">Change Study Plan</option>
                             <option value="extension_candidature_period">Extension of Candidature Period</option>

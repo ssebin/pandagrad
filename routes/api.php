@@ -21,23 +21,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/students/{id}', [StudentController::class, 'show']);
     Route::put('/students/{id}', [StudentController::class, 'update']);
     Route::delete('/students/{id}', [StudentController::class, 'destroy']);
+
     Route::get('/students/{id}/study-plan', [StudentController::class, 'getStudyPlan']);
-    //Route::get('/students/study-plans', [StudentController::class, 'getAllStudyPlans']);
     Route::put('/students/{id}/update-progress', [StudentController::class, 'updateProgress']);
     Route::post('/students/{studentId}/update-progress', [StudentController::class, 'updateProgress']);
+
     Route::get('/tasks', [TaskController::class, 'index']);
+
     Route::get('/progress-updates', [ProgressUpdateController::class, 'index']);
     Route::post('/progress-updates/{progressUpdateId}/approve', [StudentController::class, 'approveUpdate']);
     Route::post('/progress-updates/{progressUpdateId}/reject', [StudentController::class, 'rejectUpdate']);
     Route::post('/progress-updates/{progressUpdateId}/pending', [StudentController::class, 'pendingUpdate']);
-    //Route::post('/progress-updates/{id}/mark-as-read', [ProgressUpdateController::class, 'markAsRead']);
+
     Route::post('/notifications/mark-as-read/{progressUpdateId}', [NotificationController::class, 'markNotificationAsRead']);
     Route::post('/notifications/mark-as-unread/{progressUpdateId}', [NotificationController::class, 'markNotificationAsUnread']);
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [NotificationController::class, 'getUnreadCount']);
-    // Route::get('/students/{studentId}/progress', [StudentController::class, 'getStudentProgress']);
-    //Route::get('/students/{id}/nationality', [StudentController::class, 'getNationality']);
-    //Route::get('/students/nationalities', [StudentController::class, 'getAllNationalities']);
+    Route::get('/notifications/since-last-login', [NotificationController::class, 'getUnreadNotificationsSinceLastLogin']);
 
     Route::get('/lecturers', [LecturerController::class, 'getSupervisors']);
 
@@ -58,5 +58,3 @@ Route::post('/refresh', [AuthController::class, 'refresh']);
 Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
     return response()->json($request->user());
 });
-
-//Route::middleware('auth:sanctum')->get('/lecturer/students', [StudentController::class, 'studentsUnderSupervision']);

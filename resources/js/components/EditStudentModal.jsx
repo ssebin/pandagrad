@@ -150,7 +150,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                     <label className={styles.label}>Siswamail</label>
                     <input className={styles.input} type="email" name="siswamail" value={student.siswamail} onChange={handleChange} required />
 
-                    <label className={styles.label}>Status</label>
+                    <label className={styles.label}>Student Status</label>
                     <select className={styles.select} name="status" value={student.status} onChange={handleChange} required>
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>

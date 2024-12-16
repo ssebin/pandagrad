@@ -12,18 +12,34 @@ class ProgressUpdateController extends Controller
     public function index()
     {
         $user = Auth::user(); // Get the authenticated user
-        log::info('user: ' . $user);
+        //log::info('user: ' . $user);
+
+        $generalUpdateNames = [
+            'update_status' => 'Update Student Status',
+            'workshops_attended' => 'Workshops Attended',
+            'change_study_plan' => 'Change Study Plan',
+            'extension_candidature_period' => 'Extension of Candidature Period',
+        ];
 
         // Build the query
+        // $query = DB::table('progress_updates')
+        //     ->join('students', 'progress_updates.student_id', '=', 'students.id')
+        //     ->leftJoin('tasks', 'progress_updates.update_type', '=', 'tasks.unique_identifier')
+        //     ->select(
+        //         'progress_updates.*', // Select all fields from progress_updates
+        //         DB::raw("CONCAT(students.first_name, ' ', students.last_name) as student_name"), // Full student name
+        //         'tasks.name as update_name' // Task name
+        //     )
+        //     ->whereNotNull('tasks.name');
+
         $query = DB::table('progress_updates')
-            ->join('students', 'progress_updates.student_id', '=', 'students.id')
-            ->leftJoin('tasks', 'progress_updates.update_type', '=', 'tasks.unique_identifier')
-            ->select(
-                'progress_updates.*', // Select all fields from progress_updates
-                DB::raw("CONCAT(students.first_name, ' ', students.last_name) as student_name"), // Full student name
-                'tasks.name as update_name' // Task name
-            )
-            ->whereNotNull('tasks.name');
+        ->join('students', 'progress_updates.student_id', '=', 'students.id')
+        ->leftJoin('tasks', 'progress_updates.update_type', '=', 'tasks.unique_identifier') // Left join for tasks
+        ->select(
+            'progress_updates.*', // Select all fields from progress_updates
+            DB::raw("CONCAT(students.first_name, ' ', students.last_name) as student_name"), // Full student name
+            'tasks.name as task_update_name' // Task name
+        );
 
         // Filter data based on user role
         if ($user->role === 'admin') {
@@ -40,12 +56,15 @@ class ProgressUpdateController extends Controller
         }
 
         // Fetch the data and format it
-        $progressUpdates = $query->get()->map(function ($update) {
+        $progressUpdates = $query->get()->map(function ($update) use ($generalUpdateNames) {
+
+            $updateName = $update->task_update_name ?? $generalUpdateNames[$update->update_type] ?? 'Unknown Update';
+
             return [
                 'id' => $update->id,
                 'date' => date('d M Y', strtotime($update->updated_at)), // Format the date
                 'student_name' => $update->student_name,
-                'update_name' => $update->update_name ?? 'N/A',
+                'update_name' => $updateName,
                 'cgpa' => $update->cgpa ?? null,
                 'num_courses' => $update->num_courses ?? null,
                 'course_name_1' => $update->course_name_1 ?? null,
@@ -73,6 +92,7 @@ class ProgressUpdateController extends Controller
                 'link' => $update->link,
                 'description' => $update->description,
                 'completion_date' => $update->completion_date ?? null,
+                'student_status' => $update->status ?? null,
                 'status' => $this->formatStatus($update->approved),
                 'reason' => $update->reason ?? null,
                 'panels' => $update->panels ?? null,
@@ -83,6 +103,9 @@ class ProgressUpdateController extends Controller
                 'cd_date' => $update->cd_date ?? null,
                 'cd_time' => $update->cd_time ?? null,
                 'cd_venue' => $update->cd_venue ?? null,
+                'supervisor_id' => $update->supervisor_id ?? null,
+                'workshop_name' => $update->workshop_name ?? null,
+                'updated_study_plan' => $update->updated_study_plan ?? null,
             ];
         });
 

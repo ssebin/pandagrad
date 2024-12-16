@@ -1229,6 +1229,9 @@ class StudentController extends Controller
             }
         }
 
+        // Determine notification type based on the message content
+        $notificationType = $this->determineNotificationType($message);
+
         logger('Broadcasting request update:', [
             'progressUpdateId' => $progressUpdate->id,
             'studentId' => $student->id,
@@ -1246,6 +1249,7 @@ class StudentController extends Controller
                 'message' => $message ?? 'Request updated',
                 'status' => $progressUpdate->status ?? 'Pending',
                 'reason' => $progressUpdate->reason ?? null,
+                'type' => $notificationType,
                 'read_at' => $isCreatedByUser ? now() : null,
             ];
 
@@ -1260,10 +1264,28 @@ class StudentController extends Controller
                 'recipient_id' => $recipient['id'],
                 'role' => $recipient['role'],
                 'message' => $message ?? 'Request updated',
+                'type' => $notificationType,
             ];
 
             event(new RequestNotification($eventData));
         }
+    }
+
+    private function determineNotificationType($message)
+    {
+        if (str_contains($message, 'approved')) {
+            return 'success';
+        } elseif (str_contains($message, 'pending')) {
+            return 'warning';
+        } elseif (str_contains($message, 'rejected')) {
+            return 'error';
+        } elseif (str_contains($message, 'directly updated')) {
+            return 'info';
+        } elseif (str_contains($message, 'New request submitted')) {
+            return 'request';
+        }
+
+        return 'info'; // Default to info
     }
 
     public function updateProgress(Request $request, $studentId)
@@ -1432,7 +1454,7 @@ class StudentController extends Controller
         if ($isAdmin) {
             $student = Student::find($progressUpdate->student_id);
             // Construct the message
-            $message = "{$adminName} updated {$student->first_name} {$student->last_name}'s progress";
+            $message = "{$adminName} directly updated {$student->first_name} {$student->last_name}'s progress";
             $this->broadcastRequestUpdate((object) $progressUpdate, $message);
 
             $this->processAdminUpdate($validatedData, $studentID, $currentSemester, $progressUpdate->id);
@@ -1685,7 +1707,7 @@ class StudentController extends Controller
         }
 
         $admin = auth()->user();
-        $adminName = $admin->name ?? 'Admin';
+        $adminName = $admin->Name ?? 'Admin';
 
         $student = Student::find($progressUpdate->student_id);
         $studentName = $student ? "{$student->first_name} {$student->last_name}" : 'Student';
@@ -1733,7 +1755,7 @@ class StudentController extends Controller
 
         // Get the admin's name
         $admin = auth()->user();
-        $adminName = $admin->name ?? 'Admin';
+        $adminName = $admin->Name ?? 'Admin';
 
         // Get the student's name
         $student = Student::find($progressUpdate->student_id);

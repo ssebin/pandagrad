@@ -1,4 +1,4 @@
-.notification-popup {
+/* .notification-popup {
     position: fixed;
     top: 20px;
     right: 20px;
@@ -30,4 +30,159 @@
         opacity: 1;
         transform: translateY(0);
     }
+} */
+
+/* Container styling */
+.notification-popup {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: #fff;
+    font-family: Arial, sans-serif;
+    max-width: 300px;
+    z-index: 1000;
+    animation: fadeIn 1s ease-out;
+}
+
+/* Apply vertical stacking offsets using nth-child */
+.notification-popup:nth-child(1) {
+    top: 20px; /* First notification appears at 20px from the top */
+}
+.notification-popup:nth-child(2) {
+    top: 110px; /* Add 60px gap below the first notification */
+}
+.notification-popup:nth-child(3) {
+    top: 200px; /* Add another 60px gap */
+}
+.notification-popup:nth-child(4) {
+    top: 290px; /* Stacking continues */
+}
+.notification-popup:nth-child(5) {
+    top: 380px;
+}
+
+.notification-popup:nth-child(6) {
+    top: 470px;
+}
+.notification-popup:nth-child(7) {
+    top: 560px;
+}
+.notification-popup:nth-child(8) {
+    top: 650px;
+}
+
+/* Add a scroll behavior if needed for large numbers of notifications */
+.notification-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    max-height: 80%; /* Limit the height for many notifications */
+    overflow-y: hidden;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Color Schemes */
+.notification-popup.green {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.notification-popup.yellow {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.notification-popup.red {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.notification-popup.blue {
+    background-color: #cce5ff;
+    color: #004085;
+}
+
+.notification-popup.purple {
+    background-color: #e2d9f3;
+    color: #5a2d82;
+}
+
+/* Icon styling */
+.notification-popup .icon {
+    font-size: 1.5rem;
+    margin-right: 10px;
+}
+
+/* Message styling */
+.notification-popup .message {
+    flex-grow: 1;
+    font-size: 1rem;
+    margin: 0;
+}
+
+/* Close button */
+.notification-popup .close-btn {
+    background: none;
+    border: none;
+    color: inherit;
+    font-size: 1.5rem;
+    cursor: pointer;
+    margin-left: 10px;
+    outline: none;
+    line-height: 1;
+}
+
+/* Progress Bar Styling */
+.notification-popup.green .progress-bar {
+    background-color: #155724; 
+}
+
+.notification-popup.yellow .progress-bar {
+    background-color: #856404; 
+}
+
+.notification-popup.red .progress-bar {
+    background-color: #721c24; 
+}
+
+.notification-popup.blue .progress-bar {
+    background-color: #004085; 
+}
+
+.notification-popup.purple .progress-bar {
+    background-color: #5a2d82; 
+}
+
+/* Shared Progress Bar Styling */
+.notification-popup .progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 5px;
+    transition: width 0.1s linear;
+    border-radius: 0 0 10px 10px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20%);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notification-popup .close-btn:hover {
+    opacity: 0.7;
 }

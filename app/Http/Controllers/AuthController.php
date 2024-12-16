@@ -1,83 +1,4 @@
 <?php
-/*
-namespace App\Http\Controllers;
-
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Log;
-use Tymon\JWTAuth\Facades\JWTAuth;
-use Tymon\JWTAuth\Exceptions\JWTException;
-use App\Models\Admin;
-
-use Laravel\Socialite\Facades\Socialite;
-
-class AuthController extends Controller
-{
-    public function login(Request $request)
-    {
-        $request->validate([
-            'UMEmail' => 'required|email',
-            'password' => 'required',
-            'role' => 'required|in:admin',
-        ]);
-
-        // Only handling admin role as per the requirement
-        if ($request->role !== 'admin') {
-            Log::warning('Login attempt with invalid role', ['role' => $request->role]);
-            return response()->json(['error' => 'Invalid role'], 400);
-        }
-
-        $user = Admin::where('UMEmail', $request->UMEmail)->first();
-
-        // Check if user exists and password is correct
-        if ($user && Hash::check($request->password, $user->Password)) {
-            try {
-                $token = JWTAuth::fromUser($user);
-                Log::info('User logged in successfully', ['email' => $request->UMEmail]);
-                return response()->json([
-                    'token' => $token,
-                    'user' => $user,
-                    'role' => $request->role
-                ], 200);
-            } catch (JWTException $e) {
-                Log::error('Error creating token', ['error' => $e->getMessage()]);
-                return response()->json(['error' => 'Could not create token'], 500);
-            }
-        }
-
-        Log::warning('Invalid login attempt', ['email' => $request->UMEmail, 'role' => $request->role]);
-        return response()->json(['error' => 'Invalid credentials'], 401);
-    }
-
-    public function logout()
-    {
-        auth()->logout();
-        Log::info('User logged out');
-        return response()->json(['message' => 'Successfully logged out']);
-    }
-
-    public function refresh()
-    {
-        try {
-            $newToken = JWTAuth::refresh(JWTAuth::getToken());
-            return response()->json(['token' => $newToken]);
-        } catch (JWTException $e) {
-            return response()->json(['error' => 'Could not refresh token'], 500);
-        }
-    }
-
-    public function me()
-    {
-        try {
-            $user = JWTAuth::parseToken()->authenticate();
-            return response()->json($user);
-        } catch (JWTException $e) {
-            return response()->json(['error' => 'Token is invalid'], 401);
-        }
-    }
-}
-*/
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -139,7 +60,7 @@ class AuthController extends Controller
 
             // Check if the user is an admin
             $admin = Admin::where('UMEmail', $email)->first();
-            if ($admin) {
+            if ($admin) {                
                 $role = 'admin';
                 $token = $admin->createToken('admin-token')->plainTextToken;
                 // Pass the role along with the token

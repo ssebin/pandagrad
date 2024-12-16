@@ -74,6 +74,7 @@ textarea {
     max-height: 300px; /* Optional, limit maximum height */
     resize: none; /* Disable resizing for consistent UI */
     margin-top: 10px;
+    width: 93%;
 }
 
 .modalContent input[type="date"] {

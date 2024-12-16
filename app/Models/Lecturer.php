@@ -17,7 +17,8 @@ class Lecturer extends Authenticatable
         'um_email',
         'status',
         'role',
-        'profile_pic'
+        'profile_pic',
+        'last_login_at',
     ];
 
     // Lecturer supervising students (One-to-many relationship)
