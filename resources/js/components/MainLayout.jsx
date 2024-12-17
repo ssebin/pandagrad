@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import SideNav from './SideNav';
 import TopNav from './TopNav';
 import { Outlet } from 'react-router-dom';
@@ -9,9 +9,10 @@ import NotificationPopup from "./NotificationPopup";
 import "./NotificationPopup.css";
 
 function MainLayout() {
-    const { unreadCount, popupNotifications, removePopupNotification } = useNotifications();
+    const { unreadCount, visibleNotifications, removePopupNotification, notifications, popupNotifications } = useNotifications();
     const { user } = useUser();
     const [profilePic, setProfilePic] = useState(user?.profile_pic || "");
+    const MAX_VISIBLE_NOTIFICATIONS = 5;
 
     const updateProfilePicture = (newProfilePic) => {
         setProfilePic(newProfilePic);
@@ -37,30 +38,34 @@ function MainLayout() {
         setProfilePic(user?.profile_pic || "");
     }, [user]);
 
-    useEffect(() => {
-        // Set a timer for each notification to auto-dismiss after 10 seconds
-        const timers = popupNotifications.map((_, index) =>
-            setTimeout(() => removePopupNotification(index), 10000)
-        );
+    // useEffect(() => {
+    //     // Set a timer for each notification to auto-dismiss after 10 seconds
+    //     const timers = popupNotifications.map((_, index) =>
+    //         setTimeout(() => removePopupNotification(index), 10000)
+    //     );
 
-        // Clear timers on unmount or if the notifications array changes
-        return () => timers.forEach((timer) => clearTimeout(timer));
-    }, [popupNotifications, removePopupNotification]);
+    //     // Clear timers on unmount or if the notifications array changes
+    //     return () => timers.forEach((timer) => clearTimeout(timer));
+    // }, [popupNotifications]);
 
     // Set the username based on the role
     const userName = user?.role === 'admin' ? user?.Name : `${user?.first_name}`;
 
-    const MAX_VISIBLE_NOTIFICATIONS = 5;
+    const handleRemovePopup = useCallback((id) => {
+        console.log(`HRP Removing notification with ID: ${id}`);
+        removePopupNotification(id);
+    }, [removePopupNotification]);
 
     return (
         <div className="main-layout">
             <div className="notification-container">
-                {popupNotifications.slice(0, MAX_VISIBLE_NOTIFICATIONS).map((notification, index) => (
+                {visibleNotifications.map((notification) => (
                     <NotificationPopup
-                        key={index}
+                        key={notification.id}
+                        id={notification.id}
                         message={notification.message}
                         type={notification.type}
-                        onClose={() => removePopupNotification(index)}
+                        onClose={handleRemovePopup}
                     />
                 ))}
             </div>

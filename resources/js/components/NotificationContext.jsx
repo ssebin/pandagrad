@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { initializeEcho } from '../bootstrap';
+import { v4 as uuidv4 } from 'uuid';
 
 const NotificationContext = createContext();
 
@@ -10,18 +11,83 @@ export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [popupNotifications, setPopupNotifications] = useState([]);
+    const [visibleNotifications, setVisibleNotifications] = useState([]);
+    const [allNotifications, setAllNotifications] = useState([]);
     const [requests, setRequests] = useState([]);
 
+    // const addPopupNotification = (notification) => {
+    //     setPopupNotifications((prev) => {
+    //         // Allow all notifications, even beyond 5
+    //         return [...prev, notification];
+    //     });
+    // };
+    const MAX_VISIBLE_NOTIFICATIONS = 5;
+
     const addPopupNotification = (notification) => {
-        setPopupNotifications((prev) => {
-            // Allow all notifications, even beyond 5
-            return [...prev, notification];
+        const newNotification = { ...notification, id: uuidv4() };
+
+        setPopupNotifications((prev) => [...prev, newNotification]);
+        setVisibleNotifications((prev) => {
+            const nextVisible = [...prev, newNotification].slice(0, MAX_VISIBLE_NOTIFICATIONS);
+            return nextVisible;
         });
     };
 
-    const removePopupNotification = (index) => {
-        setPopupNotifications((prev) => prev.filter((_, i) => i !== index));
+    // Remove a notification by ID
+    // const removePopupNotification = (id) => {
+    //     console.log(`RPN Removing notification with ID: ${id}`);
+    //     setPopupNotifications((prev) => prev.filter((n) => n.id !== id));
+    //     setVisibleNotifications((prev) => prev.filter((n) => n.id !== id));
+    // };
+
+    const removePopupNotification = (id) => {
+        console.log(`RPN Removing notification with ID: ${id}`);
+    
+        // Update the popupNotifications list
+        setPopupNotifications((prev) => {
+            const updated = prev.filter((n) => n.id !== id);
+            console.log("Updated popupNotifications:", updated);
+    
+            // Update visible notifications immediately with correct pending logic
+            setVisibleNotifications((prev) => {
+                const updatedVisible = prev.filter((n) => n.id !== id);
+    
+                // Find the next pending notification from updated list
+                const nextPending = updated.find(
+                    (n) => !updatedVisible.some((v) => v.id === n.id)
+                );
+    
+                if (nextPending) {
+                    return [...updatedVisible, nextPending].slice(0, MAX_VISIBLE_NOTIFICATIONS);
+                }
+    
+                return updatedVisible;
+            });
+    
+            return updated; // Return the updated list for popupNotifications
+        });
     };
+
+
+    // const removePopupNotification = (id) => {
+    //     setPopupNotifications((prev) => prev.filter((n) => n.id !== id));
+    // };
+
+    // const removePopupNotification = (id) => {
+    //     setVisibleNotifications((prev) => prev.filter((n) => n.id !== id));
+
+    //     // Show pending notifications when slots open up
+    //     setPopupNotifications((prev) => {
+    //         const nextNotifications = prev.slice(1); // Remove first pending notification
+    //         if (nextNotifications.length > 0) {
+    //             setVisibleNotifications((current) => [
+    //                 ...current,
+    //                 nextNotifications[0],
+    //             ]);
+    //         }
+    //         return nextNotifications;
+    //     });
+    // };
 
     const normalizeNotifications = (rawNotifications) => {
         if (!rawNotifications) {
@@ -99,10 +165,10 @@ export const NotificationProvider = ({ children }) => {
                     Authorization: `Bearer ${token}`,
                 },
             });
-    
+
             // Assuming the nested structure is in response.data.notifications
             const unreadNotifications = response.data;
-    
+
             // Check if notifications exist and iterate through them
             if (unreadNotifications && typeof unreadNotifications === 'object') {
                 Object.values(unreadNotifications).forEach((notification) => {
@@ -193,10 +259,11 @@ export const NotificationProvider = ({ children }) => {
                 notifications,
                 unreadCount,
                 setUnreadCount,
-                popupNotifications,
                 addPopupNotification,
                 removePopupNotification,
                 setPopupNotifications,
+                visibleNotifications,
+                popupNotifications,
                 setNotifications,
                 fetchRequests,
                 requests,
