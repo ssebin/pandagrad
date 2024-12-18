@@ -239,7 +239,7 @@ export const StudentProvider = ({ children }) => {
     useEffect(() => {
         const token = localStorage.getItem('token');
         if (!token) {
-            console.warn('Token is missing. NotificationContext not initialized.');
+            console.warn('Token is missing. StudentContext not initialized.');
             return;
         }
         fetchStudentsData();

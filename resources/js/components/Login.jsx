@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { StudentContext } from './StudentContext';
 import { useUser } from './UserContext';
 import { initializeEcho } from '../bootstrap';
+import { useNotifications } from './NotificationContext';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ function Login() {
     const navigate = useNavigate();
     const { login } = useUser();
     const { fetchStudentsData } = useContext(StudentContext);
+    const { addPopupNotification } = useNotifications();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -33,7 +35,7 @@ function Login() {
             //console.log("Response:", response);
 
             if (response.status === 200) {
-                const { token, user, role: returnedRole } = response.data;
+                const { token, user, role: returnedRole, unread_notifications } = response.data;
 
                 if (token && user) {
                     // Store the token and user role in localStorage
@@ -48,6 +50,16 @@ function Login() {
                     }
 
                     login(user, token, returnedRole);
+                    
+                    if (Array.isArray(unread_notifications)) {
+                        unread_notifications.forEach((notification) => {
+                            addPopupNotification({
+                                id: notification.id,
+                                message: notification.message,
+                                type: notification.type,
+                            });
+                        });
+                    }
 
                     // Redirect based on the role like in ProcessLogin.jsx
                     if (returnedRole === 'admin') {
@@ -88,7 +100,7 @@ function Login() {
     const handleGoogleLogin = () => {
         try {
             // Redirect the user to the Google login via the backend
-            window.location.href = "http://127.0.0.1:8000/auth/google"; // This is handled by your backend
+            window.location.href = "http://127.0.0.1:8000/auth/google"; 
         } catch (error) {
             console.error('Google Login failed:', error.response?.data || error.message);
             setError('Google login failed. Please try again.');

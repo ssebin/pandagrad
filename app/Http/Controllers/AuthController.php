@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ use App\Models\Admin;
 use App\Models\Lecturer;
 use App\Models\Student;
 use GuzzleHttp\Client;
+use App\Models\Notification;
 
 class AuthController extends Controller
 {
@@ -58,19 +60,39 @@ class AuthController extends Controller
 
             $email = $googleUser->email;
 
+            $unreadNotifications = [];
+
             // Check if the user is an admin
             $admin = Admin::where('UMEmail', $email)->first();
-            if ($admin) {                
+            if ($admin) {
+                $lastSeenAt = $admin->last_active_at ?? $admin->last_login_at;
+                $unreadNotifications = Notification::where('recipient_id', 'shared')
+                    ->whereNull('read_at')
+                    ->where('created_at', '>', $lastSeenAt)
+                    ->get();
+                $admin->update(['last_login_at' => now()]);
                 $role = 'admin';
                 $token = $admin->createToken('admin-token')->plainTextToken;
+                // return response()->json([
+                //     'token' => $token,
+                //     'role' => $role,
+                //     'user' => $admin,
+                //     'unread_notifications' => $unreadNotifications,
+                // ]);
                 // Pass the role along with the token
-                return redirect()->to('http://127.0.0.1:8000/process-login?token=' . $token . '&role=' . $role);
+                return redirect()->to('http://127.0.0.1:8000/process-login?token=' . $token . '&role=' . $role . '&unread_notifications=' . urlencode(json_encode($unreadNotifications)));
             }
 
             // Check if user is Lecturer
             //if (str_ends_with($email, '@um.edu.my')) {
             $lecturer = Lecturer::where('um_email', $email)->first();  // Assuming 'email' is the column in the lecturer table
             if ($lecturer) {
+                $lastSeenAt = $lecturer->last_active_at ?? $lecturer->last_login_at;
+                $unreadNotifications = Notification::where('recipient_id', $lecturer->id)
+                    ->whereNull('read_at')
+                    ->where('created_at', '>', $lastSeenAt)
+                    ->get();
+                $lecturer->update(['last_login_at' => now()]);
                 $role = $lecturer->role;  // Get the role from the lecturer table
                 $lecturerRole = '';
 
@@ -83,7 +105,13 @@ class AuthController extends Controller
                     $lecturerRole = 'lecturer_both';
                 }
                 $token = $lecturer->createToken('lecturer-token')->plainTextToken;
-                return redirect()->to('http://127.0.0.1:8000/process-login?token=' . $token . '&role=' . $lecturerRole);
+                // return response()->json([
+                //     'token' => $token,
+                //     'role' => $lecturerRole,
+                //     'user' => $lecturer,
+                //     'unread_notifications' => $unreadNotifications,
+                // ]);
+                return redirect()->to('http://127.0.0.1:8000/process-login?token=' . $token . '&role=' . $lecturerRole . '&unread_notifications=' . urlencode(json_encode($unreadNotifications)));
             }
             //}
 
@@ -91,10 +119,22 @@ class AuthController extends Controller
             if (str_ends_with($email, '@siswa.um.edu.my')) {
                 $student = Student::where('siswamail', $email)->first();
                 if ($student) {
+                    $lastSeenAt = $student->last_active_at ?? $student->last_login_at;
+                    $unreadNotifications = Notification::where('recipient_id', $student->id)
+                        ->whereNull('read_at')
+                        ->where('created_at', '>', $lastSeenAt)
+                        ->get();
+                    $student->update(['last_login_at' => now()]);
                     $role = 'student';
                     $token = $student->createToken('student-token')->plainTextToken;
+                    // return response()->json([
+                    //     'token' => $token,
+                    //     'role' => $role,
+                    //     'user' => $student,
+                    //     'unread_notifications' => $unreadNotifications,
+                    // ]);
                     // Pass the role along with the token
-                    return redirect()->to('http://127.0.0.1:8000/process-login?token=' . $token . '&role=' . $role);
+                    return redirect()->to('http://127.0.0.1:8000/process-login?token=' . $token . '&role=' . $role . '&unread_notifications=' . urlencode(json_encode($unreadNotifications)));
                 } else {
                     return response()->json(['error' => 'Student not found'], 403);
                 }
@@ -107,6 +147,25 @@ class AuthController extends Controller
             ]);
             return response()->json(['error' => 'Authentication failed'], 500);
         }
+    }
+
+    private function fetchUnreadNotifications($user)
+    {
+        $query = Notification::query();
+
+        if ($user->role === 'admin') {
+            $query->where('recipient_id', 'shared');
+        } else {
+            $query->where('recipient_id', $user->id);
+        }
+
+        $query->whereNull('read_at');
+
+        if ($user->last_login_at) {
+            $query->where('created_at', '>', $user->last_login_at);
+        }
+
+        return $query->get()->toArray();
     }
 
     // Logout function
@@ -142,11 +201,21 @@ class AuthController extends Controller
             if ($request->role === 'admin') {
                 $admin = Admin::where('UMEmail', $request->UMEmail)->first();
                 if ($admin && Hash::check($request->password, $admin->Password)) {
+                    // Fetch unread notifications before updating last_login_at
+                    $lastSeenAt = $admin->last_active_at ?? $admin->last_login_at;
+                    $unreadNotifications = Notification::where('recipient_id', 'shared')
+                        ->whereNull('read_at')
+                        ->where('created_at', '>', $lastSeenAt)
+                        ->get();
+
+                    $admin->update(['last_login_at' => now()]);
+
                     $token = $admin->createToken('admin-token')->plainTextToken;
                     return response()->json([
                         'token' => $token,
                         'user' => $admin,
                         'role' => 'admin',
+                        'unread_notifications' => $unreadNotifications,
                     ]);
                 }
             }
@@ -154,8 +223,17 @@ class AuthController extends Controller
             if ($request->role === 'lecturer') {
                 $lecturer = Lecturer::where('um_email', $request->UMEmail)->first();
                 if ($lecturer && Hash::check($request->password, $lecturer->password)) {
+                    // Fetch unread notifications before updating last_login_at
+                    $lastSeenAt = $lecturer->last_active_at ?? $lecturer->last_login_at;
+                    $unreadNotifications = Notification::where('recipient_id', $lecturer->id)
+                        ->whereNull('read_at')
+                        ->where('created_at', '>', $lastSeenAt)
+                        ->get();
+
+                    $lecturer->update(['last_login_at' => now()]);
+
                     $role = $lecturer->role;
-                    
+
                     $lecturerRole = $this->getLecturerRole($role); // Helper method to get role
                     //Log::info('lecturerRole: ', [$lecturerRole]);
                     $token = $lecturer->createToken('lecturer-token')->plainTextToken;
@@ -163,6 +241,7 @@ class AuthController extends Controller
                         'token' => $token,
                         'user' => $lecturer,
                         'role' => $lecturerRole,
+                        'unread_notifications' => $unreadNotifications,
                     ]);
                 }
             }
@@ -170,11 +249,21 @@ class AuthController extends Controller
             if ($request->role === 'student') {
                 $student = Student::where('siswamail', $request->UMEmail)->first();
                 if ($student && Hash::check($request->password, $student->password)) {
+                    // Fetch unread notifications before updating last_login_at
+                    $lastSeenAt = $student->last_active_at ?? $student->last_login_at;
+                    $unreadNotifications = Notification::where('recipient_id', $student->id)
+                        ->whereNull('read_at')
+                        ->where('created_at', '>', $lastSeenAt)
+                        ->get();
+
+                    $student->update(['last_login_at' => now()]);
+
                     $token = $student->createToken('student-token')->plainTextToken;
                     return response()->json([
                         'token' => $token,
                         'user' => $student,
                         'role' => 'student',
+                        'unread_notifications' => $unreadNotifications,
                     ]);
                 }
             }

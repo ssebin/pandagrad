@@ -46,35 +46,26 @@
     color: #fff;
     font-family: Arial, sans-serif;
     max-width: 300px;
+    min-height: 50px;
     z-index: 1000;
     animation: fadeIn 1s ease-out;
 }
 
 /* Apply vertical stacking offsets using nth-child */
 .notification-popup:nth-child(1) {
-    top: 20px; /* First notification appears at 20px from the top */
+    top: 20px;
 }
 .notification-popup:nth-child(2) {
-    top: 110px; /* Add 60px gap below the first notification */
+    top: 120px; 
 }
 .notification-popup:nth-child(3) {
-    top: 200px; /* Add another 60px gap */
+    top: 220px; 
 }
 .notification-popup:nth-child(4) {
-    top: 290px; /* Stacking continues */
+    top: 320px;
 }
 .notification-popup:nth-child(5) {
-    top: 380px;
-}
-
-.notification-popup:nth-child(6) {
-    top: 470px;
-}
-.notification-popup:nth-child(7) {
-    top: 560px;
-}
-.notification-popup:nth-child(8) {
-    top: 650px;
+    top: 420px;
 }
 
 /* Add a scroll behavior if needed for large numbers of notifications */
@@ -87,6 +78,7 @@
     z-index: 1000;
     display: flex;
     flex-direction: column;
+    gap: 100px;
 }
 
 /* Color Schemes */

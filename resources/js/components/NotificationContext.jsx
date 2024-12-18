@@ -2,10 +2,59 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
 import { initializeEcho } from '../bootstrap';
 import { v4 as uuidv4 } from 'uuid';
+import { useUser } from './UserContext';
 
 const NotificationContext = createContext();
 
 export const useNotifications = () => useContext(NotificationContext);
+
+// Helper function to manage displayed IDs in localStorage
+const getDisplayedNotifications = () => {
+    const storedIds = localStorage.getItem('displayedNotifications');
+    return storedIds ? new Set(JSON.parse(storedIds)) : new Set();
+};
+
+const saveDisplayedNotifications = (ids) => {
+    localStorage.setItem('displayedNotifications', JSON.stringify([...ids]));
+};
+
+const fetchUnreadNotifications = async (addPopupNotification) => {
+    console.log('Fetching unread notifications since last login');
+    const token = localStorage.getItem('token');
+    const displayedNotifications = getDisplayedNotifications(); // Get previously displayed IDs
+
+    try {
+        const response = await axios.get('/api/notifications/since-last-login', {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const unreadNotifications = response.data;
+        console.log('Unread Notifications:', unreadNotifications);
+
+        if (Array.isArray(unreadNotifications)) {
+            unreadNotifications.forEach((notification) => {
+                // Check if the notification ID has already been displayed
+                if (!displayedNotifications.has(notification.id)) {
+                    displayedNotifications.add(notification.id); // Mark as displayed
+
+                    addPopupNotification({
+                        id: notification.id || uuidv4(), // Ensure unique ID
+                        message: notification.message,
+                        type: notification.type,
+                    });
+                    console.log('Notification added:', notification);
+                }
+            });
+
+            // Persist updated IDs in localStorage
+            saveDisplayedNotifications(displayedNotifications);
+        } else {
+            console.log('No unread notifications received.');
+        }
+    } catch (error) {
+        console.error('Error fetching unread notifications:', error);
+    }
+};
 
 export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
@@ -14,6 +63,7 @@ export const NotificationProvider = ({ children }) => {
     const [visibleNotifications, setVisibleNotifications] = useState([]);
     const [allNotifications, setAllNotifications] = useState([]);
     const [requests, setRequests] = useState([]);
+    const { token } = useUser();
 
     // const addPopupNotification = (notification) => {
     //     setPopupNotifications((prev) => {
@@ -42,28 +92,28 @@ export const NotificationProvider = ({ children }) => {
 
     const removePopupNotification = (id) => {
         console.log(`RPN Removing notification with ID: ${id}`);
-    
+
         // Update the popupNotifications list
         setPopupNotifications((prev) => {
             const updated = prev.filter((n) => n.id !== id);
             console.log("Updated popupNotifications:", updated);
-    
+
             // Update visible notifications immediately with correct pending logic
             setVisibleNotifications((prev) => {
                 const updatedVisible = prev.filter((n) => n.id !== id);
-    
+
                 // Find the next pending notification from updated list
                 const nextPending = updated.find(
                     (n) => !updatedVisible.some((v) => v.id === n.id)
                 );
-    
+
                 if (nextPending) {
                     return [...updatedVisible, nextPending].slice(0, MAX_VISIBLE_NOTIFICATIONS);
                 }
-    
+
                 return updatedVisible;
             });
-    
+
             return updated; // Return the updated list for popupNotifications
         });
     };
@@ -157,101 +207,186 @@ export const NotificationProvider = ({ children }) => {
         }
     };
 
-    const fetchUnreadNotifications = async () => {
-        const token = localStorage.getItem('token');
-        try {
-            const response = await axios.get('/api/notifications/unread', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+    // const fetchUnreadNotifications = async () => {
+    //     const token = localStorage.getItem('token');
+    //     try {
+    //         const response = await axios.get('/api/notifications/unread', {
+    //             headers: {
+    //                 Authorization: `Bearer ${token}`,
+    //             },
+    //         });
 
-            // Assuming the nested structure is in response.data.notifications
-            const unreadNotifications = response.data;
+    //         // Assuming the nested structure is in response.data.notifications
+    //         const unreadNotifications = response.data;
 
-            // Check if notifications exist and iterate through them
-            if (unreadNotifications && typeof unreadNotifications === 'object') {
-                Object.values(unreadNotifications).forEach((notification) => {
-                    addPopupNotification({
-                        message: notification.message,
-                        type: notification.type,
-                    });
-                });
-            } else {
-                console.log('No unread notifications received.');
-            }
-        } catch (error) {
-            console.error('Error fetching unread notifications:', error);
-        }
-    };
+    //         // Check if notifications exist and iterate through them
+    //         if (unreadNotifications && typeof unreadNotifications === 'object') {
+    //             Object.values(unreadNotifications).forEach((notification) => {
+    //                 addPopupNotification({
+    //                     message: notification.message,
+    //                     type: notification.type,
+    //                 });
+    //             });
+    //         } else {
+    //             console.log('No unread notifications received.');
+    //         }
+    //     } catch (error) {
+    //         console.error('Error fetching unread notifications:', error);
+    //     }
+    // };
+
+    // useEffect(() => {
+    //     const token = localStorage.getItem('token');
+    //     if (!token) {
+    //         console.warn('Token is missing. NotificationContext not initialized.');
+    //         return;
+    //     }
+
+    //     fetchUnreadNotifications(addPopupNotification);
+
+    //     const initializeNotifications = async () => {
+    //         console.log("Initializing NotificationContext");
+
+    //         // Fetch initial data
+    //         await Promise.all([fetchNotifications(), fetchRequests(), fetchUnreadCount()]);
+
+    //         // Ensure Echo is initialized
+    //         const echo = initializeEcho();
+
+    //         if (!echo) {
+    //             console.error('Echo instance is not initialized. Cannot subscribe to channels.');
+    //             return;
+    //         }
+
+    //         const storedUser = localStorage.getItem('user');
+    //         const user = storedUser ? JSON.parse(storedUser) : null;
+    //         const userRole = localStorage.getItem('role');
+    //         const userId = userRole === 'admin' ? 'shared' : user?.id;
+
+    //         if (!userId) {
+    //             console.error('User ID is missing. Cannot subscribe to Echo.');
+    //             return;
+    //         }
+
+    //         console.log('Subscribing to Echo channel for userId:', userId);
+
+    //         const channel = echo.private(`RequestNotification${userId}`);
+    //         //console.log('Channel:', channel);
+
+    //         channel.listen('RequestNotification', async (data) => {
+    //             console.log('Notification received via Echo:', data);
+
+    //             const { message, type } = data.data || {};
+
+    //             // Fallback for safety if type or message are missing
+    //             const notificationMessage = message || 'Notification received';
+    //             const notificationType = type || 'info'; // Default to 'info'
+
+    //             // Update popup notification state with message and type
+    //             addPopupNotification({ message: notificationMessage, type: notificationType });
+
+    //             // Fetch updated notifications and requests only when needed
+    //             await fetchNotifications();
+    //             if (window.location.pathname.includes('requests')) {
+    //                 await fetchRequests();
+    //             }
+    //         });
+    //     };
+
+    //     initializeNotifications();
+    // }, []);
+
+    // useEffect(() => {
+    //     const token = localStorage.getItem('token');
+    //     if (token) {
+    //         initializeEcho(); // Reinitialize Echo when token changes
+    //     }
+    // }, [localStorage.getItem('token')]); // Watch for token changes
+
+    // useEffect(() => {
+    //     fetchUnreadNotifications(addPopupNotification);
+    // }, []); 
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
         if (!token) {
             console.warn('Token is missing. NotificationContext not initialized.');
             return;
         }
 
-        fetchUnreadNotifications();
+        fetchUnreadNotifications(addPopupNotification);
 
-        const initializeNotifications = async () => {
-            console.log("Initializing NotificationContext");
+        const initializeContext = async () => {
+            const role = localStorage.getItem('role');
+            const storedUser = localStorage.getItem('user');
 
-            // Fetch initial data
-            await Promise.all([fetchNotifications(), fetchRequests(), fetchUnreadCount()]);
+            if (!role || !storedUser) {
+                console.warn('Role or user is missing. NotificationContext not initialized.');
+                return;
+            }
 
-            // Ensure Echo is initialized
+            console.log('Initializing NotificationContext for new session');
+
+            // Clear previous Echo subscriptions
+            if (window.Echo) {
+                console.log('Unsubscribing from all Echo channels');
+                Object.keys(window.Echo.connector.channels).forEach((channelName) => {
+                    console.log(`Leaving channel: ${channelName}`);
+                    window.Echo.leave(channelName);
+                });
+            }
+
+            // Initialize Echo
             const echo = initializeEcho();
-
             if (!echo) {
                 console.error('Echo instance is not initialized. Cannot subscribe to channels.');
                 return;
             }
 
-            const storedUser = localStorage.getItem('user');
-            const user = storedUser ? JSON.parse(storedUser) : null;
-            const userRole = localStorage.getItem('role');
-            const userId = userRole === 'admin' ? 'shared' : user?.id;
+            const user = JSON.parse(storedUser);
+            const userId = role === 'admin' ? 'shared' : user?.id;
 
             if (!userId) {
                 console.error('User ID is missing. Cannot subscribe to Echo.');
                 return;
             }
 
-            console.log('Subscribing to Echo channel for userId:', userId);
+            console.log(`Subscribing to Echo channel for userId: ${userId}`);
 
             const channel = echo.private(`RequestNotification${userId}`);
-            //console.log('Channel:', channel);
-
             channel.listen('RequestNotification', async (data) => {
                 console.log('Notification received via Echo:', data);
 
                 const { message, type } = data.data || {};
-
-                // Fallback for safety if type or message are missing
                 const notificationMessage = message || 'Notification received';
-                const notificationType = type || 'info'; // Default to 'info'
+                const notificationType = type || 'info';
 
-                // Update popup notification state with message and type
                 addPopupNotification({ message: notificationMessage, type: notificationType });
 
-                // Fetch updated notifications and requests only when needed
-                await fetchNotifications();
-                if (window.location.pathname.includes('requests')) {
-                    await fetchRequests();
-                }
+                // Fetch updated data
+                await Promise.all([fetchNotifications(), fetchRequests()]);
             });
+
+            // Fetch initial data for the logged-in user
+            await Promise.all([
+                fetchNotifications(),
+                fetchUnreadCount(),
+                fetchRequests(),
+            ]);
         };
 
-        initializeNotifications();
-    }, []);
+        initializeContext();
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            initializeEcho(); // Reinitialize Echo when token changes
-        }
-    }, [localStorage.getItem('token')]); // Watch for token changes
+        // Cleanup
+        return () => {
+            if (window.Echo) {
+                console.log('Unsubscribing from all Echo channels');
+                Object.keys(window.Echo.connector.channels).forEach((channelName) => {
+                    console.log(`Leaving channel: ${channelName}`);
+                    window.Echo.leave(channelName);
+                });
+            }
+        };
+    }, [token]); // Runs whenever the token changes
 
     return (
         <NotificationContext.Provider

@@ -1,17 +1,32 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
+import { useNotifications } from './NotificationContext';
 
 function ProcessLogin() {
     const navigate = useNavigate();
     const { login } = useUser();
+    const { addPopupNotification } = useNotifications();
 
     useEffect(() => {
         // Extract the token from the query string
         const queryParams = new URLSearchParams(window.location.search);
         const token = queryParams.get('token');
         const role = queryParams.get('role');
-        console.log('Token from URL:', token, 'Role:', role);
+        const unreadNotificationsEncoded = queryParams.get('unread_notifications');
+
+        console.log('Token from URL:', token, 'Role:', role, 'Encoded Unread Notifications:', unreadNotificationsEncoded);
+
+        // Decode and parse the unread notifications
+        let unreadNotifications = [];
+        if (unreadNotificationsEncoded) {
+            try {
+                unreadNotifications = JSON.parse(decodeURIComponent(unreadNotificationsEncoded));
+                console.log('Decoded Unread Notifications:', unreadNotifications);
+            } catch (error) {
+                console.error('Failed to decode or parse unread_notifications:', error);
+            }
+        }
 
         if (token && role) {
             // Store the token in localStorage
@@ -34,6 +49,16 @@ function ProcessLogin() {
                         console.log('User data:', userData);
                         // Store user data and token in context
                         login(userData, token, role);
+
+                        if (Array.isArray(unreadNotifications)) {
+                            unreadNotifications.forEach((notification) => {
+                                addPopupNotification({
+                                    id: notification.id,
+                                    message: notification.message,
+                                    type: notification.type,
+                                });
+                            });
+                        }
 
                         if (role === 'student') {
                             localStorage.setItem('has_study_plan', userData.has_study_plan);

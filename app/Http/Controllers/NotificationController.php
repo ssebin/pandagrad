@@ -101,17 +101,29 @@ class NotificationController extends Controller
     public function getUnreadNotificationsSinceLastLogin(Request $request)
     {
         $user = $request->user(); // Get the authenticated user
-        log::info("User: " . $user);
-        log::info("Last login at: " . $user->last_login_at);
+        log::info("User: " . $user->id . ", Role: " . $user->role . ", Last Login At: " . $user->last_login_at);
 
-        $query = Notification::where('recipient_id', $user->id);
+        $query = Notification::query();
 
-        // Check if last_login_at is not null
+        if ($user->role === 'admin') {
+            // Fetch notifications targeted to all admins
+            $query->where('recipient_id', 'shared');
+        } else {
+            // Fetch notifications for the specific user
+            $query->where('recipient_id', $user->id);
+        }
+
+        // Unread notifications only
+        $query->whereNull('read_at');
+
+        // If last_login_at exists, fetch notifications created after the last login
         if ($user->last_login_at) {
             $query->where('created_at', '>', $user->last_login_at);
         }
 
         $notifications = $query->get();
+
+        log::info("Unread Notifications Retrieved:", $notifications->toArray());
 
         return response()->json($notifications);
     }

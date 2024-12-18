@@ -30,9 +30,6 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
 
         // If no matching semester is found, return null
         if (!matchingSemester) {
-            // console.error(
-            //     `No matching semester found for Semester ${semesterNumber}. Academic Year: ${academicYearStart}/${academicYearStart + 1}, Semester Type: ${semesterType}`
-            // );
             return null;
         }
 
@@ -86,46 +83,6 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
             year: "numeric", month: "short", day: "numeric"
         }).format(formattedDate);
     };
-
-    const currentDate = new Date(); // Get the current date
-
-    // const determineStatus = (taskData, semesterEndDate) => {
-    //     const currentDate = new Date();
-
-    //     // Handle undefined or invalid semesterEndDate
-    //     if (!semesterEndDate || isNaN(new Date(semesterEndDate))) {
-    //         console.warn("Semester end date is unavailable; defaulting to onTrackPending.");
-    //         return 'onTrackPending';
-    //     }
-
-    //     const semesterEnd = new Date(semesterEndDate);
-
-    //     if (!taskData || !taskData.progress_updates) {
-    //         return currentDate <= semesterEnd ? 'onTrackPending' : 'delayedPending';
-    //     }
-
-    //     // Get the most recent update
-    //     const latestUpdate = taskData.progress_updates
-    //         .map(update => ({ ...update, completion_date: new Date(update.completion_date) }))
-    //         .filter(update => !isNaN(update.completion_date)) // Keep only valid dates
-    //         .sort((a, b) => b.completion_date - a.completion_date)[0]; // Most recent update
-
-    //     const progressStatus = latestUpdate?.progress_status || null;
-    //     const completionDate = latestUpdate?.completion_date || null;
-
-    //     // For special tasks, check progress status explicitly
-    //     if (progressStatus === "Pending" || progressStatus === "In Progress") {
-    //         return currentDate <= semesterEnd ? 'onTrackPending' : 'delayedPending';
-    //     }
-
-    //     // For all tasks, check completion date
-    //     if (completionDate) {
-    //         return completionDate <= semesterEnd ? 'onTrackCompleted' : 'delayedCompleted';
-    //     }
-
-    //     // Default: pending
-    //     return currentDate <= semesterEnd ? 'onTrackPending' : 'delayedPending';
-    // };
 
     const determineStatus = (taskData, lastSemesterEndDates) => {
         const currentDate = new Date();
@@ -197,19 +154,9 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
         return taskEndDates;
     };
 
-    // const getMostRecentCompletionDate = (progressUpdates) => {
-    //     if (!Array.isArray(progressUpdates) || progressUpdates.length === 0) {
-    //         return null; // No progress updates
-    //     }
-
-    //     // Extract the most recent `completion_date`
-    //     return progressUpdates
-    //         .map(update => new Date(update.completion_date)) // Convert to Date objects
-    //         .filter(date => !isNaN(date)) // Keep only valid dates
-    //         .reduce((latest, date) => (date > latest ? date : latest), new Date(0)) // Find the most recent date
-    //         .toISOString()
-    //         .split('T')[0]; // Convert back to ISO string in YYYY-MM-DD format
-    // };
+    if (!studyPlan) {
+        return <div>Loading...</div>; // Or a loading spinner
+    }
 
     return (
         <div className={styles.flowchartWrapper}>

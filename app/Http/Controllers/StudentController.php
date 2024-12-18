@@ -100,8 +100,8 @@ class StudentController extends Controller
         $user = $request->user(); // Get the authenticated user
         $student = Student::find($id);
 
-        log::info('User:', [$user]);
-        log::info('Student:', [$student]);
+        //log::info('User:', [$user]);
+        //log::info('Student:', [$student]);
 
         if (!$student) {
             return response()->json(['message' => 'Student not found'], 404);
@@ -114,8 +114,8 @@ class StudentController extends Controller
 
         // Allow students to access only their own details
         if ($user->role === 'student') {
-            log::info('Student ID:', [$student->id]);
-            log::info('User ID:', [$user->id]);
+            //log::info('Student ID:', [$student->id]);
+            //log::info('User ID:', [$user->id]);
             if ($user->id !== $student->id) {
                 return response()->json(['message' => 'Unauthorized'], 403);
             }
@@ -1239,7 +1239,24 @@ class StudentController extends Controller
         ]);
 
         foreach ($recipients as $recipient) {
-            $isCreatedByUser = ($recipient['id'] == $currentUserId && $recipient['role'] === $currentUserRole);
+            //$isCreatedByUser = ($recipient['id'] == $currentUserId && $recipient['role'] === $currentUserRole);
+
+            $isCreatedByUser = false;
+
+            // Handle Admins
+            if ($recipient['role'] === 'admin' && $recipient['id'] === 'shared' && $currentUser->role === 'admin') {
+                $isCreatedByUser = true;
+            }
+
+            // Handle Lecturers with normalized roles
+            $normalizedCurrentUserRole = $roleMapping[$currentUser->role] ?? $currentUser->role;
+
+            if ($recipient['id'] == $currentUserId && $recipient['role'] === $normalizedCurrentUserRole) {
+                $isCreatedByUser = true;
+            }
+
+            log::info('Recipient:', [$recipient]);
+            log::info('Is Created By User:', [$isCreatedByUser]);
 
             $notificationData = [
                 'progress_update_id' => $progressUpdate->id,
