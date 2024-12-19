@@ -14,7 +14,7 @@
 .modalContent {
     background: white;
     padding: 25px;
-    border-radius: 10px;
+    border-radius: 12px;
     width: 350px;
     max-height: 80%;
     overflow-y: auto;
@@ -132,7 +132,7 @@ textarea {
 }
 
 .saveButton {
-    background-color: #192E59;
+    background: linear-gradient(180deg, #192E59, #0A193B);
     color: white;
     padding: 10px 40px;
     cursor: pointer;
@@ -142,7 +142,7 @@ textarea {
 }
 
 .addButton {
-    background-color: #192E59;
+    background: linear-gradient(180deg, #192E59, #0A193B);
     color: white;
     padding: 10px 50px;
     cursor: pointer;

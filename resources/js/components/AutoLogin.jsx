@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
+import { callLogout } from "./UserContext";
 import Login from './Login';
 
 function AutoLogin() {
@@ -12,9 +13,22 @@ function AutoLogin() {
         const savedUser = localStorage.getItem('user');
         const savedToken = localStorage.getItem('token');
         const savedRole = localStorage.getItem('role');
+        const tokenTimestamp = localStorage.getItem('tokenTimestamp');
         const hasStudyPlan = localStorage.getItem('has_study_plan') === 'true'; // Fetch flag from localStorage
+
+        const TOKEN_EXPIRY_TIME = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
     
-        if (savedUser && savedToken && savedRole) {
+        if (savedUser && savedToken && savedRole && tokenTimestamp) {
+            const now = Date.now();
+            const isExpired = now - parseInt(tokenTimestamp, 10) > TOKEN_EXPIRY_TIME;
+
+            if (isExpired) {
+                setLoading(false); // Show the login page
+                callLogout(); // Logout the user
+                console.log('Token expired during auto-login. Clearing localStorage and redirecting to login...');          
+                return;
+            }
+
             console.log('Auto-login detected. Logging in user automatically...');
             login(JSON.parse(savedUser), savedToken, savedRole);
     

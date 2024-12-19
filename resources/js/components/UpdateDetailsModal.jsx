@@ -94,65 +94,6 @@ const UpdateDetailsModal = ({ update, onClose, userRole }) => {
         setTasksOptions(categorizedTasks); // Set categorized tasks
     }, [tasks]);
 
-    // const markAsRead = async (progressUpdateId) => {
-    //     const token = localStorage.getItem("token");
-    //     if (!progressUpdateId) {
-    //         console.error("Progress Update ID is missing. Cannot mark as read.");
-    //         return;
-    //     }
-
-    //     console.log("Notifications Type:", typeof notification, "Value:", notification);
-
-    //     if (!Array.isArray(notificatios)) {
-    //         console.error("Notification is not an array.");
-    //         return;
-    //     }
-
-    //     const noti = noti.find(
-    //         (noti) => noti.progress_update_id === progressUpdateId
-    //     );
-
-    //     if (noti && noti.read_at) {
-    //         console.log("Notification is already marked as read.");
-    //         return;
-    //     }
-    //     try {
-    //         await axios.post(`/api/notifications/mark-as-read/${progressUpdateId}`, {}, {
-    //             headers: {
-    //                 Authorization: `Bearer ${token}`,
-    //             },
-    //         });
-    //         console.log("Notification marked as read.");
-
-    //         const unreadResponse = await axios.get('/api/notifications/unread-count', {
-    //             headers: {
-    //                 Authorization: `Bearer ${token}`,
-    //             },
-    //         });
-
-    //         setNotification((prevNotifications) =>
-    //             prevNotifications.map((noti) =>
-    //                 noti.progress_update_id === progressUpdateId
-    //                     ? { ...noti, read_at: new Date().toISOString() }
-    //                     : noti
-    //             )
-    //         );
-
-    //         // setUnreadCount((prevUnreadCount) => {
-    //         //     const isUnread = notifications.some(
-    //         //         (notification) =>
-    //         //             notification.progress_update_id === progressUpdateId &&
-    //         //             !notification.read_at
-    //         //     );
-    //         //     return isUnread ? prevUnreadCount - 1 : prevUnreadCount;
-    //         // });
-
-    //         setUnreadCount(unreadResponse.data.unread_count);
-    //     } catch (error) {
-    //         console.error("Error marking notification as read:", error);
-    //     }
-    // };
-
     const markAsRead = async (progressUpdateId) => {
         const token = localStorage.getItem("token");
         if (!progressUpdateId) {

@@ -14,6 +14,7 @@ const Requests = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedUpdate, setSelectedUpdate] = useState(null);
     const [filterStatus, setFilterStatus] = useState("");
+    const [showUnread, setShowUnread] = useState(false);
     const { notifications = [], fetchRequests, requests } = useNotifications();
 
     const userRole = user.role;
@@ -66,16 +67,42 @@ const Requests = () => {
         }
     };
 
+    // const filterRequests = (requests) => {
+    //     return requests.filter((request) => {
+    //         const matchesSearch = searchKeyword === "" ||
+    //             (request.student_name && request.student_name.toLowerCase().includes(searchKeyword)) ||
+    //             (request.update_name && request.update_name.toLowerCase().includes(searchKeyword)) ||
+    //             (request.evidence && request.evidence.name && request.evidence.name.toLowerCase().includes(searchKeyword)) ||
+    //             (request.status && request.status.toLowerCase().includes(searchKeyword));
+
+    //         const matchesFilter = filterStatus === "" || request.status === filterStatus;
+    //         return matchesSearch && matchesFilter;
+    //     });
+    // };
+
     const filterRequests = (requests) => {
         return requests.filter((request) => {
-            const matchesSearch = searchKeyword === "" ||
-                (request.student_name && request.student_name.toLowerCase().includes(searchKeyword)) ||
-                (request.update_name && request.update_name.toLowerCase().includes(searchKeyword)) ||
-                (request.evidence && request.evidence.name && request.evidence.name.toLowerCase().includes(searchKeyword)) ||
+            const relatedNotification = Array.isArray(notifications)
+                ? notifications.find((noti) => noti.progress_update_id === request.id)
+                : undefined;
+
+            const isUnread = relatedNotification?.read_at === null;
+
+            const matchesSearch =
+                searchKeyword === "" ||
+                (request.student_name &&
+                    request.student_name.toLowerCase().includes(searchKeyword)) ||
+                (request.update_name &&
+                    request.update_name.toLowerCase().includes(searchKeyword)) ||
+                (request.evidence &&
+                    request.evidence.name &&
+                    request.evidence.name.toLowerCase().includes(searchKeyword)) ||
                 (request.status && request.status.toLowerCase().includes(searchKeyword));
 
             const matchesFilter = filterStatus === "" || request.status === filterStatus;
-            return matchesSearch && matchesFilter;
+            const matchesUnread = !showUnread || isUnread;
+
+            return matchesSearch && matchesFilter && matchesUnread;
         });
     };
 
@@ -93,27 +120,36 @@ const Requests = () => {
 
     const renderPageNumbers = () => {
         if (totalPages === 1) {
-            // If there's only one page, show just "1"
             return [1];
         }
 
         const totalPagesArray = Array.from({ length: totalPages }, (_, i) => i + 1);
         const maxPagesToShow = 2; // Number of pages to show at the start and end
-
-        // Show pages around the current page
         const visiblePages = [];
-        if (currentPage <= maxPagesToShow) {
-            visiblePages.push(...totalPagesArray.slice(0, maxPagesToShow + 1));
-            visiblePages.push('...', ...totalPagesArray.slice(-maxPagesToShow));
-        } else if (currentPage > totalPages - maxPagesToShow) {
-            visiblePages.push(...totalPagesArray.slice(0, maxPagesToShow));
-            visiblePages.push('...', ...totalPagesArray.slice(-maxPagesToShow - 1));
-        } else {
-            visiblePages.push(...totalPagesArray.slice(0, maxPagesToShow));
+
+        // Always include the first page
+        visiblePages.push(1);
+
+        // Add '...' after the first page if currentPage is far from it
+        if (currentPage > maxPagesToShow + 1) {
             visiblePages.push('...');
-            visiblePages.push(currentPage - 1, currentPage, currentPage + 1);
+        }
+
+        // Add pages around the current page
+        const start = Math.max(2, currentPage - 1); // Ensure pages stay within bounds
+        const end = Math.min(totalPages - 1, currentPage + 1);
+        for (let i = start; i <= end; i++) {
+            visiblePages.push(i);
+        }
+
+        // Add '...' before the last page if currentPage is far from it
+        if (currentPage < totalPages - maxPagesToShow) {
             visiblePages.push('...');
-            visiblePages.push(...totalPagesArray.slice(-maxPagesToShow));
+        }
+
+        // Always include the last page
+        if (totalPages > 1) {
+            visiblePages.push(totalPages);
         }
 
         return visiblePages;
@@ -137,7 +173,7 @@ const Requests = () => {
                         />
                     </div>
                     <button
-                        className="filter-button"
+                        className="view-pending-button"
                         onClick={() => {
                             if (filterStatus === "Pending") {
                                 setFilterStatus(""); // Clear the filter to show all
@@ -148,6 +184,15 @@ const Requests = () => {
                         }}
                     >
                         {filterStatus === "Pending" ? "View All" : "View Pending"}
+                    </button>
+                    <button
+                        className="filter-button"
+                        onClick={() => {
+                            setShowUnread(!showUnread); // Toggle the unread filter
+                            setCurrentPage(1); // Reset to the first page
+                        }}
+                    >
+                        {showUnread ? "View All" : "View Unread"}
                     </button>
                 </div>
             </div>

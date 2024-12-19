@@ -11,20 +11,7 @@ const getColor = (index) => {
     return colors[index % colors.length];
 };
 
-// const getTaskColor = (task, opacity) => {
-//     const taskColors = {
-//         "Dissertation": `rgba(255, 99, 71, ${opacity})`,        // Tomato
-//         "Candidature Defence": `rgba(255, 100, 193, ${opacity})`, // Pink
-//         "Literature Review": `rgba(32, 178, 170, ${opacity})`,   // LightSeaGreen
-//         "Proposal Defence": `rgba(70, 130, 180, ${opacity})`,    // SteelBlue
-//         "Final Report": `rgba(255, 215, 0, ${opacity})`,         // Gold
-//         "Core Courses": `rgba(200, 150, 0, ${opacity})`,         // DarkOrange
-//         "Draft of Dissertation": `rgba(147, 112, 219, ${opacity})` // MediumPurple
-//     };
-//     return taskColors[task] || `rgba(224, 224, 224, ${opacity})`;
-// };
-
-const getProgressColor = (status) => {
+const getSolidColor = (status) => {
     switch (status.toLowerCase()) {
         case 'on track':
             return '#0043CE';
@@ -37,17 +24,18 @@ const getProgressColor = (status) => {
     }
 };
 
-// const calculateCurrentSemester = (semesters) => {
-//     const today = new Date();
-//     const currentSemester = semesters.find(semester => {
-//         const startDate = new Date(semester.start_date);
-//         const endDate = new Date(semester.end_date);
-//         return today >= startDate && today <= endDate;
-//     });
-
-//     if (!currentSemester) return { semester: null, academic_year: null };
-//     return { semester: currentSemester.semester, academic_year: currentSemester.academic_year };
-// };
+const getProgressColor = (status) => {
+    switch (status.toLowerCase()) {
+        case 'on track':
+            return 'linear-gradient(90deg, #0043CE, #00A8FF)';
+        case 'slightly delayed':
+            return 'linear-gradient(90deg, #FF8D08, #FFD300)';
+        case 'very delayed':
+            return 'linear-gradient(90deg, #FF0808,rgb(249, 131, 131))';
+        default:
+            return '#ccc'; // Fallback for unknown status
+    }
+};
 
 const calculateStudentSemester = (intake, currentSemester) => {
     const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
@@ -100,75 +88,6 @@ function AllStudents() {
     } else if (user.role === "lecturer_both") {
         basePath = "/lecturer/both";
     }
-
-    // const fetchSupervisors = async () => {
-    //     try {
-    //         const response = await axios.get('/api/lecturers?role=supervisor');
-    //         setSupervisors(response.data);
-    //     } catch (error) {
-    //         console.error('Error fetching supervisors:', error);
-    //     }
-    // };
-
-    // const fetchStudentsData = async () => {
-    //     try {
-    //         const semesterResponse = await axios.get('/api/semesters');
-    //         const semesters = semesterResponse.data;
-    //         const currentSem = calculateCurrentSemester(semesters);
-    //         setCurrentSemester(currentSem);
-
-    //         const studentResponse = await axios.get('/api/students?includeDetails=true');
-    //         const students = studentResponse.data;
-
-    //         students.forEach(student => {
-    //             student.currentSemester = calculateStudentSemester(student.intake, currentSem);
-    //         });
-
-    //         const groupedStudents = students.reduce((acc, student) => {
-    //             const intake = student.intake;
-    //             if (!acc[intake]) {
-    //                 acc[intake] = [];
-    //             }
-    //             acc[intake].push(student);
-    //             return acc;
-    //         }, {});
-
-    //         // Sort intakes in descending order (oldest to newest)
-    //         const sortedIntakes = Object.keys(groupedStudents).sort((a, b) => {
-    //             const [aSem, aYearRange] = a.split(', ');
-    //             const [bSem, bYearRange] = b.split(', ');
-    //             const [aYearStart] = aYearRange.split('/').map(Number);
-    //             const [bYearStart] = bYearRange.split('/').map(Number);
-    //             const aSemNumber = parseInt(aSem.split(' ')[1]);
-    //             const bSemNumber = parseInt(bSem.split(' ')[1]);
-
-    //             if (aYearStart === bYearStart) {
-    //                 return bSemNumber - aSemNumber;
-    //             }
-    //             return bYearStart - aYearStart;
-    //         });
-
-    //         const sortedGroupedStudents = {};
-    //         sortedIntakes.forEach(intake => {
-    //             sortedGroupedStudents[intake] = groupedStudents[intake].sort((a, b) =>
-    //                 `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
-    //             );
-    //         });
-
-    //         setStudentsData(sortedGroupedStudents);
-    //     } catch (error) {
-    //         console.error('Failed to fetch students:', error.response?.data || error.message);
-    //         if (error.response?.status === 401) {
-    //             // Handle token expiration, refresh token, or redirect to login
-    //             console.log('Unauthorized - token might be expired');
-    //         }
-    //     }
-    // };
-
-    // useEffect(() => {
-    //     fetchStudentsData();
-    //     fetchSupervisors();
-    // }, []);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -287,13 +206,6 @@ function AllStudents() {
             );
         });
     };
-
-    // const handleStudentClick = (studentId) => {
-    //     const selectedStudent = students.find(student => student.id === studentId);
-    //     console.log('Selected student:', selectedStudent); // Debugging purposes
-    //     // Optionally store selected student data in state/context
-    //     setSelectedStudent(selectedStudent);
-    // };
 
     const handleAddStudent = async (event) => {
         event.preventDefault();
@@ -580,15 +492,15 @@ function AllStudents() {
                                                                 ? student.profile_pic
                                                                 : `/storage/${student.profile_pic}`}
                                                             alt="Profile"
-                                                            className="profile-pic"
+                                                            className="profile-picc"
                                                         />
                                                     </div>
                                                     <div className="progress">
-                                                        <span className="track-status" style={{ color: getProgressColor(student.track_status) }}>
+                                                        <span className="track-status" style={{ color: getSolidColor(student.track_status) }}>
                                                             {student.progress}% ({student.track_status})
                                                         </span>
                                                         <div className="progress-bar">
-                                                            <div className="progress-completed" style={{ width: `${student.progress}%`, backgroundColor: getProgressColor(student.track_status) }}></div>
+                                                            <div className="progress-completed" style={{ width: `${student.progress}%`, background: getProgressColor(student.track_status) }}></div>
                                                         </div>
                                                     </div>
                                                 </div>

@@ -1,12 +1,54 @@
 .side-nav {
     width: 230px;
     height: 100vh;
-    background-color: #192E59;
-    box-shadow: 5px 0 5px -5px rgba(0, 0, 0, 0.2);
+    /* background-color: #192E59; */
+    background: linear-gradient(90deg, #192E59, #0A193B);
+    /* box-shadow: 5px 0 5px -5px rgba(0, 0, 0, 0.2); */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     position: relative;
+    background-clip: padding-box;
+    box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.5);
+    position: relative;
+    border-radius: 0px 30px 30px 0px;
+}
+
+.side-nav.collapsed {
+    width: 80px;
+}
+
+.side-nav.collapsed .menu-item {
+    justify-content: center;
+    padding: 10px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.side-nav.collapsed .menu-item .menu-icon {
+    margin-right: 0;
+}
+
+.side-nav.collapsed .menu-item span {
+    display: none;
+}
+
+.side-nav .collapse-button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    margin: 10px;
+    cursor: pointer;
+    position: absolute;
+    bottom: 10px;
+    right: 10px; 
+    left: unset; 
+}
+
+.side-nav.collapsed .collapse-button {
+    right: 40%; /* Center horizontally when collapsed */
+    transform: translateX(50%);
 }
 
 .side-nav .top-section {
@@ -27,7 +69,7 @@
     width: 28px;
     position: absolute;
     top: 16px;
-    left: 28px;
+    left: 26px;
 }
 
 .side-nav .logo-text {
@@ -36,7 +78,7 @@
     color: #FFFFFF;
     position: absolute;
     top: 22px;
-    left: 74px;
+    left: 72px;
 }
 
 .side-nav .divider {
@@ -75,7 +117,7 @@
     text-align: center;
     margin-top: auto;
     position: absolute; 
-    bottom: 120px;
+    bottom: 150px;
     left: -230px;
     width: 100%;
 }

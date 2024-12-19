@@ -27,7 +27,7 @@ h1 {
 }
 
 .add-semester-button {
-    background-color: #192E59;
+    background: linear-gradient(180deg, #192E59, #0A193B);
     color: white;
     border: none;
     padding: 10px 20px;

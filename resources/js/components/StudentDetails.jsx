@@ -9,27 +9,6 @@ import ProgressFlowchart from './ProgressFlowchart.jsx';
 import { useUser } from './UserContext';
 import { StudentContext } from './StudentContext';
 
-// const calculateStudentSemester = (intake, currentSemester) => {
-//     const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
-//     const [currentYearStart, currentYearEnd] = currentYearRange.split('/').map(Number);
-
-//     const [intakeSem, intakeYearRange] = intake.split(', ');
-//     const [intakeYearStart, intakeYearEnd] = intakeYearRange.split('/').map(Number);
-//     const intakeSemNumber = parseInt(intakeSem.split(' ')[1]);
-
-//     let semesterCount = (currentYearStart - intakeYearStart) * 2;
-
-//     if (currentSem === 2) {
-//         semesterCount += 1;
-//     }
-
-//     if (intakeSemNumber === 2) {
-//         semesterCount -= 1;
-//     }
-
-//     return semesterCount + 1;
-// };
-
 function StudentDetails() {
     const { id } = useParams();
     const { user } = useUser();
@@ -98,44 +77,6 @@ function StudentDetails() {
         }
     };
 
-    // const fetchStudentProgress = async (studentId) => {
-    //     const token = localStorage.getItem('token');
-    //     const headers = { Authorization: `Bearer ${token}` };
-
-    //     try {
-    //         const studentProgressResponse = await axios.get(`/api/students/${studentId}/progress`, { headers });
-    //         seStudentProgress(studentProgressResponse.data);
-    //     } catch (error) {
-    //         console.error('Error fetching tasks:', error);
-    //     }
-    // };
-
-    // const fetchTasks = async () => {
-    //     try {
-    //         const response = await axios.get('/api/tasks');
-    //         setTasks(response.data);
-    //     } catch (error) {
-    //         console.error('Error fetching tasks:', error);
-    //     }
-    // };
-
-    // const fetchCurrentSemester = async (studentId) => {
-    //     try {
-    //         const semesterResponse = await axios.get('/api/semesters/current');
-    //         setCurrentSemester(semesterResponse.data);
-
-    //         const studentResponse = await axios.get(`/api/students/${studentId}`);
-    //         const studentData = studentResponse.data;
-    //         setStudent(studentData);
-
-    //         // Calculate student's current semester
-    //         const calculatedSem = calculateStudentSemester(studentData.intake, semesterResponse.data);
-    //         setCalculatedSemester(calculatedSem);
-    //     } catch (error) {
-    //         console.error('Error fetching student details:', error);
-    //     }
-    // };
-
     useEffect(() => {
         if (user.role === 'student') {
             // If the user is a student, use their ID from the user object
@@ -193,6 +134,7 @@ function StudentDetails() {
     const workshops = student.workshops_attended ? student.workshops_attended.split(',').map(w => w.trim()) : [];
 
     const progressColor = getProgressColor(student.track_status);
+    const solidColor = getSolidColor(student.track_status);
 
     return (
         <div className={styles.studentDetails}>
@@ -228,10 +170,10 @@ function StudentDetails() {
                         </span>
                     </div>
                     <div className={styles.progressBarContainer}>
-                        <p style={{ color: progressColor }}>{student.progress}% <span className={styles.trackStatus} style={{ color: progressColor }}>({student.track_status})</span></p>
+                        <p style={{ color: solidColor }}>{student.progress}% <span className={styles.trackStatus} style={{ color: solidColor }}>({student.track_status})</span></p>
                     </div>
                     <div className={styles.progressBar} style={{ width: `calc(25% + ${student.first_name.length + student.last_name.length + student.status.length}em)` }}>
-                        <div className={styles.progressCompleted} style={{ width: `${student.progress}%`, backgroundColor: progressColor }}></div>
+                        <div className={styles.progressCompleted} style={{ width: `${student.progress}%`, background: progressColor }}></div>
                     </div>
                 </div>
                 <div className={styles.studentActions}>
@@ -383,7 +325,7 @@ function StudentDetails() {
     );
 }
 
-const getProgressColor = (status) => {
+const getSolidColor = (status) => {
     switch (status.toLowerCase()) {
         case 'on track':
             return '#0043CE';
@@ -396,4 +338,16 @@ const getProgressColor = (status) => {
     }
 };
 
+const getProgressColor = (status) => {
+    switch (status.toLowerCase()) {
+        case 'on track':
+            return 'linear-gradient(90deg, #0043CE, #00A8FF)';
+        case 'slightly delayed':
+            return 'linear-gradient(90deg, #FF8D08, #FFD300)';
+        case 'very delayed':
+            return 'linear-gradient(90deg, #FF0808,rgb(249, 131, 131))';
+        default:
+            return '#ccc'; // Fallback for unknown status
+    }
+};
 export default StudentDetails;

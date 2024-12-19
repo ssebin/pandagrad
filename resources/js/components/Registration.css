@@ -32,7 +32,7 @@ select {
     background-color: #CBE2FB;
     box-sizing: border-box;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    background-color: #192E59;
+    background: linear-gradient(180deg, #192E59, #0A193B);
     color: #fff;
     border: none;
     cursor: pointer;

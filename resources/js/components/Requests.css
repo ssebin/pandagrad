@@ -59,7 +59,9 @@
 
 /* Hover effect for table rows */
 .requests-table tbody tr:hover {
-    background-color: #f9f9f9;
+    background-color: #f1f1f1; /* Light gray for hover background */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    transform: translateY(-1px); /* Slight lift effect */
 }
 
 .pagination {
@@ -74,13 +76,13 @@
     border: none;
     margin: 0 5px;
     padding: 5px 10px;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
     font-size: 14px;
 }
 
 .pagination button.active {
-    background-color: #192e59;
+    background: linear-gradient(180deg, #192E59, #0A193B);
     color: white;
     font-weight: bold;
 }
@@ -130,4 +132,18 @@
     background-color: #FFC5C5;
     border-color: #DF0404; 
     color: #DF0404; 
+}
+
+
+.view-pending-button {
+    padding: 10px 16px;
+    margin-left: 10px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: #e9ad07;
+    color: white;
 }

@@ -105,7 +105,7 @@
 }
 
 .saveButton {
-    background-color: #192E59;
+    background: linear-gradient(180deg, #192E59, #0A193B);
     color: white;
     padding: 10px 50px;
     cursor: pointer;
