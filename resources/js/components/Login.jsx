@@ -1,12 +1,13 @@
 import React, { useState, useContext } from 'react';
-import './Login.css';
-import axios from './axiosConfig.js'; // Ensure this is correctly configured
+import styles from './Login.module.css';
+import axios from './axiosConfig.js';
 import { useNavigate } from 'react-router-dom';
 import { StudentContext } from './StudentContext';
 import { useUser } from './UserContext';
 import { initializeEcho } from '../bootstrap';
 import { useNotifications } from './NotificationContext';
 import { encryptAndStore } from "./storage.js";
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -108,69 +109,79 @@ function Login() {
     };
 
     return (
-        <div className="login-container">
-            <div className="left-section">
-                <img src="/images/logo.png" alt="Logo" className="logo" />
-                <p className='logo-text'>PandaGrad</p>
-                <img src="/images/faculty-logo.png" alt="Faculty Logo" className="faculty-logo" />
-                <h2 className='welcome'>Welcome Back!</h2>
-
-                {/* Traditional Login Form */}
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="email">Siswamail/UM Email</label>
-                        <input
-                            type="email"
-                            id="email"
-                            name="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="password">Password</label>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            required
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="role">Role</label>
-                        <select
-                            id="role"
-                            name="role"
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            required
-                        >
-                            <option value="student">Student</option>
-                            <option value="lecturer">Lecturer</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <button type="submit" className="login-button">Login</button>
-                        <button className="google-login-button" onClick={handleGoogleLogin}>
-                            <img src="/images/googlelogo.png" alt="Google Logo" />
-                            Google SSO
-                        </button>
-                    </div>
-                </form>
-
-                {/* Display error message if there is any */}
-                {error && <p className="error-message">{error}</p>}
+        <div className={styles.loginContainer}>
+            <div className={styles.leftSection}>
+                <div className={styles.overlay}></div>
+                <div className={styles.content}>
+                    <img src="/images/fsktm.jpg" alt="FSKTM Background" className={styles.backgroundImage} />
+                    <img src="/images/faculty-logo.png" alt="Faculty Logo" className={styles.facultyLogo} />
+                    <p className={styles.description}>
+                        A website to monitor Postgraduate students' progress in FSKTM, UM.
+                    </p>
+                </div>
             </div>
+            <div className={styles.rightSection}>
+                <div className={styles.contentWrapper}>
+                    <img src="/images/logo.png" alt="Logo" className={styles.logo} />
+                    <h1 className={styles.logoText}>PandaGrad</h1>
+                    <p className={styles.tagline}>Log in to keep track of your progress and updates.</p>
 
-            <div className="right-section">
-                <img src="/images/login-3d.png" alt="Login 3D Image" className="login-3d" />
+                    <form onSubmit={handleSubmit}>
+                        <div className={`${styles.formGroup} ${styles.inputWithIcon}`}>
+                            <i className={`fa fa-user ${styles.icon}`}></i>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                placeholder="Siswamail/UM Email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className={`${styles.formGroup} ${styles.inputWithIcon}`}>
+                            <i className={`fa fa-lock ${styles.icon}`}></i>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
+                        </div>
+                        <div className={`${styles.formGroup} ${styles.inputWithIcon}`}>
+                            <i className={`fa fa-users ${styles.icon}`}></i>
+                            <select
+                                id="role"
+                                name="role"
+                                value={role}
+                                onChange={(e) => setRole(e.target.value)}
+                                required
+                            >
+                                <option value="" disabled>Select your role</option>
+                                <option value="student">Student</option>
+                                <option value="lecturer">Lecturer</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                        <button type="submit" className={styles.loginButton}>Login</button>
+                        <p className={styles.signupText}>
+                            <b>Don’t have an account?</b><br></br>Please contact your faculty administrator.
+                        </p>
+                    </form>
+
+                    <div className={styles.divider}>Or</div>
+                    <button className={styles.googleLoginButton} onClick={handleGoogleLogin}>
+                        <img src="/images/googlelogo.png" alt="Google Logo" />
+                        Continue with Google
+                    </button>
+
+                    {error && <p className={styles.errorMessage}>{error}</p>}
+                </div>
             </div>
         </div>
-
     );
 }
 

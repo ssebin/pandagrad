@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom"; // Import useNavigate for naviga
 import { useUser } from "./UserContext"; // Import the UserContext
 import { StudentContext } from './StudentContext';
 import axios from "./axiosConfig"; // Import axios instance
-import './RegistrationComplete.css';
 import { encryptAndStore, retrieveAndDecrypt } from "./storage.js";
+import styles from './RegistrationComplete.module.css';
 
 const RegistrationComplete = () => {
-    const navigate = useNavigate(); 
+    const navigate = useNavigate();
     const { fetchStudentsData } = useContext(StudentContext);
     const { setUser } = useUser();
 
@@ -34,27 +34,36 @@ const RegistrationComplete = () => {
             }
         };
 
-        fetchUserData(); 
+        fetchUserData();
         fetchStudentsData();
     }, [setUser]);
 
     return (
-        <div className="registration-complete-container">
-            <div className="registration-left-section">
-                {/* Logos */}
-                <div className="logo-container">
-                    <img src="/images/logo.png" alt="Logo" className="logo" />
-                    <p className='logo-text'>PandaGrad</p>
-                    <img src="/images/faculty-logo.png" alt="Faculty Logo" className="faculty-logo" />
+        <div className={styles.registrationCompleteContainer}>
+            <div className={styles.leftSection}>
+                <img src="/images/fsktm.jpg" alt="FSKTM Background" className={styles.backgroundImage} />
+                <div className={styles.overlay}></div>
+                <div className={styles.content}>
+                    <img src="/images/logo.png" alt="Logo" className={styles.logo} />
+                    <p className={styles.logoText}>PandaGrad</p>
+                    <p className={styles.description}>Monitor your progress and stay on track with FSKTM's monitoring system.</p>
                 </div>
-                {/* 3D Illustration Image */}
-                <img src="/images/thumbs-up.png" alt="Illustration" className="thumbs-up" />
             </div>
-
-            <div className="registration-right-section">
-                <h2 className='welcome'>Study Plan Created Successfully</h2>
-                <p className="complete-details">Your study plan has been created. You may request to change the study plan in the future if required.</p>
-                <button type="submit" className="registration-complete-button" onClick={() => navigate('/student/my-progress')}>Go to My Progress</button>
+            <div className={styles.rightSection}>
+                <div className={styles.contentWrapper}>
+                    <h2 className={styles.welcome}>Study Plan Created Successfully!</h2>
+                    <p className={styles.completeDetails}>
+                        Your study plan has been created. You may request to change the study
+                        plan in the future if required.
+                    </p>
+                    <button
+                        type="button"
+                        className={styles.registrationCompleteButton}
+                        onClick={() => navigate('/student/my-progress')}
+                    >
+                        Go to My Progress
+                    </button>
+                </div>
             </div>
         </div>
     );

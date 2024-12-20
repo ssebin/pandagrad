@@ -6,6 +6,8 @@ import { FaBan } from 'react-icons/fa';
 function Unauthorized() {
     return (
         <div className="unauthorized-container">
+            <img src="/images/fsktm.jpg" alt="FSKTM Background" className="backgroundImage" />
+            <div className="overlay"></div>
             <div className="unauthorized-content">
                 <div className="unauthorized-icon">
                     <FaBan />

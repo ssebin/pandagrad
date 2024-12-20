@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { retrieveAndDecrypt } from "./storage";
 import { useNavigate } from 'react-router-dom';
-import './StudyPlanRegistration.css';
+import styles from "./StudyPlanRegistration.module.css";
 
 const StudyPlanRegistration = () => {
     const navigate = useNavigate();
@@ -277,24 +277,25 @@ const StudyPlanRegistration = () => {
     // ];
 
     return (
-        <div className="studyplan-container">
-            <div className="registration-left-section">
-                {/* Logos */}
-                <div className="logo-container">
-                    <img src="/images/logo.png" alt="Logo" className="logo" />
-                    <p className="logo-text">PandaGrad</p>
-                    <img src="/images/faculty-logo.png" alt="Faculty Logo" className="faculty-logo" />
+        <div className={styles.studyplanContainer}>
+            <div className={styles.leftSection}>
+                <img src="/images/fsktm.jpg" alt="FSKTM Background" className={styles.backgroundImage} />
+                <div className={styles.overlay}></div>
+                <div className={styles.content}>
+                    <img src="/images/logo.png" alt="Logo" className={styles.logo} />
+                    <p className={styles.logoText}>PandaGrad</p>
+                    <p className={styles.description}>Monitor your progress and stay on track with FSKTM's monitoring system.</p>
                 </div>
-                {/* 3D Illustration Image */}
-                <img src="/images/registration-3d.png" alt="Illustration" className="registration-3d" />
             </div>
 
-            <div className="registration-right-section">
-                {/* Form */}
-                <h1 className="registration-title">Study Plan Registration</h1>
+            <div className={styles.rightSection}>
+                <div className={styles.formWrapper}>
+                <h1 className={styles.title}>Study Plan Registration</h1>
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="semesters_no">Number of Semesters<span style={{ color: 'red' }}> *</span></label>
+                    <div className={styles.formGroup}>
+                        <label className={styles.label} htmlFor="semesters_no">
+                            Number of Semesters<span className={styles.required}> *</span>
+                        </label>
                         <select
                             name="semesters_no"
                             id="semesters_no"
@@ -312,59 +313,67 @@ const StudyPlanRegistration = () => {
                         </select>
                     </div>
 
-                    {/* Dynamic Semester Fields */}
                     {formData.semesters.map((semester, index) => (
-                        <div key={index} className="form-group">
-                            <label>Semester {index + 1}<span style={{ color: 'red' }}> *</span></label>
-                            <div className="tasks-field" ref={(el) => (dropdownRefs.current[index] = el)}>
-                                <div className={`dropdown ${dropdownVisible[index] ? 'show' : ''}`}>
+                        <div key={index} className={styles.formGroup}>
+                            <label className={styles.label} >
+                                Semester {index + 1}<span className={styles.required}> *</span>
+                            </label>
+                            <div
+                                className={styles.tasksField}
+                                ref={(el) => (dropdownRefs.current[index] = el)}
+                            >
+                                <div className={`${styles.dropdown} ${dropdownVisible[index] ? styles.show : ""}`}>
                                     <button
                                         type="button"
-                                        className="dropdown-button"
+                                        className={styles.dropdownButton}
                                         onClick={() => handleDropdownToggle(index)}
                                     >
-                                        Select Tasks <span className="dropdown-icon">+</span>
+                                        Select Tasks
+                                        <span className={styles.dropdownIcon}>+</span>
                                     </button>
-                                    <div className="dropdown-content">
-                                        {Object.keys(tasksOptions).map(category => (
+                                    <div className={styles.dropdownContent}>
+                                        {Object.keys(tasksOptions).map((category) => (
                                             <div key={category}>
                                                 <strong>{category}</strong>
-                                                {Array.isArray(tasksOptions[category]) && tasksOptions[category].map(task => (
-                                                    <label key={task.id} className="checkbox-label">
-                                                        <input
-                                                            type="checkbox"
-                                                            name={`task-${index}-${task.id}`}
-                                                            value={task.id}
-                                                            checked={tempSelectedTasks.some(t => t.id === task.id)}
-                                                            onChange={() => handleTaskChange(task)}
-                                                        />
-                                                        {task.name}
-                                                    </label>
-                                                ))}
+                                                {Array.isArray(tasksOptions[category]) &&
+                                                    tasksOptions[category].map((task) => (
+                                                        <label key={task.id} className={styles.checkboxLabel}>
+                                                            <input
+                                                                type="checkbox"
+                                                                name={`task-${index}-${task.id}`}
+                                                                value={task.id}
+                                                                checked={tempSelectedTasks.some((t) => t.id === task.id)}
+                                                                onChange={() => handleTaskChange(task)}
+                                                            />
+                                                            {task.name}
+                                                        </label>
+                                                    ))}
                                             </div>
                                         ))}
                                         <button
                                             type="button"
-                                            className="apply-button"
+                                            className={styles.applyButton}
                                             onClick={() => handleApplyButton(index)}
                                         >
                                             Apply
                                         </button>
                                     </div>
-
                                 </div>
 
-                                <div className="selected-tasks">
+                                <div className={styles.selectedTasks}>
                                     {semester.tasks.length > 0
-                                        ? semester.tasks.map(t => t.name).join(", ")
+                                        ? semester.tasks.map((t) => t.name).join(", ")
                                         : "No tasks selected"}
                                 </div>
                             </div>
                         </div>
                     ))}
 
-                    <button type="submit" className="submit-button">Next</button>
+                    <button type="submit" className={styles.submitButton}>
+                        Next
+                    </button>
                 </form>
+                </div>
             </div>
         </div>
     );

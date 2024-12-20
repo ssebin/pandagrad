@@ -1,0 +1,202 @@
+/* .registration-container {
+    display: flex;
+    height: auto;
+    width: 100vw;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+}
+
+select {
+    appearance: none;
+    background-color: white;
+    padding-right: 30px;
+}
+
+.registration-title {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 30px;
+    margin-top: 60px;
+    width: 100%; 
+    text-align: center;
+}
+
+.submit-button {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #000000;
+    border-radius: 10px;
+    background-color: #C3DDFE;
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(180deg, #192E59, #0A193B);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 10px;
+    padding: 10px;
+    margin-bottom: 10%;
+}
+
+.submit-button:hover {
+    background-color: rgb(1, 1, 75);
+}
+
+.registration-3d {
+    margin-left: 20%;
+    width: 400px;
+    height: auto;
+    object-fit: cover;
+}
+
+.registration-left-section, .registration-right-section {
+    flex: 1;
+    background-color: white; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;    
+} */
+
+.registrationContainer {
+    display: flex;
+    height: auto;
+    min-height: 100vh;
+}
+
+.leftSection {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.backgroundImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(25, 46, 89, 0.7);
+    z-index: 1;
+}
+
+.content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: white;
+    padding: 20px;
+}
+
+.logo {
+    width: 80px;
+    margin-bottom: -10px;
+}
+
+.logoText {
+    font-size: 26px;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.description {
+    font-size: 18px;
+    color: #ddd;
+}
+
+.rightSection {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: white;
+    box-shadow: -4px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.formWrapper {
+    width: 100%;
+    max-width: 400px;
+    text-align: left;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: #192E59;
+    text-align: center;
+}
+
+.formGroup {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.label {
+    font-size: 14px;
+}
+
+.required {
+    color: red;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 12px 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    outline: none;
+    margin-top: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+select {
+    background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="gray"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 10px center;
+    background-size: 30px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+input:focus,
+select:focus {
+    border-color: #192E59;
+}
+
+.submitButton {
+    width: 100%;
+    background: #192E59;
+    color: white;
+    padding: 10px 0;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.submitButton:hover {
+    background-color: rgb(1, 1, 75); 
+}

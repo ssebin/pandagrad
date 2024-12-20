@@ -46,7 +46,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
 
             // Filter tasks and group them based on nationality
             const studentNationality = nationalities[studentId] || 'Unknown'; // Default to 'Unknown'
-            //console.log('Fetched student nationality:', studentNationality);
 
             // Filter tasks based on nationality
             const filteredTasks = tasks.filter(task => {
@@ -209,8 +208,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
     const student = user.role === 'student'
         ? allStudents.find(s => s.id === parseInt(user.id))
         : allStudents.find(s => s.id === parseInt(id));
-
-    console.log("Student:", student);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -694,21 +691,21 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
 
 
                                     <div>
-                                        <div ref={(el) => { dropdownRefs.current[index] = el }} className={`dropdown ${dropdownVisible[index] ? 'show' : ''}`}>
+                                        <div ref={(el) => { dropdownRefs.current[index] = el }} className={`${styles.dropdown} ${dropdownVisible[index] ? styles.show : ""}`}>
                                             <button
                                                 type="button"
-                                                className={styles.semesterinput}
+                                                className={styles.dropdownButton}
                                                 onClick={() => handleDropdownToggle(index)}
                                             >
-                                                Select Tasks <span className="dropdown-icon">+</span>
+                                                Select Tasks <span className={styles.dropdownIcon}>+</span>
                                             </button>
-                                            <div className="dropdown-content">
+                                            <div className={styles.dropdownContent}>
                                                 {Object.keys(tasksOptions).map(category => (
                                                     <div key={category}>
                                                         <strong>{category}</strong>
                                                         {Array.isArray(tasksOptions[category]) &&
                                                             tasksOptions[category].map(task => (
-                                                                <label key={task.id} className="checkbox-label">
+                                                                <label key={task.id} className={styles.checkboxLabel}>
                                                                     <input
                                                                         type="checkbox"
                                                                         name={`task-${index}-${task.id}`}
@@ -723,7 +720,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                                                 ))}
                                                 <button
                                                     type="button"
-                                                    className="apply-button"
+                                                    className={styles.applyButton}
                                                     onClick={() => handleApplyButton(index)}
                                                 >
                                                     Apply

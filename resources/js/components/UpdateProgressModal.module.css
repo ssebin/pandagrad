@@ -66,7 +66,7 @@
 }
 
 .selectedtasks {
-    margin-top: 0px;
+    margin-top: 5px;
     margin-bottom: 10px;
     margin-left: 16px;
     font-size: 0.8em;
@@ -126,3 +126,125 @@
     align-items: center;
     z-index: 1000;
 }
+
+.tasksField {
+    position: relative;
+    overflow: visible;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdownButton {
+    width: calc(100% - 20px);
+    padding: 10px;
+    font-size: 0.8em;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: white; 
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    outline: none;
+    margin-top: 10px;
+    margin-left: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dropdownButton:focus {
+    border-color: #192E59;
+}
+
+.dropdownContent {
+    display: none;
+    position: relative;
+    background-color: #ffffff;
+    width: 94%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    z-index: 1;
+    text-align: left;
+    padding: 10px;
+    max-height: 240px;
+    overflow-y: auto;
+    font-size: 0.8em;
+}
+
+.dropdown.show .dropdownContent {
+    display: block;
+}
+
+.dropdownIcon {
+    font-size: 16px;
+    font-weight: bolder;
+    margin-right: 9px;
+    color: rgba(0, 0, 0, 0.4);
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+}
+
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #ffffff;
+    margin-left: 10px;
+    margin-right: 20px;
+    margin-bottom: 10px;
+    width: 28px;
+    height: 16px;
+    border: 1px solid #000000;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #192E59;
+    border-color: #192E59;
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✓';
+    color: white;
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.selectedTasks {
+    margin-top: 10px;
+    font-size: 0.8em;
+    font-weight: bolder;
+    line-height: 18px;
+}
+
+.dropdownContent strong {
+    display: block;
+    font-size: 14px;
+    padding: 8px 4px;
+    margin-bottom: 6px;
+    color: #000000;
+}
+
+.applyButton {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-right: 10px;
+    padding: 10px 20px;
+    background-color: none;
+    color: #192E59;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    float: right;
+} 

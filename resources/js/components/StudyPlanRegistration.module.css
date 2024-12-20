@@ -1,0 +1,380 @@
+/* .studyplan-container {
+    display: flex;
+    min-height: 100vh;
+    height: auto;
+    width: 100vw;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+}
+
+.dropdown {
+    position: relative;
+    display: block;
+}
+
+.dropdown-button {
+    width: 350px;
+    padding: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    border: 1px solid #000000;
+    border-radius: 10px;
+    background-color: white; 
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #ffffff;
+    width: 94%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    z-index: 1;
+    text-align: left;
+    padding: 10px;
+    max-height: 240px;
+    overflow-y: auto;
+    font-size: 0.95em;
+}
+
+.dropdown.show .dropdown-content {
+    display: block;
+}
+
+.dropdown-icon {
+    font-size: 16px;
+    font-weight: bolder;
+    margin-left: 8px;
+    color: rgba(0, 0, 0, 0.4);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+}
+
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #ffffff;
+    margin-right: 10px;
+    width: 2px;
+    height: 2px;
+    border: 1px solid #000000;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #192E59;
+    border-color: #192E59;
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✓';
+    color: white;
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.selected-tasks {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: bolder;
+    line-height: 18px;
+}
+
+.dropdown-content strong {
+    display: block;
+    font-size: 14px;
+    padding: 8px 4px;
+    margin-bottom: 6px;
+    color: #000000;
+}
+
+.apply-button {
+    align-self: flex-end; 
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: none;
+    color: #192E59;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+} */
+
+/* Left Section (unchanged from login/registration) */
+.studyplanContainer {
+    display: flex;
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+}
+
+.leftSection {
+    flex: 1;
+    position: relative;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(25, 46, 89, 0.7);
+    z-index: 1;
+}
+
+.backgroundImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    color: white;
+    padding: 30px;
+}
+
+.logo {
+    width: 80px;
+    margin-bottom: -10px;
+}
+
+.logoText {
+    font-size: 26px;
+    font-weight: bold;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.description {
+    font-size: 18px;
+    color: #ddd;
+}
+
+.rightSection {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: white;
+    box-shadow: -4px 0px 10px rgba(0, 0, 0, 0.1);
+    overflow: visible;
+}
+
+.formWrapper {
+    width: 100%;
+    max-width: 400px;
+    text-align: left;
+}
+
+.title {
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    color: #192E59;
+    text-align: center;
+}
+
+.formGroup {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.label {
+    font-size: 14px;
+}
+
+.required {
+    color: red;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 12px 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    outline: none;
+    margin-top: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+select {
+    background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="gray"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 10px center;
+    background-size: 30px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+input:focus,
+select:focus {
+    border-color: #192E59;
+}
+
+.submitButton {
+    width: 100%;
+    background: #192E59;
+    color: white;
+    padding: 10px 0;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.submitButton:hover {
+    background-color: rgb(1, 1, 75); 
+}
+
+.tasksField {
+    position: relative;
+    overflow: visible;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdownButton {
+    width: 100%;
+    padding: 12px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: white; 
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    outline: none;
+    margin-top: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dropdownButton:focus {
+    border-color: #192E59;
+}
+
+.dropdownContent {
+    display: none;
+    position: relative;
+    background-color: #ffffff;
+    width: 94%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    z-index: 1;
+    text-align: left;
+    padding: 10px;
+    max-height: 240px;
+    overflow-y: auto;
+    font-size: 14px;
+}
+
+.dropdown.show .dropdownContent {
+    display: block;
+}
+
+.dropdownIcon {
+    font-size: 16px;
+    font-weight: bolder;
+    margin-right: 9px;
+    color: rgba(0, 0, 0, 0.4);
+}
+
+.checkboxLabel {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+}
+
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #ffffff;
+    margin-left: 10px;
+    margin-right: 20px;
+    margin-bottom: 10px;
+    width: 28px;
+    height: 16px;
+    border: 1px solid #000000;
+    border-radius: 8px;
+    cursor: pointer;
+    position: relative;
+}
+
+input[type="checkbox"]:checked {
+    background-color: #192E59;
+    border-color: #192E59;
+}
+
+input[type="checkbox"]:checked::after {
+    content: '✓';
+    color: white;
+    font-size: 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.selectedTasks {
+    margin-top: 10px;
+    font-size: 14px;
+    font-weight: bolder;
+    line-height: 18px;
+}
+
+.dropdownContent strong {
+    display: block;
+    font-size: 14px;
+    padding: 8px 4px;
+    margin-bottom: 6px;
+    color: #000000;
+}
+
+.applyButton {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-right: 10px;
+    padding: 10px 20px;
+    background-color: none;
+    color: #192E59;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    float: right;
+} 

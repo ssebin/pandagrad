@@ -6,6 +6,8 @@ import { FaExclamationTriangle } from 'react-icons/fa'; // Import warning icon
 function InternalServerError() {
     return (
         <div className="error-container">
+            <img src="/images/fsktm.jpg" alt="FSKTM Background" className="backgroundImage" />
+            <div className="overlay"></div>
             <div className="error-content">
                 <div className="error-icon">
                     <FaExclamationTriangle />

@@ -249,6 +249,17 @@ export const StudentProvider = ({ children }) => {
         fetchSemesters();
     }, []);
 
+    const token = retrieveAndDecrypt('token');
+
+    useEffect(() => {
+        if (!token) {
+            console.warn('Token is missing. Cannot fetch semesters.');
+            return;
+        }
+    
+        fetchSemesters();
+    }, [token]);
+
     return (
         <StudentContext.Provider value={{ studentsData, setStudentsData, currentSemester, isLoading, fetchStudentsData, supervisors, fetchSupervisors, tasks, nationalities, semesters, fetchSemesters, fetchTasks }}>
             {children}

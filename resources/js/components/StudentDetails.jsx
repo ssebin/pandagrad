@@ -34,6 +34,8 @@ function StudentDetails() {
         basePath = "/lecturer/both";
     }
 
+    const realId = user.role === 'student' ? user.id : id;
+
     const fetchStudyPlan = async (studentId) => {
         try {
             const response = await axios.get(`/api/students/${studentId}/study-plan`);
@@ -78,18 +80,7 @@ function StudentDetails() {
     };
 
     useEffect(() => {
-        if (user.role === 'student') {
-            // If the user is a student, use their ID from the user object
-            fetchStudyPlan(user.id);
-            //setStudentCurrentTask(currentTasks[user.id] || 'Unknown');
-            //fetchCurrentSemester(user.id);
-        } else {
-            // For admin and lecturer, use the ID from the URL
-            fetchStudyPlan(id);
-            //setStudentCurrentTask(currentTasks[id] || 'Unknown');
-            //fetchCurrentSemester(id);
-        }
-        //fetchCurrentSemester();
+        fetchStudyPlan(realId);
     }, [id, user]);
 
     const handleModalClose = () => {
@@ -311,13 +302,13 @@ function StudentDetails() {
                 currentSemester={currentSemester}
             />
 
-            <UpdateProgressModal
-                studentId={id}
+            <UpdateProgressModal                
+                studentId={realId}
                 isOpen={isUpdateModalOpen}
                 onClose={handleUpdateModalClose}
                 onUpdate={() => {
                     fetchStudentsData();
-                    fetchStudyPlan(id);
+                    fetchStudyPlan(realId);
                 }}
                 user={user}
             />

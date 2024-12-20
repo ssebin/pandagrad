@@ -1,4 +1,4 @@
-html, body {
+/* html, body {
     margin: 0;
     padding: 0;
     height: 100%;
@@ -107,7 +107,7 @@ select {
     -moz-appearance: none;
     background-color: white;
     padding-right: 30px;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="%23888888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,4 6,8 10,4"/></svg>'); /* Custom V-shaped arrow */
+    background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="%23888888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,4 6,8 10,4"/></svg>');
     background-repeat: no-repeat;
     background-position: right 10px center;
 }
@@ -227,10 +227,6 @@ select {
     align-items: center;
 }
 
-
-/* Media Queries for Responsiveness */
-
-/* Tablet */
 @media (max-width: 1024px) {
     .left-section {
         padding: 20px 50px; 
@@ -283,8 +279,6 @@ select {
     }
 }
 
-
-/* Mobile */
 @media (max-width: 540px) {
     .left-section {
         flex: 1;
@@ -357,4 +351,233 @@ select {
     }
 
 }
+ */
 
+.loginContainer {
+    display: flex;
+    height: auto;
+    min-height: 100vh;
+}
+
+.rightSection {
+    flex: 1;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.contentWrapper {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.logo {
+    width: 80px;
+    margin-bottom: 10px;
+}
+
+.logoText {
+    font-size: 28px;
+    font-weight: bold;
+    color: #192E59;
+    margin-bottom: 10px;
+}
+
+.tagline {
+    color: #666;
+    font-size: 16px;
+    margin-bottom: 30px;
+}
+
+.formGroup {
+    margin-bottom: 15px;
+    width: 100%;
+    position: relative;
+}
+
+input,
+select {
+    width: 100%;
+    padding: 12px 10px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    outline: none;
+    margin-top: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    box-sizing: border-box;
+}
+
+select {
+    background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="gray"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 10px center;
+    background-size: 30px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+input:focus,
+select:focus {
+    border-color: #192E59;
+}
+
+.inputWithIcon {
+    position: relative;
+}
+
+.inputWithIcon input,
+.inputWithIcon select {
+    padding-left: 44px; 
+}
+
+.inputWithIcon .icon {
+    position: absolute;
+    top: 60%;
+    left: 14px;
+    transform: translateY(-50%);
+    color: #aaa;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.loginButton {
+    width: 100%;
+    background: #192E59;
+    color: white;
+    padding: 10px 0;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-top: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.loginButton:hover {
+    background-color: rgb(1, 1, 75); 
+}
+
+.signupText {
+    font-size: 14px;
+    margin-top: 15px;
+    color: #555;
+}
+
+.signupText a {
+    color: #FF416C;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.divider {
+    margin: 20px 0;
+    font-size: 14px;
+    color: #aaa;
+    position: relative;
+}
+
+.divider:before,
+.divider:after {
+    content: "";
+    position: absolute;
+    width: 40%;
+    height: 1px;
+    background: #ddd;
+    top: 50%;
+}
+
+.divider:before {
+    left: 0;
+}
+
+.divider:after {
+    right: 0;
+}
+
+.googleLoginButton {
+    width: 100%;
+    border: 1px solid #ddd;
+    padding: 10px 0;
+    font-size: 14px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 10px;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.googleLoginButton img {
+    width: 20px;
+    margin-right: 10px;
+}
+
+.googleLoginButton:hover {
+    background: #f5f5f5;
+}
+
+.leftSection {
+    flex: 1;
+    position: relative;
+    overflow: visible;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(25, 46, 89, 0.7);
+    z-index: 1;
+}
+
+.backgroundImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.left-section .content {
+    z-index: 2;
+    text-align: center;
+    color: white;
+    padding: 30px;
+    position: relative;
+}
+
+.title {
+    position: relative;
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    z-index: 1000;
+}
+
+.description {
+    position: relative;
+    font-size: 18px;
+    color: white; 
+    z-index: 1000;
+}
+
+.facultyLogo {
+    width: 220px;
+    margin: 0 auto 40px;
+    z-index: 2; 
+    position: relative; 
+    display: block;
+}
