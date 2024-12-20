@@ -3,6 +3,7 @@ import styles from "./UpdateDetailsModal.module.css";
 import axios from "axios";
 import { useNotifications } from "./NotificationContext";
 import { StudentContext } from './StudentContext';
+import { retrieveAndDecrypt } from "./storage";
 
 const UpdateDetailsModal = ({ update, onClose, userRole }) => {
     const [status, setStatus] = useState(update.status || "Pending");
@@ -33,7 +34,7 @@ const UpdateDetailsModal = ({ update, onClose, userRole }) => {
         }
 
         try {
-            const token = localStorage.getItem("token");
+            const token = retrieveAndDecrypt("token");
             // Construct the API endpoint based on the status
             let url = `/api/progress-updates/${update.id}/`;
             if (status === "Approved") {
@@ -95,7 +96,7 @@ const UpdateDetailsModal = ({ update, onClose, userRole }) => {
     }, [tasks]);
 
     const markAsRead = async (progressUpdateId) => {
-        const token = localStorage.getItem("token");
+        const token = retrieveAndDecrypt("token");
         if (!progressUpdateId) {
             console.error("Progress Update ID is missing.");
             return;
@@ -140,7 +141,7 @@ const UpdateDetailsModal = ({ update, onClose, userRole }) => {
     };
 
     const handleMarkAsUnread = async (progressUpdateId) => {
-        const token = localStorage.getItem("token");
+        const token = retrieveAndDecrypt("token");
         if (!progressUpdateId) {
             console.error("Progress Update ID is missing. Cannot mark as unread.");
             return;

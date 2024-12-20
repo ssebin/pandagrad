@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Registration.css';
 import { StudentContext } from './StudentContext';
 import { useUser } from './UserContext';
+import { encryptAndStore, retrieveAndDecrypt } from "./storage";
 
 const Registration = () => {
     const navigate = useNavigate();
@@ -27,62 +28,6 @@ const Registration = () => {
         setFormData({ ...formData, profile_pic: e.target.files[0] });
     };
 
-    // const handleSubmit = (e) => {
-    //     e.preventDefault();
-
-    //     // Log the current form data state
-    //     console.log('Current formData:', formData);
-
-    //     // Create a FormData object to handle file uploads
-    //     const formDataObj = new FormData();
-    //     Object.keys(formData).forEach(key => {
-    //         formDataObj.append(key, formData[key]);
-    //     });
-
-    //     // Log the FormData object contents
-    //     console.log('FormData before sending:', [...formDataObj]);
-
-    //     // Get the user object from localStorage
-    //     const user = JSON.parse(localStorage.getItem('user'));
-
-    //     // Check if user exists and retrieve Siswamail
-    //     if (user && user.siswamail) {
-    //         // Append Siswamail to formDataObj
-    //         formDataObj.append('siswamail', user.siswamail);
-    //     } else {
-    //         // Handle the case where user or siswamail is not available
-    //         console.error('User not found in localStorage or Siswamail is missing');
-    //         return;
-    //     }
-
-    //     // Save nationality in localStorage
-    //     localStorage.setItem('nationality', formData.nationality);
-
-    //     fetch('http://127.0.0.1:8000/api/student/register', {
-    //         method: 'POST',
-    //         headers: {
-    //             'Authorization': `Bearer ${localStorage.getItem('token')}`,
-    //         },
-    //         body: formDataObj
-    //     })
-    //         .then(response => {
-    //             // Check if the response is JSON
-    //             if (response.headers.get('content-type')?.includes('application/json')) {
-    //                 return response.json();
-    //             } else {
-    //                 throw new Error('Non-JSON response received');
-    //             }
-    //         })
-    //         .then(data => {
-    //             console.log('Registration successful:', data);
-    //             // Redirect to study plan registration
-    //             navigate('/student/register-study-plan');
-    //         })
-    //         .catch(error => {
-    //             console.error('Error during registration:', error);
-    //         });
-    // };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
     
@@ -97,7 +42,7 @@ const Registration = () => {
             });
     
             // Get the user object from localStorage
-            const user = JSON.parse(localStorage.getItem('user'));
+            const user = JSON.parse(retrieveAndDecrypt('user'));
     
             if (user && user.siswamail) {
                 // Append Siswamail to formDataObj
@@ -108,13 +53,13 @@ const Registration = () => {
             }
     
             // Save nationality in localStorage
-            localStorage.setItem('nationality', formData.nationality);
+            encryptAndStore('nationality', formData.nationality);
     
             // Send registration request
             const response = await fetch('http://127.0.0.1:8000/api/student/register', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                    'Authorization': `Bearer ${retrieveAndDecrypt('token')}`,
                 },
                 body: formDataObj
             });
@@ -135,7 +80,7 @@ const Registration = () => {
             };
             setUser(updatedUser);
     
-            localStorage.setItem('user', JSON.stringify(updatedUser)); // Update localStorage            
+            encryptAndStore('user', JSON.stringify(updatedUser)); // Update localStorage            
     
             // Redirect to study plan registration
             navigate('/student/register-study-plan');

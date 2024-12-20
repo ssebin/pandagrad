@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
 import { useNotifications } from './NotificationContext';
+import { encryptAndStore } from "./storage";
 
 function ProcessLogin() {
     const navigate = useNavigate();
@@ -31,8 +32,8 @@ function ProcessLogin() {
         if (token && role) {
             // Store the token in localStorage
             console.log('Storing token and role in localStorage:', token);
-            localStorage.setItem('token', token);
-            localStorage.setItem('role', role);
+            encryptAndStore('token', token);
+            encryptAndStore('role', role);
 
             // Fetch user data from the backend using the token
             fetch('http://127.0.0.1:8000/api/me', {
@@ -61,7 +62,8 @@ function ProcessLogin() {
                         }
 
                         if (role === 'student') {
-                            localStorage.setItem('has_study_plan', userData.has_study_plan);
+                            encryptAndStore('has_study_plan', user.has_study_plan ? 'true' : 'false');
+                            console.log('Stored has_study_plan:', user.has_study_plan ? 'true' : 'false');
                         }
 
                         // Redirect the user to the correct page based on their role

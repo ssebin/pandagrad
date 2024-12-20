@@ -54,11 +54,12 @@ window.axios.defaults.headers.common["X-Requested-With"] = "XMLHttpRequest";
 
 import Echo from "laravel-echo";
 import Pusher from "pusher-js";
+import { retrieveAndDecrypt } from "./components/storage";
 
 let echoInstance = null;
 
 export const initializeEcho = () => {
-    const token = localStorage.getItem("token");
+    const token = retrieveAndDecrypt("token");
 
     if (!token) {
         console.warn("Token not found. Echo will not be initialized.");

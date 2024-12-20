@@ -199,7 +199,8 @@ function AllStudents() {
                     (student.supervisor && student.supervisor.first_name && student.supervisor.first_name.toLowerCase().includes(searchKeyword.toLowerCase())) || // Access supervisor's first_name
                     (student.supervisor && student.supervisor.last_name && student.supervisor.last_name.toLowerCase().includes(searchKeyword.toLowerCase())) || // Access supervisor's last_name
                     (student.matric_number && student.matric_number.toLowerCase().includes(searchKeyword.toLowerCase())) ||
-                    (student.research && student.research.toLowerCase().includes(searchKeyword.toLowerCase()))) &&
+                    (student.research && student.research.toLowerCase().includes(searchKeyword.toLowerCase())) ||
+                    (student.status && student.status.toLowerCase().includes(searchKeyword.toLowerCase()))) &&
                 (filters.programs.length === 0 || filters.programs.includes(student.program)) &&
                 (filters.tasks.length === 0 || filters.tasks.includes(taskCategory)) &&
                 (filters.progress.length === 0 || filters.progress.includes(student.track_status))

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from "react";
+import { retrieveAndDecrypt } from "./storage";
 import "./TopNav.css";
 import { StudentContext } from './StudentContext';
 
@@ -42,7 +43,7 @@ function TopNav({ userName, profilePic, updateProfilePicture }) {
                     method: "POST",
                     body: formData,
                     headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                        Authorization: `Bearer ${retrieveAndDecrypt("token")}`,
                     },
                 });
 

@@ -4,6 +4,7 @@ import { useUser } from "./UserContext"; // Import the UserContext
 import { StudentContext } from './StudentContext';
 import axios from "./axiosConfig"; // Import axios instance
 import './RegistrationComplete.css';
+import { encryptAndStore, retrieveAndDecrypt } from "./storage.js";
 
 const RegistrationComplete = () => {
     const navigate = useNavigate(); 
@@ -12,12 +13,12 @@ const RegistrationComplete = () => {
 
     useEffect(() => {
         // Set has_study_plan in local storage
-        localStorage.setItem('has_study_plan', 'true');
+        encryptAndStore('has_study_plan', 'true');
 
         // Fetch the updated user details
         const fetchUserData = async () => {
             try {
-                const token = localStorage.getItem('token'); // Get the token from localStorage
+                const token = retrieveAndDecrypt('token'); // Get the token from localStorage
                 const headers = { Authorization: `Bearer ${token}` };
 
                 const response = await axios.get('/api/me', { headers }); // API endpoint to fetch user details
@@ -25,7 +26,7 @@ const RegistrationComplete = () => {
 
                 // Update the user context and localStorage
                 setUser(updatedUser);
-                localStorage.setItem('user', JSON.stringify(updatedUser));
+                encryptAndStore('user', JSON.stringify(updatedUser));
 
                 console.log('Updated user data fetched:', updatedUser);
             } catch (error) {

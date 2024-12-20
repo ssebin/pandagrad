@@ -1,5 +1,6 @@
 import axios from "axios";
 import { callLogout } from "./UserContext";
+import { encryptAndStore, retrieveAndDecrypt } from "./storage";
 
 const instance = axios.create({
     baseURL: "http://127.0.0.1:8000",
@@ -11,7 +12,7 @@ const instance = axios.create({
 // Interceptor for adding token to request headers
 instance.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("token");
+        const token = retrieveAndDecrypt("token");
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -44,12 +45,13 @@ instance.interceptors.response.use(
 
                 try {
                     const { data } = await instance.post("/api/refresh");
-                    localStorage.setItem("token", data.token); // Update the token
+                    encryptAndStore("token", data.token); // Securely encrypt and store the token
                     originalRequest.headers.Authorization = `Bearer ${data.token}`;
                     return instance(originalRequest); // Retry the original request with new token
                 } catch (err) {
                     console.error("Token refresh failed:", err);
                     alert("Session expired. Please log in again.");
+                    callLogout();
                     localStorage.removeItem("token"); // Clear the token
                     window.location.href = "/login"; // Redirect to login
                     return Promise.reject(err);
@@ -65,8 +67,8 @@ instance.interceptors.response.use(
 // Interceptor for adding token to request headers
 instance.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem("token");
-        const tokenTimestamp = localStorage.getItem("tokenTimestamp");
+        const token = retrieveAndDecrypt("token");
+        const tokenTimestamp = retrieveAndDecrypt("tokenTimestamp");
         const now = Date.now();
 
         const TOKEN_EXPIRY_TIME = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
@@ -82,7 +84,7 @@ instance.interceptors.request.use(
 
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
-            localStorage.setItem("tokenTimestamp", now.toString()); // Reset timestamp on activity
+            encryptAndStore("tokenTimestamp", now.toString()); // Reset timestamp on activity
         }
         return config;
     },

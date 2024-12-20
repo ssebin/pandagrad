@@ -5,12 +5,12 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    background-color: #CBE2FB;
+    background-color: white;
 }
 
 select {
     appearance: none;
-    background-color: #CBE2FB;
+    background-color: white;
     padding-right: 30px;
 }
 
@@ -29,7 +29,7 @@ select {
     padding: 12px;
     border: 1px solid #000000;
     border-radius: 10px;
-    background-color: #CBE2FB;
+    background-color: #C3DDFE;
     box-sizing: border-box;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     background: linear-gradient(180deg, #192E59, #0A193B);
@@ -55,7 +55,7 @@ select {
 
 .registration-left-section, .registration-right-section {
     flex: 1;
-    background-color: #CBE2FB; 
+    background-color: white; 
     display: flex;
     align-items: center;
     justify-content: center;

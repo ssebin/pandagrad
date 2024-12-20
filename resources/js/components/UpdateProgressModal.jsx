@@ -3,6 +3,7 @@ import axios from './axiosConfig.js';
 import styles from './UpdateProgressModal.module.css';
 import { StudentContext } from './StudentContext';
 import { useParams } from 'react-router-dom';
+import { retrieveAndDecrypt } from "./storage.js";
 
 function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
     const { id } = useParams();
@@ -549,7 +550,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
         //     console.log(`formdata2 = ${key}: ${value}`);
         // }
         // console.log("Semesters JSON:", JSON.stringify(extraFields.semesters, null, 2));
-        const adminName = JSON.parse(localStorage.getItem('user')).Name;
+        const adminName = JSON.parse(retrieveAndDecrypt('user')).Name;
         formData2.append('admin_name', adminName);
         formData2.append('currentSemester', student.currentSemester);
         console.log("Student ID:", studentId);

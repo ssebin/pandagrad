@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { retrieveAndDecrypt } from "./storage";
 import { useNavigate } from 'react-router-dom';
 import './StudyPlanRegistration.css';
 
@@ -15,12 +16,12 @@ const StudyPlanRegistration = () => {
     const dropdownRefs = useRef({});
 
     useEffect(() => {
-        const nationality = localStorage.getItem('nationality');
+        const nationality = retrieveAndDecrypt('nationality');
 
         fetch('http://127.0.0.1:8000/api/tasks', {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Authorization': `Bearer ${retrieveAndDecrypt('token')}`,
             }
         })
             .then(response => response.json())
@@ -192,7 +193,7 @@ const StudyPlanRegistration = () => {
         fetch('http://127.0.0.1:8000/api/student/study-plan', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                'Authorization': `Bearer ${retrieveAndDecrypt('token')}`,
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify(payload),

@@ -5,6 +5,7 @@ import { Outlet } from 'react-router-dom';
 import './MainLayout.css';
 import { useUser } from './UserContext';
 import { useNotifications } from "./NotificationContext";
+import { encryptAndStore, retrieveAndDecrypt } from "./storage";
 import NotificationPopup from "./NotificationPopup";
 import "./NotificationPopup.css";
 
@@ -16,13 +17,13 @@ function MainLayout() {
 
     const updateProfilePicture = (newProfilePic) => {
         setProfilePic(newProfilePic);
-        const updatedUserData = { ...JSON.parse(localStorage.getItem("user")), profile_pic: newProfilePic };
-        localStorage.setItem("user", JSON.stringify(updatedUserData));
+        const updatedUserData = { ...JSON.parse(retrieveAndDecrypt("user")), profile_pic: newProfilePic };
+        encryptAndStore("user", JSON.stringify(updatedUserData));
     };
 
     useEffect(() => {
         const handleStorageChange = () => {
-            const updatedUser = JSON.parse(localStorage.getItem("user"));
+            const updatedUser = JSON.parse(retrieveAndDecrypt("user"));
             setProfilePic(updatedUser?.profile_pic || "");
         };
 

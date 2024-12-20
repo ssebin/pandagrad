@@ -14,7 +14,7 @@ html, body {
 
 .left-section {
     flex: 2;
-    background-color: #CBE2FB; 
+    background: white;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -22,16 +22,18 @@ html, body {
     padding: 20px;
     padding-top: 60px;
     padding-left: 20px;
-    position: relative;
+    position: relative;    
 }
 
 .right-section {
     flex: 1;
-    background-color: #192E59;
+    background: linear-gradient(90deg, #192e59, #0a193b);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    border-radius: 20px 0 0 20px;
+    box-shadow: 5px 0 15px 5px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 .logo {
@@ -87,12 +89,12 @@ label {
 input, select, .login-button, .google-login-button {
     width: 100%;
     padding: 12px;
-    border: 1px solid #000000;
     border-radius: 10px;
-    background-color: #CBE2FB; 
+    background-color: white;
     box-sizing: border-box;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     margin-top: 10px;
+    border: 1px solid #192e59;
 }
 
 input, select {
@@ -103,7 +105,7 @@ select {
     appearance: none; 
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-color: #CBE2FB;
+    background-color: white;
     padding-right: 30px;
     background-image: url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" stroke="%23888888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2,4 6,8 10,4"/></svg>'); /* Custom V-shaped arrow */
     background-repeat: no-repeat;
@@ -187,7 +189,7 @@ select {
 .checkbox-custom {
     width: 14px;
     height: 14px;
-    background-color: #CBE2FB;
+    background-color: white;
     border: 1.5px solid #000000;
     border-radius: 5px;
     position: relative;
@@ -203,14 +205,14 @@ select {
     display: none;
     width: 4px;
     height: 7px;
-    border: solid #CBE2FB;
+    border: solid white;
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
 }
 
 .checkbox-container input[type="checkbox"]:checked + .checkbox-custom {
-    background-color: #192E59;  
-    border-color: #192E59;  
+    background-color: white;  
+    border-color: white;  
 }
 
 .checkbox-container input[type="checkbox"]:checked + .checkbox-custom::after {

@@ -27,14 +27,14 @@ h1 {
 }
 
 .add-semester-button {
-    background: linear-gradient(180deg, #192E59, #0A193B);
+    background: #192E59;
     color: white;
     border: none;
     padding: 10px 20px;
     border-radius: 10px;
     cursor: pointer;
     float: right;
-    margin-bottom: 40px;
+    margin-left: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 

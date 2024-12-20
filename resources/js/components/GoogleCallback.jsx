@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
+import { encryptAndStore } from "./storage";
 
 function GoogleCallback() {
     const navigate = useNavigate();
@@ -16,8 +17,8 @@ function GoogleCallback() {
         if (token && role) {
             // Store the token in localStorage
             console.log('Storing token and role in localStorage:', token);
-            localStorage.setItem('token', token);
-            localStorage.setItem('role', role);  
+            encryptAndStore('token', token);
+            encryptAndStore('role', role);  
 
             // Fetch user data from the backend using the token
             fetch('http://127.0.0.1:8000/api/me', {

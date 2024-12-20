@@ -54,7 +54,10 @@ function SideNav() {
                             {!isCollapsed && <span>Analytics</span>}
                         </NavLink>
                         <NavLink to="/admin/requests" className="menu-item">
-                            <FaEnvelope className="menu-icon" />
+                            <div className="icon-container">
+                                <FaEnvelope className="menu-icon" />
+                                {isCollapsed && unreadCount > 0 && <span className="notification-dot"></span>}
+                            </div>
                             {!isCollapsed && (
                                 <span>
                                     Requests {unreadCount > 0 && <span className="notification-badge">{unreadCount}</span>}

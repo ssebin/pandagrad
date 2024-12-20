@@ -3,6 +3,8 @@ import axios from "axios";
 import { initializeEcho } from '../bootstrap';
 import { v4 as uuidv4 } from 'uuid';
 import { useUser } from './UserContext';
+import { encryptAndStore, retrieveAndDecrypt } from "./storage.js";
+import eventEmitter from './events';
 
 const NotificationContext = createContext();
 
@@ -10,17 +12,21 @@ export const useNotifications = () => useContext(NotificationContext);
 
 // Helper function to manage displayed IDs in localStorage
 const getDisplayedNotifications = () => {
-    const storedIds = localStorage.getItem('displayedNotifications');
+    const storedIds = retrieveAndDecrypt('displayedNotifications');
     return storedIds ? new Set(JSON.parse(storedIds)) : new Set();
 };
 
 const saveDisplayedNotifications = (ids) => {
-    localStorage.setItem('displayedNotifications', JSON.stringify([...ids]));
+    encryptAndStore('displayedNotifications', JSON.stringify([...ids]));
 };
 
 const fetchUnreadNotifications = async (addPopupNotification) => {
     console.log('Fetching unread notifications since last login');
-    const token = localStorage.getItem('token');
+    const token = retrieveAndDecrypt('token');
+    if (!token) {
+        console.warn('Token is missing. NotificationContext not initialized.');
+        return;
+    }
     const displayedNotifications = getDisplayedNotifications(); // Get previously displayed IDs
 
     try {
@@ -118,6 +124,23 @@ export const NotificationProvider = ({ children }) => {
         });
     };
 
+    const clearAllNotifications = () => {
+        console.log("Clearing all notifications");
+        setPopupNotifications([]);
+        setVisibleNotifications([]);
+    };
+
+    useEffect(() => {
+        // Listen for the clearNotifications event
+        const clearListener = () => clearAllNotifications();
+
+        eventEmitter.on('clearNotifications', clearListener);
+
+        // Cleanup the listener on unmount
+        return () => {
+            eventEmitter.off('clearNotifications', clearListener);
+        };
+    }, []);
 
     // const removePopupNotification = (id) => {
     //     setPopupNotifications((prev) => prev.filter((n) => n.id !== id));
@@ -150,7 +173,7 @@ export const NotificationProvider = ({ children }) => {
     };
 
     const fetchNotifications = async () => {
-        const token = localStorage.getItem("token");
+        const token = retrieveAndDecrypt("token");
         if (!token) {
             console.warn('Token is missing. NotificationContext not initialized.');
             return;
@@ -171,7 +194,7 @@ export const NotificationProvider = ({ children }) => {
     };
 
     const fetchUnreadCount = async () => {
-        const token = localStorage.getItem("token");
+        const token = retrieveAndDecrypt("token");
         try {
             const response = await axios.get('/api/notifications/unread-count', {
                 headers: {
@@ -185,7 +208,7 @@ export const NotificationProvider = ({ children }) => {
     };
 
     const fetchRequests = async () => {
-        const token = localStorage.getItem('token');
+        const token = retrieveAndDecrypt('token');
         if (!token) {
             console.warn('Token is missing. NotificationContext not initialized.');
             return;
@@ -308,6 +331,9 @@ export const NotificationProvider = ({ children }) => {
     // }, []); 
 
     useEffect(() => {
+        const storedToken = retrieveAndDecrypt('token');
+        console.log('StudentContext initialized. Token retrieved:', storedToken);
+    
         if (!token) {
             console.warn('Token is missing. NotificationContext not initialized.');
             return;
@@ -316,11 +342,16 @@ export const NotificationProvider = ({ children }) => {
         fetchUnreadNotifications(addPopupNotification);
 
         const initializeContext = async () => {
-            const role = localStorage.getItem('role');
-            const storedUser = localStorage.getItem('user');
+            const role = retrieveAndDecrypt('role');
+            const storedUser = retrieveAndDecrypt('user');
 
-            if (!role || !storedUser) {
-                console.warn('Role or user is missing. NotificationContext not initialized.');
+            if (!role) {
+                console.warn('Role is missing. NotificationContext not initialized.');
+                return;
+            }
+
+            if (!storedUser) {
+                console.warn('User data is missing. NotificationContext not initialized.');
                 return;
             }
 
@@ -402,6 +433,10 @@ export const NotificationProvider = ({ children }) => {
                 setNotifications,
                 fetchRequests,
                 requests,
+                removePopupNotification: (id) => {
+                    setPopupNotifications((prev) => prev.filter((n) => n.id !== id));
+                    setVisibleNotifications((prev) => prev.filter((n) => n.id !== id));
+                },
             }}
         >
             {children}

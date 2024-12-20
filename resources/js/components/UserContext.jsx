@@ -1,4 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import { encryptAndStore, retrieveAndDecrypt } from "./storage";
+import eventEmitter from './events';
 
 const UserContext = createContext();
 
@@ -16,7 +18,11 @@ export function UserProvider({ children }) {
     const TOKEN_EXPIRY_TIME = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
 
     const checkTokenExpiry = () => {
-        const tokenTimestamp = localStorage.getItem('tokenTimestamp');
+        const tokenTimestamp = retrieveAndDecrypt('tokenTimestamp');
+        if (!tokenTimestamp) {
+            console.log('Token timestamp not found, skipping expiry check.');
+            return; // Avoid logging out if the timestamp is missing
+        }
         if (tokenTimestamp) {
             const now = Date.now();
             const isExpired = now - parseInt(tokenTimestamp, 10) > TOKEN_EXPIRY_TIME;
@@ -28,17 +34,25 @@ export function UserProvider({ children }) {
     };
 
     const resetTokenExpiry = () => {
-        const token = localStorage.getItem('token');
+        const token = retrieveAndDecrypt('token');
         if (token) {
-            localStorage.setItem('tokenTimestamp', Date.now().toString());
+            encryptAndStore('tokenTimestamp', Date.now().toString());
         }
     };
 
     useEffect(() => {
-        const savedUser = localStorage.getItem('user');
-        const savedToken = localStorage.getItem('token');
+        const savedUser = retrieveAndDecrypt('user');
+        const savedToken = retrieveAndDecrypt('token');
+        const savedTimestamp = retrieveAndDecrypt('tokenTimestamp');
 
-        if (savedUser && savedToken) {
+        console.log('Retrieved during initialization:', {
+            user: savedUser,
+            token: savedToken,
+            tokenTimestamp: savedTimestamp,
+        });
+
+        if (savedUser && savedToken && savedTimestamp) {
+            console.log('Auto-login detected. Setting user and token.');
             setUser(JSON.parse(savedUser));
             setToken(savedToken);
         }
@@ -61,24 +75,31 @@ export function UserProvider({ children }) {
     }, []);
 
 
-    useEffect(() => {
-        globalLogout = logout;
-    }, []);
+    // useEffect(() => {
+    //     globalLogout = logout;
+    // }, []);
 
     // To make other tabs log out if the user logs out in one tab (requires refresh)
     // useEffect(() => {
     //     const handleStorageChange = (event) => {
     //         if (event.key === 'token') {
-    //             const updatedToken = localStorage.getItem('token');
-    //             setToken(updatedToken);
-
+    //             const updatedToken = retrieveAndDecrypt('token');
     //             if (!updatedToken) {
-    //                 setUser(null); // Clear user if token is removed
+    //                 console.log('Token removed in another tab, logging out.');
+    //                 setUser(null);
+    //                 setToken(null);
+    //                 localStorage.clear();
+    //                 // Emit the clearNotifications event
+    //                 eventEmitter.emit('clearNotifications');
+    //             } else {
+    //                 console.log('Token updated in another tab.');
+    //                 eventEmitter.emit('clearNotifications');
+    //                 setToken(updatedToken);
     //             }
     //         }
 
     //         if (event.key === 'user') {
-    //             const updatedUser = localStorage.getItem('user');
+    //             const updatedUser = retrieveAndDecrypt('user');
     //             setUser(updatedUser ? JSON.parse(updatedUser) : null);
     //         }
     //     };
@@ -91,18 +112,25 @@ export function UserProvider({ children }) {
     // }, []);
 
     const login = (userData, token, role) => {
+        console.log('Storing user and token:', { userData, token, role });
         setUser({ ...userData, role });
         setToken(token);
         const timestamp = Date.now().toString();
-        localStorage.setItem('user', JSON.stringify({ ...userData, role }));
-        localStorage.setItem('token', token);
-        localStorage.setItem('tokenTimestamp', timestamp);
+        encryptAndStore('user', JSON.stringify({ ...userData, role }));
+        encryptAndStore('role', role);
+        encryptAndStore('token', token);
+        encryptAndStore('tokenTimestamp', timestamp);
+
+        const storedToken = retrieveAndDecrypt('token');
+        console.log('Token retrieved after storing:', storedToken);
     };
 
     const logout = () => {
         setUser(null);
         setToken(null);
         localStorage.clear();
+        // Emit the clearNotifications event
+        eventEmitter.emit('clearNotifications');
     };
 
     // Prevent rendering children while loading
@@ -118,6 +146,7 @@ export function UserProvider({ children }) {
 }
 
 export function callLogout() {
+    console.trace('callLogout invoked. Global logout:', globalLogout);
     if (globalLogout) {
         globalLogout();
     }

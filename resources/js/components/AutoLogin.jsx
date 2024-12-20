@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from './UserContext';
 import { callLogout } from "./UserContext";
+import { retrieveAndDecrypt } from "./storage";
 import Login from './Login';
 
 function AutoLogin() {
@@ -10,11 +11,11 @@ function AutoLogin() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const savedUser = localStorage.getItem('user');
-        const savedToken = localStorage.getItem('token');
-        const savedRole = localStorage.getItem('role');
-        const tokenTimestamp = localStorage.getItem('tokenTimestamp');
-        const hasStudyPlan = localStorage.getItem('has_study_plan') === 'true'; // Fetch flag from localStorage
+        const savedUser = retrieveAndDecrypt('user');
+        const savedToken = retrieveAndDecrypt('token');
+        const savedRole = retrieveAndDecrypt('role');
+        const tokenTimestamp = retrieveAndDecrypt('tokenTimestamp');
+        const hasStudyPlan = retrieveAndDecrypt('has_study_plan') === 'true'; // Fetch flag from localStorage
 
         const TOKEN_EXPIRY_TIME = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
     

@@ -6,6 +6,7 @@ import { StudentContext } from './StudentContext';
 import { useUser } from './UserContext';
 import { initializeEcho } from '../bootstrap';
 import { useNotifications } from './NotificationContext';
+import { encryptAndStore } from "./storage.js";
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -38,19 +39,18 @@ function Login() {
                 const { token, user, role: returnedRole, unread_notifications } = response.data;
 
                 if (token && user) {
-                    // Store the token and user role in localStorage
-                    localStorage.setItem('token', token);
-                    localStorage.setItem('role', returnedRole);
+                    console.log('Storing token and user data after manual login:', { token, user, role: returnedRole });
 
                     initializeEcho();
 
                     // Store additional user information for students only
                     if (returnedRole === 'student') {
-                        localStorage.setItem('has_study_plan', user.has_study_plan);
+                        encryptAndStore('has_study_plan', user.has_study_plan ? 'true' : 'false');
+                        console.log('Stored has_study_plan:', user.has_study_plan ? 'true' : 'false');
                     }
 
                     login(user, token, returnedRole);
-                    
+
                     if (Array.isArray(unread_notifications)) {
                         unread_notifications.forEach((notification) => {
                             addPopupNotification({
@@ -100,7 +100,7 @@ function Login() {
     const handleGoogleLogin = () => {
         try {
             // Redirect the user to the Google login via the backend
-            window.location.href = "http://127.0.0.1:8000/auth/google"; 
+            window.location.href = "http://127.0.0.1:8000/auth/google";
         } catch (error) {
             console.error('Google Login failed:', error.response?.data || error.message);
             setError('Google login failed. Please try again.');
@@ -170,6 +170,7 @@ function Login() {
                 <img src="/images/login-3d.png" alt="Login 3D Image" className="login-3d" />
             </div>
         </div>
+
     );
 }
 

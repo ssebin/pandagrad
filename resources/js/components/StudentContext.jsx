@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
+import { retrieveAndDecrypt } from "./storage";
 import axios from 'axios';
 
 export const StudentContext = createContext();
@@ -17,7 +18,7 @@ export const StudentProvider = ({ children }) => {
             setIsLoading(true);
 
             // Add Authorization Header
-            const token = localStorage.getItem('token');
+            const token = retrieveAndDecrypt('token');
             const headers = { Authorization: `Bearer ${token}` };
 
             // Fetch semester info
@@ -142,7 +143,7 @@ export const StudentProvider = ({ children }) => {
     // };
 
     const fetchSupervisors = async () => {
-        const token = localStorage.getItem('token');
+        const token = retrieveAndDecrypt('token');
         const headers = { Authorization: `Bearer ${token}` };
         try {
             const response = await axios.get('/api/lecturers?role=supervisor', { headers });
@@ -164,7 +165,7 @@ export const StudentProvider = ({ children }) => {
     // };
 
     const fetchTasks = async () => {
-        const token = localStorage.getItem('token');
+        const token = retrieveAndDecrypt('token');
         const headers = { Authorization: `Bearer ${token}` };
 
         try {
@@ -189,7 +190,7 @@ export const StudentProvider = ({ children }) => {
     // };
 
     const fetchSemesters = async () => {
-        const token = localStorage.getItem('token');
+        const token = retrieveAndDecrypt('token');
         const headers = { Authorization: `Bearer ${token}` };
 
         try {
@@ -237,7 +238,7 @@ export const StudentProvider = ({ children }) => {
 
     // Fetch data on component mount
     useEffect(() => {
-        const token = localStorage.getItem('token');
+        const token = retrieveAndDecrypt('token');
         if (!token) {
             console.warn('Token is missing. StudentContext not initialized.');
             return;
