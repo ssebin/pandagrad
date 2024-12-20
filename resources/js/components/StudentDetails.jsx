@@ -262,7 +262,7 @@ function StudentDetails() {
                         </div>
                     </div>
                     <div className={styles.verticalLine}></div>
-                    <div className={styles.studentInfoBlock}>
+                    <div className={`${styles.studentInfoBlock} ${styles.studentInfoBlockRight}`}>
                         <div className={styles.infoItem}>
                             <div className={styles.infoItemTitle}>Workshops Attended</div>
                             <div className={styles.infoItemValue}>
