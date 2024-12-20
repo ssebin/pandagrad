@@ -65,7 +65,7 @@ class AuthController extends Controller
             // Check if the user is an admin
             $admin = Admin::where('UMEmail', $email)->first();
             if ($admin) {
-                $lastSeenAt = $admin->last_active_at ?? $admin->last_login_at;
+                $lastSeenAt = $admin->last_active_at ?? $admin->last_login_at  ?? $admin->created_at ?? '2000-01-01 00:00:00';
                 $unreadNotifications = Notification::where('recipient_id', 'shared')
                     ->whereNull('read_at')
                     ->where('created_at', '>', $lastSeenAt)
@@ -87,7 +87,7 @@ class AuthController extends Controller
             //if (str_ends_with($email, '@um.edu.my')) {
             $lecturer = Lecturer::where('um_email', $email)->first();  // Assuming 'email' is the column in the lecturer table
             if ($lecturer) {
-                $lastSeenAt = $lecturer->last_active_at ?? $lecturer->last_login_at;
+                $lastSeenAt = $lecturer->last_active_at ?? $lecturer->last_login_at ?? $lecturer->created_at ?? '2000-01-01 00:00:00';
                 $unreadNotifications = Notification::where('recipient_id', $lecturer->id)
                     ->whereNull('read_at')
                     ->where('created_at', '>', $lastSeenAt)
@@ -119,7 +119,7 @@ class AuthController extends Controller
             if (str_ends_with($email, '@siswa.um.edu.my')) {
                 $student = Student::where('siswamail', $email)->first();
                 if ($student) {
-                    $lastSeenAt = $student->last_active_at ?? $student->last_login_at;
+                    $lastSeenAt = $student->last_active_at ?? $student->last_login_at  ?? $student->created_at ?? '2000-01-01 00:00:00';
                     $unreadNotifications = Notification::where('recipient_id', $student->id)
                         ->whereNull('read_at')
                         ->where('created_at', '>', $lastSeenAt)
@@ -140,12 +140,13 @@ class AuthController extends Controller
                 }
             }
 
-            return response()->json(['error' => 'Unauthorized'], 403);
+            // In Google Callback Handler
+            return redirect()->to('http://127.0.0.1:8000/unauthorized');
         } catch (Exception $e) {
             Log::error('Google authentication failed', [
                 'error' => $e->getMessage(),
             ]);
-            return response()->json(['error' => 'Authentication failed'], 500);
+            return redirect()->to('http://127.0.0.1:8000/internal-server-error');
         }
     }
 
@@ -202,7 +203,7 @@ class AuthController extends Controller
                 $admin = Admin::where('UMEmail', $request->UMEmail)->first();
                 if ($admin && Hash::check($request->password, $admin->Password)) {
                     // Fetch unread notifications before updating last_login_at
-                    $lastSeenAt = $admin->last_active_at ?? $admin->last_login_at;
+                    $lastSeenAt = $admin->last_active_at ?? $admin->last_login_at  ?? $admin->created_at ?? '2000-01-01 00:00:00';
                     $unreadNotifications = Notification::where('recipient_id', 'shared')
                         ->whereNull('read_at')
                         ->where('created_at', '>', $lastSeenAt)
@@ -224,7 +225,7 @@ class AuthController extends Controller
                 $lecturer = Lecturer::where('um_email', $request->UMEmail)->first();
                 if ($lecturer && Hash::check($request->password, $lecturer->password)) {
                     // Fetch unread notifications before updating last_login_at
-                    $lastSeenAt = $lecturer->last_active_at ?? $lecturer->last_login_at;
+                    $lastSeenAt = $lecturer->last_active_at ?? $lecturer->last_login_at ?? $lecturer->created_at ?? '2000-01-01 00:00:00';
                     $unreadNotifications = Notification::where('recipient_id', $lecturer->id)
                         ->whereNull('read_at')
                         ->where('created_at', '>', $lastSeenAt)
@@ -250,7 +251,7 @@ class AuthController extends Controller
                 $student = Student::where('siswamail', $request->UMEmail)->first();
                 if ($student && Hash::check($request->password, $student->password)) {
                     // Fetch unread notifications before updating last_login_at
-                    $lastSeenAt = $student->last_active_at ?? $student->last_login_at;
+                    $lastSeenAt = $student->last_active_at ?? $student->last_login_at ?? $student->created_at ?? '2000-01-01 00:00:00';
                     $unreadNotifications = Notification::where('recipient_id', $student->id)
                         ->whereNull('read_at')
                         ->where('created_at', '>', $lastSeenAt)

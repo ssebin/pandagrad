@@ -1,6 +1,7 @@
 import axios from "axios";
 import { callLogout } from "./UserContext";
 import { encryptAndStore, retrieveAndDecrypt } from "./storage";
+import { useNavigate } from "react-router-dom";
 
 const instance = axios.create({
     baseURL: "http://127.0.0.1:8000",
@@ -89,6 +90,23 @@ instance.interceptors.request.use(
         return config;
     },
     (error) => Promise.reject(error)
+);
+
+// Interceptor for handling response errors
+instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 500) {
+            // Redirect to Internal Server Error page
+            const navigate = useNavigate();
+            navigate("/internal-server-error");
+        } else if (error.response && error.response.status === 401 || error.response.status === 403) {
+            // Redirect to Unauthorized page
+            const navigate = useNavigate();
+            navigate("/unauthorized");
+        }
+        return Promise.reject(error);
+    }
 );
 
 export default instance;

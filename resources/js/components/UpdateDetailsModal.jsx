@@ -63,8 +63,12 @@ const UpdateDetailsModal = ({ update, onClose, userRole }) => {
             onClose(); // Close the modal after success
 
         } catch (error) {
-            console.error("Error details:", error.response?.data, error.message);
-            alert("An error occurred. Please try again.");
+            if (error.response && error.response.status === 400) {
+                alert(error.response.data.message); // Show "already approved" message
+            } else {
+                console.error('An error occurred:', error);
+                alert('An unexpected error occurred.');
+            }
         }
     };
 

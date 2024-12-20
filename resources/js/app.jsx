@@ -16,6 +16,7 @@ import Registration from './components/Registration.jsx';
 import RegistrationComplete from './components/RegistrationComplete.jsx';
 import StudyPlanRegistration from './components/StudyPlanRegistration.jsx';
 import Unauthorized from './components/Unauthorized';
+import InternalServerError from './components/InternalServerError';
 
 function App() {
     return (
@@ -23,6 +24,7 @@ function App() {
             <Route path="/" element={<AutoLogin />} />
             <Route path="/process-login" element={<ProcessLogin />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/internal-server-error" element={<InternalServerError />} />
 
             {/* Full Page Routes without MainLayout */}
             <Route path="/student/register" element={<ProtectedRoute role="student"><Registration /></ProtectedRoute>} />

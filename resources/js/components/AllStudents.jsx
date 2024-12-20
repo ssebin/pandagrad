@@ -450,67 +450,80 @@ function AllStudents() {
                 )}
 
                 <div className="student-columns-container">
-                    <div className="student-columns">
-                        {Object.keys(mappedStudentsData).reverse().map((intake, index) => (
-                            <div className="column" key={index}>
-                                <div className="column-header">
-                                    <h2>{intake}</h2>
-                                    <span className="student-count">
-                                        {mappedStudentsData[intake] ? filterStudents(mappedStudentsData[intake]).length : 0}
-                                    </span>
-                                </div>
-                                <hr style={{ borderColor: getColor(index) }} />
-                                {mappedStudentsData[intake] &&
-                                    filterStudents(mappedStudentsData[intake]).map((student, idx) => {
-                                        const task = tasks.find(t => t.name === student.task);
-                                        const taskCategory = task ? task.category : 'Unknown';
+                    {Object.keys(mappedStudentsData).some((intake) => filterStudents(mappedStudentsData[intake]).length > 0) ? (
+                        <div className="student-columns">
+                            {Object.keys(mappedStudentsData).reverse().map((intake, index) => (
+                                <div className="column" key={index}>
+                                    <div className="column-header">
+                                        <h2>{intake}</h2>
+                                        <span className="student-count">
+                                            {mappedStudentsData[intake] ? filterStudents(mappedStudentsData[intake]).length : 0}
+                                        </span>
+                                    </div>
+                                    <hr style={{ borderColor: getColor(index) }} />
+                                    {mappedStudentsData[intake] &&
+                                        filterStudents(mappedStudentsData[intake]).map((student, idx) => {
+                                            const task = tasks.find(t => t.name === student.task);
+                                            const taskCategory = task ? task.category : 'Unknown';
 
-                                        return (
-                                            <Link to={`${basePath}/student/${student.id}`} key={idx} className="student-link">
-                                                <div className="student-card" key={idx}>
-                                                    <div className="card-header">
-                                                        <h3>
-                                                            {student.first_name}{" "}
-                                                            {student.supervisor?.first_name && (
-                                                                <span className="supervisor">(Dr. {student.supervisor?.first_name})</span>
-                                                            )}
-                                                        </h3>
-                                                        <span className={`status ${student.status
-                                                            .toLowerCase()
-                                                            // .replace(/terminated\s*\(i\)/g, 'ti')
-                                                            // .replace(/terminated\s*\(f\)/g, 'tf')
-                                                            .replace(/\s+/g, '-')
-                                                            .trim()}`}>
-                                                            {student.status}
-                                                        </span>
-                                                    </div>
-                                                    <p className="semester">Semester {student.currentSemester} - {student.program}</p>
-                                                    <p className="research">{student.research}</p>
-                                                    <div className="task-profile">
-                                                        <div className="task" style={{ backgroundColor: `${getTaskColor(student.taskCategory, 0.2)}`, color: `${getTaskColor(student.taskCategory, 1)}`, padding: '3px 8px', borderRadius: '5px' }}>{student.taskCategory || 'Unknown'}</div>
-                                                        <img
-                                                            src={student.profile_pic.includes('profile-pic.png')
-                                                                ? student.profile_pic
-                                                                : `/storage/${student.profile_pic}`}
-                                                            alt="Profile"
-                                                            className="profile-picc"
-                                                        />
-                                                    </div>
-                                                    <div className="progress">
-                                                        <span className="track-status" style={{ color: getSolidColor(student.track_status) }}>
-                                                            {student.progress}% ({student.track_status})
-                                                        </span>
-                                                        <div className="progress-bar">
-                                                            <div className="progress-completed" style={{ width: `${student.progress}%`, background: getProgressColor(student.track_status) }}></div>
+                                            return (
+                                                <Link to={`${basePath}/student/${student.id}`} key={idx} className="student-link">
+                                                    <div className="student-card" key={idx}>
+                                                        <div className="card-header">
+                                                            <h3>
+                                                                {student.first_name}{" "}
+                                                                {student.supervisor?.first_name && (
+                                                                    <span className="supervisor">(Dr. {student.supervisor?.first_name})</span>
+                                                                )}
+                                                            </h3>
+                                                            <span className={`status ${student.status
+                                                                .toLowerCase()
+                                                                // .replace(/terminated\s*\(i\)/g, 'ti')
+                                                                // .replace(/terminated\s*\(f\)/g, 'tf')
+                                                                .replace(/\s+/g, '-')
+                                                                .trim()}`}>
+                                                                {student.status}
+                                                            </span>
+                                                        </div>
+                                                        <p className="semester">Semester {student.currentSemester} - {student.program}</p>
+                                                        <p className="research">{student.research}</p>
+                                                        <div className="task-profile">
+                                                            <div className="task" style={{ backgroundColor: `${getTaskColor(student.taskCategory, 0.2)}`, color: `${getTaskColor(student.taskCategory, 1)}`, padding: '3px 8px', borderRadius: '5px' }}>{student.taskCategory || 'Unknown'}</div>
+                                                            <img
+                                                                src={student.profile_pic.includes('profile-pic.png')
+                                                                    ? student.profile_pic
+                                                                    : `/storage/${student.profile_pic}`}
+                                                                alt="Profile"
+                                                                className="profile-picc"
+                                                            />
+                                                        </div>
+                                                        <div className="progress">
+                                                            <span className="track-status" style={{ color: getSolidColor(student.track_status) }}>
+                                                                {student.progress}% ({student.track_status})
+                                                            </span>
+                                                            <div className="progress-bar">
+                                                                <div className="progress-completed" style={{ width: `${student.progress}%`, background: getProgressColor(student.track_status) }}></div>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </Link>
-                                        );
-                                    })}
-                            </div>
-                        ))}
-                    </div>
+                                                </Link>
+                                            );
+                                        })}
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div
+                            style={{
+                                textAlign: 'center',
+                                padding: '50px',
+                                // fontSize: '16px',
+                                // color: '#555',
+                            }}
+                        >
+                            No data available
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

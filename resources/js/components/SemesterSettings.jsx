@@ -98,8 +98,8 @@ function SemesterSettings() {
                 (semester.start_date && formatDate(semester.start_date).toLowerCase().includes(searchKeyword)) ||
                 (semester.end_date && formatDate(semester.end_date).toLowerCase().includes(searchKeyword)) ||
                 (semester.remarks && semester.remarks.toLowerCase().includes(searchKeyword)) ||
-                (semester.semester && semester.semester.toString().includes(searchKeyword)) || 
-                (semester.status && semester.status.toLowerCase().includes(searchKeyword))     
+                (semester.semester && semester.semester.toString().includes(searchKeyword)) ||
+                (semester.status && semester.status.toLowerCase().includes(searchKeyword))
             );
         });
     };
@@ -174,71 +174,88 @@ function SemesterSettings() {
             {isLoading ? (
                 <p>Loading...</p>
             ) : (
-                <table className="semester-table">
-                    <thead>
-                        <tr>
-                            <th>No.</th>
-                            <th>Semester</th>
-                            <th>Academic Year</th>
-                            <th>Start Date</th>
-                            <th>End Date</th>
-                            <th>Remarks</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {paginatedSemesters.sort((a, b) => b.id - a.id).map((semester, index) => (
-                            <tr key={index} onClick={() => handleRowClick(semester)} style={{ cursor: 'pointer' }}>
-                                <td>{semesters.length - index}</td>
-                                <td>{semester.semester}</td>
-                                <td>{semester.academic_year}</td>
-                                <td>{formatDate(semester.start_date)}</td>
-                                <td>{formatDate(semester.end_date)}</td>
-                                <td className="remarks-cell"><i>{semester.remarks}</i></td>
-                                <td>
-                                    <span className={`status-badge ${getStatusClass(semester.status)}`}>{semester.status}</span>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                <>
+                    {paginatedSemesters.length > 0 ? (
+                        <table className="semester-table">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Semester</th>
+                                    <th>Academic Year</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Remarks</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginatedSemesters.sort((a, b) => b.id - a.id).map((semester, index) => (
+                                    <tr key={index} onClick={() => handleRowClick(semester)} style={{ cursor: 'pointer' }}>
+                                        <td>{semesters.length - index}</td>
+                                        <td>{semester.semester}</td>
+                                        <td>{semester.academic_year}</td>
+                                        <td>{formatDate(semester.start_date)}</td>
+                                        <td>{formatDate(semester.end_date)}</td>
+                                        <td className="remarks-cell"><i>{semester.remarks}</i></td>
+                                        <td>
+                                            <span className={`status-badge ${getStatusClass(semester.status)}`}>{semester.status}</span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    ) : (
+                        <div
+                            style={{
+                                textAlign: 'center',
+                                padding: '50px',
+                                // fontSize: '16px',
+                                // color: '#555',
+                            }}
+                        >
+                            No data available
+                        </div>
+                    )}
+                </>
             )}
-            <div className="pagination">
-                <button
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1}
-                >
-                    First
-                </button>
-                <button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                >
-                    &lt;
-                </button>
-                {renderPageNumbers().map((page, index) => (
+            {paginatedSemesters.length > 0 && (
+                <div className="pagination">
                     <button
-                        key={index}
-                        onClick={() => typeof page === 'number' && handlePageChange(page)}
-                        className={currentPage === page ? "active" : ""}
-                        disabled={page === '...'}
+                        onClick={() => handlePageChange(1)}
+                        disabled={currentPage === 1}
                     >
-                        {page}
+                        First
                     </button>
-                ))}
-                <button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                >
-                    &gt;
-                </button>
-                <button
-                    onClick={() => handlePageChange(totalPages)}
-                    disabled={currentPage === totalPages}
-                >
-                    Last
-                </button>
-            </div>
+                    <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                    >
+                        &lt;
+                    </button>
+                    {renderPageNumbers().map((page, index) => (
+                        <button
+                            key={index}
+                            onClick={() => typeof page === 'number' && handlePageChange(page)}
+                            className={currentPage === page ? "active" : ""}
+                            disabled={page === '...'}
+                        >
+                            {page}
+                        </button>
+                    ))}
+                    <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                    >
+                        &gt;
+                    </button>
+                    <button
+                        onClick={() => handlePageChange(totalPages)}
+                        disabled={currentPage === totalPages}
+                    >
+                        Last
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

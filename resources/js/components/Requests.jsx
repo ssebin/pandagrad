@@ -212,62 +212,70 @@ const Requests = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {paginatedRequests.map((request, index) => {
+                        {paginatedRequests.length > 0 ? (
+                            paginatedRequests.map((request, index) => {
 
-                            const relatedNotification = Array.isArray(notifications)
-                                ? notifications.find((noti) => noti.progress_update_id === request.id)
-                                : undefined;
+                                const relatedNotification = Array.isArray(notifications)
+                                    ? notifications.find((noti) => noti.progress_update_id === request.id)
+                                    : undefined;
 
-                            const isRead = relatedNotification?.read_at !== null;
+                                const isRead = relatedNotification?.read_at !== null;
 
-                            //console.log("Related Notification:", relatedNotification);
-                            //console.log("Is Read:", isRead);
-                            return (
-                                <tr
-                                    key={index}
-                                    onClick={() => handleRowClick(request)}
-                                    style={{
-                                        backgroundColor: isRead ? "#f5f5f5" : "white", // Light gray if read, white otherwise
-                                    }}
-                                >
-                                    <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                                    <td>{formatDate(request.date)}</td>
-                                    <td>{request.student_name}</td>
-                                    <td>{request.update_name}</td>
-                                    <td>
-                                        {request.evidence ? (
-                                            <a
-                                                href={`/storage/${request.evidence.path}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                {request.evidence.name}
-                                            </a>
-                                        ) : (
-                                            "-"
-                                        )}
-                                    </td>
-                                    <td>
-                                        {request.link ? (
-                                            <a
-                                                href={request.link}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                            >
-                                                {request.link.length > 20
-                                                    ? `${request.link.substring(0, 20)}...`
-                                                    : request.link}
-                                            </a>
-                                        ) : (
-                                            "-"
-                                        )}
-                                    </td>
-                                    <td>
-                                        <span className={`status-badge ${getStatusClass(request.status)}`}>{request.status}</span>
-                                    </td>
-                                </tr>
-                            );
-                        })}
+                                //console.log("Related Notification:", relatedNotification);
+                                //console.log("Is Read:", isRead);
+                                return (
+                                    <tr
+                                        key={index}
+                                        onClick={() => handleRowClick(request)}
+                                        style={{
+                                            backgroundColor: isRead ? "#f5f5f5" : "white", // Light gray if read, white otherwise
+                                        }}
+                                    >
+                                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                                        <td>{formatDate(request.date)}</td>
+                                        <td>{request.student_name}</td>
+                                        <td>{request.update_name}</td>
+                                        <td>
+                                            {request.evidence ? (
+                                                <a
+                                                    href={`/storage/${request.evidence.path}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    {request.evidence.name}
+                                                </a>
+                                            ) : (
+                                                "-"
+                                            )}
+                                        </td>
+                                        <td>
+                                            {request.link ? (
+                                                <a
+                                                    href={request.link}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >
+                                                    {request.link.length > 20
+                                                        ? `${request.link.substring(0, 20)}...`
+                                                        : request.link}
+                                                </a>
+                                            ) : (
+                                                "-"
+                                            )}
+                                        </td>
+                                        <td>
+                                            <span className={`status-badge ${getStatusClass(request.status)}`}>{request.status}</span>
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        ) : (
+                            <tr>
+                                <td colSpan="7" style={{ textAlign: "center", padding: "50px" }}>
+                                    No data available
+                                </td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             )}
