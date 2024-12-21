@@ -231,7 +231,7 @@ const Requests = () => {
                                             backgroundColor: isRead ? "#f5f5f5" : "white", // Light gray if read, white otherwise
                                         }}
                                     >
-                                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                                        <td>{requests.length - ((currentPage - 1) * itemsPerPage + index)}</td>
                                         <td>{formatDate(request.date)}</td>
                                         <td>{request.student_name}</td>
                                         <td>{request.update_name}</td>

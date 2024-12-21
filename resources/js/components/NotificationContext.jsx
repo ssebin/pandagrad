@@ -426,7 +426,6 @@ export const NotificationProvider = ({ children }) => {
                 unreadCount,
                 setUnreadCount,
                 addPopupNotification,
-                removePopupNotification,
                 setPopupNotifications,
                 visibleNotifications,
                 popupNotifications,

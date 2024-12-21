@@ -1,0 +1,71 @@
+.admin-settings-container {
+    padding: 20px;
+    padding-right: 30px;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+
+.admin-table th, .admin-table td {
+    border-bottom: 1px solid #E2E8F0; 
+    padding: 20px 10px;
+    text-align: center;
+}
+
+.admin-table th {
+    background-color: transparent;
+    color: black;
+    font-weight: bold;
+}
+
+.admin-table th:nth-child(2), .admin-table td:nth-child(2) {
+    width: 160px; 
+}
+
+.admin-table th:nth-child(3), .admin-table td:nth-child(3) {
+    width: 300px; 
+}
+
+.admin-table th:nth-child(6), .admin-table td:nth-child(6) {
+    width: 120px; 
+}
+
+.admin-table tbody tr {
+    cursor: pointer;
+}
+
+.admin-table tbody tr:hover {
+    background-color: #f5f5f5;
+}
+
+.status-inactive, .status-active, .status-deactivated {
+    border-radius: 4px;
+    display: inline-block;
+    font-size: 0.8em; 
+    border: 1px solid; 
+}
+
+.status-inactive {
+    padding: 3px 22px; 
+    background-color: #FFBF0850;
+    border-color: #FFBF08;
+    color: #B58200;
+}
+
+.status-active {
+    padding: 3px 26px; 
+    background-color: #16C09850;
+    border-color: #00B087; 
+    color: #008767; 
+}
+
+.status-deactivated {
+    padding: 3px 12px; 
+    background-color: #FFC5C5;
+    border-color: #DF0404; 
+    color: #DF0404; 
+}

@@ -2,25 +2,56 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from './axiosConfig.js';
 import styles from './EditStudentModal.module.css';
 import { useNavigate, useParams } from 'react-router-dom';
-import { StudentContext } from './StudentContext';
+import { StudentContext } from './StudentContext.jsx';
 
-function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemester }) {
+function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentSemester }) {
     const navigate = useNavigate();
-    const { id } = useParams();
-    const { studentsData, supervisors, fetchStudentsData, semesters } = useContext(StudentContext);
+    const { supervisors, semesters, studentsData } = useContext(StudentContext);
+    const [student, setStudent] = useState(selectedStudent || {});
 
-    // Flatten the studentsData object (merge all semester arrays into one array)
-    const allStudents = Object.values(studentsData).flat();
-
-    // Find the student by ID
-    const initialStudent = allStudents.find(s => s.id === parseInt(id));
-
-    const [student, setStudent] = useState(initialStudent);
+    const students = studentsData && Object.keys(studentsData).length > 0
+        ? Object.values(studentsData).flat()
+        : [];
+    console.log('id', student.id);
 
     useEffect(() => {
-        setStudent(initialStudent);
-    }, [initialStudent]);
-
+        if (!isOpen) {
+            // Reset the form when the modal is closed
+            setStudent({});
+        } else if (selectedStudent) {
+            // Set the student state when `selectedStudent` changes
+            setStudent({
+                id: selectedStudent.id || null,
+                first_name: selectedStudent.first_name || '',
+                last_name: selectedStudent.last_name || '',
+                siswamail: selectedStudent.siswamail || '',
+                matric_number: selectedStudent.matric_number || '',
+                program: selectedStudent.program || '',
+                intake: selectedStudent.intake || '',
+                supervisor_id: selectedStudent.supervisor_id || null,
+                research: selectedStudent.research || '',
+                cgpa: selectedStudent.cgpa || '',
+                nationality: selectedStudent.nationality || '',
+                status: selectedStudent.status || '',
+            });
+        } else {
+            // Reset the form for adding a new student
+            setStudent({
+                id: null,
+                first_name: '',
+                last_name: '',
+                siswamail: '',
+                matric_number: '',
+                program: '',
+                intake: '',
+                supervisor_id: null,
+                research: '',
+                cgpa: '',
+                nationality: '',
+                status: '',
+            });
+        }
+    }, [isOpen, selectedStudent]);
 
     const calculateStudentSemester = (intake) => {
         const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
@@ -70,17 +101,19 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
             return;
         }
 
-        const duplicate = allStudents.find(
-            (eachStudent) => eachStudent.siswamail === student.siswamail
+        const duplicate = students.find(
+            (eachStudent) =>
+                eachStudent.siswamail === student.siswamail && eachStudent.id !== student.id
         );
-        if (duplicate && (!student || duplicate.id !== student.id)) {
+
+        if (duplicate) {
             alert('A student with the same siswamail already exists!');
             return;
         }
 
-        axios.put(`/api/students/${studentId}`, student)
+        axios.put(`/api/students/${student.id}`, student)
             .then(response => {
-                onUpdate(studentId);
+                onUpdate();
                 onClose();
             })
             .catch(error => {
@@ -94,10 +127,9 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
         }
 
         try {
-            await axios.delete(`/api/students/${studentId}`);
-            onClose(); // Close the modal
-            fetchStudentsData(); // Fetch the updated student data
-            navigate('/admin/all-students'); // Redirect to all students page
+            await axios.delete(`/api/students/${student.id}`);
+            onUpdate();
+            onClose();
         } catch (error) {
             console.error('Error deleting student:', error);
         }
@@ -158,7 +190,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                                     {intake}
                                 </option>
                             ))}
-                            <option value="null">N/A</option>
+                        <option value="null">N/A</option>
                     </select>
 
                     <label className={styles.label}>Supervisor</label>
@@ -217,4 +249,4 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
     );
 }
 
-export default EditStudentModal;
+export default StudentInfoModal;

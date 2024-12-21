@@ -46,6 +46,13 @@
     font-family: 'Roboto', sans-serif;
 }
 
+.modalContent input[readonly],
+.modalContent textarea[readonly],
+.modalContent a {
+     /* Grey out text for readonly inputs */
+    background-color: #f9f9f9;
+}
+
 .buttons {
     padding: 10px 0px;
     border: none;

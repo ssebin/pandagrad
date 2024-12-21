@@ -40,6 +40,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications/since-last-login', [NotificationController::class, 'getUnreadNotificationsSinceLastLogin']);
 
     Route::get('/lecturers', [LecturerController::class, 'getSupervisors']);
+    Route::get('/lecturers/all', [LecturerController::class, 'index']);
+    Route::post('/lecturers', [LecturerController::class, 'store']);
+    Route::put('/lecturers/{id}', [LecturerController::class, 'update']);
+
+    Route::get('/admins', [AdminController::class, 'index']);
+    Route::post('/admins', [AdminController::class, 'store']);
+    Route::put('/admins/{AdminID}', [AdminController::class, 'update']);
 
     Route::get('/semesters', [SemesterController::class, 'index']);
     Route::post('/semesters', [SemesterController::class, 'store']);

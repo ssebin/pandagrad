@@ -26,7 +26,7 @@ class NotificationController extends Controller
             ->get()
             ->unique('progress_update_id');
 
-        log::info($notifications);
+        //log::info($notifications);
 
         return response()->json($notifications);
     }

@@ -97,51 +97,6 @@ export const StudentProvider = ({ children }) => {
         }
     };
 
-    // const fetchAndStoreStudyPlans = async (headers) => {
-    //     try {
-    //         // Fetch all study plans for all students
-    //         const response = await axios.get('/api/students/study-plans', { headers });
-    //         const studyPlansById = response.data; // { studentId: [studyPlanData] }
-
-    //         console.log('Fetched All Study Plans:', studyPlansById);
-    //         return studyPlansById;
-    //     } catch (error) {
-    //         console.error('Error fetching all study plans:', error);
-    //         return {}; // Return an empty object on error
-    //     }
-    // };
-
-    // const fetchStudyPlan = async (studentId, headers) => {
-    //     try {
-    //         const response = await axios.get(`/api/students/${studentId}/study-plan`, { headers });
-    //         console.log(`Study Plan Response for Student ID: ${studentId}`, response.data);
-
-    //         if (response.data) {
-    //             return response.data; // Return the study plan directly
-    //         } else {
-    //             console.log(`Study plan not found for student ID: ${studentId}`);
-    //             return null; // Return null if no study plan exists
-    //         }
-    //     } catch (error) {
-    //         console.error(`Error fetching study plan for student ID: ${studentId}`, error);
-    //         return null; // Return null on error
-    //     }
-    // };
-
-    // const fetchAndStoreStudyPlans = async (students, headers) => {
-    //     const studyPlanPromises = students.map(student => fetchStudyPlan(student.id, headers));
-    //     const studyPlans = await Promise.all(studyPlanPromises);
-
-    //     // Create a dictionary of study plans by student ID
-    //     const studyPlansById = students.reduce((acc, student, index) => {
-    //         acc[student.id] = studyPlans[index] || []; // Assign fetched study plan or an empty array
-    //         return acc;
-    //     }, {});
-
-    //     console.log('Study Plans by ID:', studyPlansById);
-    //     return studyPlansById;
-    // };
-
     const fetchSupervisors = async () => {
         const token = retrieveAndDecrypt('token');
         const headers = { Authorization: `Bearer ${token}` };
@@ -152,17 +107,6 @@ export const StudentProvider = ({ children }) => {
             console.error('Error fetching supervisors:', error);
         }
     };
-
-    // const fetchTasks = async () => {
-    //     const token = localStorage.getItem('token');
-    //     const headers = { Authorization: `Bearer ${token}` };
-    //     try {
-    //         const response = await axios.get('/api/tasks', { headers });
-    //         setTasks(response.data);
-    //     } catch (error) {
-    //         console.error('Error fetching tasks:', error);
-    //     }
-    // };
 
     const fetchTasks = async () => {
         const token = retrieveAndDecrypt('token');
@@ -175,19 +119,6 @@ export const StudentProvider = ({ children }) => {
             console.error('Error fetching tasks:', error);
         }
     };
-
-    // const fetchNationalities = async () => {
-    //     const token = localStorage.getItem('token');
-    //     const headers = { Authorization: `Bearer ${token}` };
-
-    //     try {
-    //         const nationalityResponse = await axios.get('/api/students/nationalities', { headers });
-    //         console.log(nationalityResponse.data);
-    //         setNationalities(nationalityResponse.data); // { studentId: nationality }
-    //     } catch (error) {
-    //         console.error('Error fetching nationalities:', error);
-    //     }
-    // };
 
     const fetchSemesters = async () => {
         const token = retrieveAndDecrypt('token');

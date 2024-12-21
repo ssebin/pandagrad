@@ -17,6 +17,9 @@ import RegistrationComplete from './components/RegistrationComplete.jsx';
 import StudyPlanRegistration from './components/StudyPlanRegistration.jsx';
 import Unauthorized from './components/Unauthorized';
 import InternalServerError from './components/InternalServerError';
+import ManageStudents from './components/ManageStudents';
+import ManageLecturers from './components/ManageLecturers';
+import ManageAdmins from './components/ManageAdmins';
 
 function App() {
     return (
@@ -40,6 +43,9 @@ function App() {
                 <Route path="admin-settings/manage-users" element={<ManageUsers />} />
                 <Route path="admin-settings/semester-settings" element={<SemesterSettings />} />
                 <Route path="admin-settings/program-structures" element={<ProgramStructures />} />
+                <Route path="admin-settings/manage-users/students" element={<ManageStudents />} />
+                <Route path="admin-settings/manage-users/lecturers" element={<ManageLecturers />} />
+                <Route path="admin-settings/manage-users/admins" element={<ManageAdmins />} />
                 <Route path="student/:id" element={<StudentDetails />} />
             </Route>
 

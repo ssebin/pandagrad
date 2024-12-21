@@ -20,6 +20,9 @@ class Lecturer extends Authenticatable
         'profile_pic',
         'last_login_at',
         'last_active_at',
+        'remarks',
+        'program',
+        'password',
     ];
 
     // Lecturer supervising students (One-to-many relationship)

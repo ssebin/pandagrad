@@ -57,8 +57,8 @@ h1 {
 
 .semester-table th {
     background-color: transparent;
-    color: #9d9ea4;
-    font-weight: 400;
+    color: black;
+    font-weight: bold;
 }
 
 .semester-table th:nth-child(2), .semester-table td:nth-child(2) {
