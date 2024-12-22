@@ -87,9 +87,10 @@ function Login() {
                 }
             }
         } catch (error) {
-            if (error.response && error.response.status === 401) {
-                // Show popup with error message for invalid credentials
-                console.error('Login failed:', error);
+            if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                const errorMessage = error.response?.data?.error || 'Unauthorized access. Your account may be deactivated.';
+                console.log('Login failed:', errorMessage);
+                //navigate('/unauthorized', { state: { message: errorMessage } });
             } else {
                 // Handle other types of errors
                 console.error('Login failed:', error);

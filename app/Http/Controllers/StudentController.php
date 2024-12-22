@@ -921,7 +921,7 @@ class StudentController extends Controller
             }
 
             // Log::info('Study Plan:', [$studyPlan]);
-            // Log::info('Current Semester:', [$currentSemester]);
+            Log::info('Current Semester:', [$currentSemester]);
 
             // Get the intake
             $intake = $studyPlan->student->intake;
@@ -984,10 +984,12 @@ class StudentController extends Controller
                     if ($latestUpdate->approved === 1) {
                         // Determine task status
                         $taskStatus = $task->determineStatus($semesterEndDate);
+                        log::info('Task Status:', [$taskStatus]);
 
                         // Count completed tasks
                         if (in_array($taskStatus, ['onTrackCompleted', 'delayedCompleted'])) {
                             $fullyCompletedTasks++;
+                            log::info('Fully Completed Task:', [$task->name]);
                         }
 
                         // Check for delayed pending tasks
@@ -996,6 +998,32 @@ class StudentController extends Controller
                                 $delayedTasks['veryDelayed'] = true;
                             } elseif ($semesterNumber === $currentSemester - 1) {
                                 $delayedTasks['slightlyDelayed'] = true;
+                            }
+                        }
+                    }
+                }
+                // Handle cases where the student is beyond the study plan
+                $lastStudyPlanSemester = count($studyPlanSemesters);
+                if ($currentSemester > $lastStudyPlanSemester) {
+                    foreach ($studyPlanSemesters as $studyPlanSemester) {
+                        $semesterNumber = $studyPlanSemester['semester'];
+
+                        foreach ($studyPlanSemester['tasks'] as $taskId) {
+                            $task = $studyPlan->tasks->find($taskId);
+
+                            if (!$task || $task->progressUpdates->isEmpty()) {
+                                continue;
+                            }
+
+                            $latestUpdate = $task->progressUpdates->sortByDesc('updated_at')->first();
+                            if ($latestUpdate->approved !== 1) {
+                                continue;
+                            }
+
+                            if ($semesterNumber === $lastStudyPlanSemester) {
+                                $delayedTasks['slightlyDelayed'] = true;
+                            } elseif ($semesterNumber < $lastStudyPlanSemester) {
+                                $delayedTasks['veryDelayed'] = true;
                             }
                         }
                     }
@@ -1666,7 +1694,7 @@ class StudentController extends Controller
 
         if ($progressUpdate->approved == 1) {
             return response()->json(['message' => 'This update has already been approved.'], 400);
-        }    
+        }
 
         $admin = auth()->user();
         log::info('Admin:', [$admin]);
@@ -1723,7 +1751,7 @@ class StudentController extends Controller
 
         if ($progressUpdate->approved == 0) {
             return response()->json(['message' => 'This update has already been rejected.'], 400);
-        }    
+        }
 
         $rollbackData = json_decode($progressUpdate->rollback_data, true);
 
@@ -1774,7 +1802,7 @@ class StudentController extends Controller
 
         if ($progressUpdate->approved == null) {
             return response()->json(['message' => 'This update has already been marked as pending.'], 400);
-        }    
+        }
 
         $rollbackData = json_decode($progressUpdate->rollback_data, true);
 

@@ -65,6 +65,9 @@ class AuthController extends Controller
             // Check if the user is an admin
             $admin = Admin::where('UMEmail', $email)->first();
             if ($admin) {
+                if ($admin->Status === 'Deactivated') {
+                    return redirect()->to('http://127.0.0.1:8000/unauthorized')->with('error', 'Your account is deactivated.');
+                }
                 $lastSeenAt = $admin->last_active_at ?? $admin->last_login_at  ?? $admin->created_at ?? '2000-01-01 00:00:00';
                 $unreadNotifications = Notification::where('recipient_id', 'shared')
                     ->whereNull('read_at')
@@ -87,6 +90,9 @@ class AuthController extends Controller
             //if (str_ends_with($email, '@um.edu.my')) {
             $lecturer = Lecturer::where('um_email', $email)->first();  // Assuming 'email' is the column in the lecturer table
             if ($lecturer) {
+                if ($lecturer->status === 'Deactivated') {
+                    return redirect()->to('http://127.0.0.1:8000/unauthorized')->with('error', 'Your account is deactivated.');
+                }
                 $lastSeenAt = $lecturer->last_active_at ?? $lecturer->last_login_at ?? $lecturer->created_at ?? '2000-01-01 00:00:00';
                 $unreadNotifications = Notification::where('recipient_id', $lecturer->id)
                     ->whereNull('read_at')
@@ -119,6 +125,9 @@ class AuthController extends Controller
             if (str_ends_with($email, '@siswa.um.edu.my')) {
                 $student = Student::where('siswamail', $email)->first();
                 if ($student) {
+                    if ($student->status === 'Deactivated') {
+                        return redirect()->to('http://127.0.0.1:8000/unauthorized')->with('error', 'Your account is deactivated.');
+                    }
                     $lastSeenAt = $student->last_active_at ?? $student->last_login_at  ?? $student->created_at ?? '2000-01-01 00:00:00';
                     $unreadNotifications = Notification::where('recipient_id', $student->id)
                         ->whereNull('read_at')
@@ -202,6 +211,11 @@ class AuthController extends Controller
             if ($request->role === 'admin') {
                 $admin = Admin::where('UMEmail', $request->UMEmail)->first();
                 if ($admin && Hash::check($request->password, $admin->Password)) {
+                    if ($admin->Status === 'Deactivated') {
+                        return response()->json([
+                            'error' => 'Your account is deactivated.',
+                        ], 403);
+                    }
                     // Fetch unread notifications before updating last_login_at
                     $lastSeenAt = $admin->last_active_at ?? $admin->last_login_at  ?? $admin->created_at ?? '2000-01-01 00:00:00';
                     $unreadNotifications = Notification::where('recipient_id', 'shared')
@@ -224,6 +238,11 @@ class AuthController extends Controller
             if ($request->role === 'lecturer') {
                 $lecturer = Lecturer::where('um_email', $request->UMEmail)->first();
                 if ($lecturer && Hash::check($request->password, $lecturer->password)) {
+                    if ($lecturer->status === 'Deactivated') {
+                        return response()->json([
+                            'error' => 'Your account is deactivated.',
+                        ], 403);
+                    }
                     // Fetch unread notifications before updating last_login_at
                     $lastSeenAt = $lecturer->last_active_at ?? $lecturer->last_login_at ?? $lecturer->created_at ?? '2000-01-01 00:00:00';
                     $unreadNotifications = Notification::where('recipient_id', $lecturer->id)
@@ -250,6 +269,11 @@ class AuthController extends Controller
             if ($request->role === 'student') {
                 $student = Student::where('siswamail', $request->UMEmail)->first();
                 if ($student && Hash::check($request->password, $student->password)) {
+                    if ($student->status === 'Deactivated') {
+                        return response()->json([
+                            'error' => 'Your account is deactivated.',
+                        ], 403);
+                    }
                     // Fetch unread notifications before updating last_login_at
                     $lastSeenAt = $student->last_active_at ?? $student->last_login_at ?? $student->created_at ?? '2000-01-01 00:00:00';
                     $unreadNotifications = Notification::where('recipient_id', $student->id)

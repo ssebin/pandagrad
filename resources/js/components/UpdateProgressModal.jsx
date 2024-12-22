@@ -879,11 +879,17 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                             onChange={(e) => handleExtraFieldChange('supervisor_id', e.target.value)} // Store supervisor_id
                         >
                             <option value="">Select a Supervisor</option>
-                            {supervisors.map(supervisor => (
-                                <option key={supervisor.id} value={supervisor.id}>
-                                    Dr. {supervisor.first_name} {supervisor.last_name}
-                                </option>
-                            ))}
+                            {supervisors
+                                .filter(
+                                    supervisor =>
+                                        supervisor.status !== 'Deactivated' && // Exclude deactivated supervisors
+                                        supervisor.program === student.program // Ensure programs match
+                                )
+                                .map(supervisor => (
+                                    <option key={supervisor.id} value={supervisor.id}>
+                                        Dr. {supervisor.first_name} {supervisor.last_name}
+                                    </option>
+                                ))}
                         </select>
                         <label className={styles.label}>Research Topic<span style={{ color: 'red' }}> *</span></label>
                         <input

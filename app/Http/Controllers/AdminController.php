@@ -61,4 +61,18 @@ class AdminController extends Controller
 
         return response()->json(['message' => 'Admin updated successfully']);
     }
+
+    public function destroy($id)
+    {
+        $admin = Admin::find($id);
+
+        if (!$admin) {
+            return response()->json(['error' => 'Admin not found'], 404);
+        }
+
+        $admin->delete();
+
+        return response()->json(['message' => 'Admin deleted successfully']);
+    }
+
 }

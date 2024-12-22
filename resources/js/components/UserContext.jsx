@@ -75,9 +75,9 @@ export function UserProvider({ children }) {
     }, []);
 
 
-    // useEffect(() => {
-    //     globalLogout = logout;
-    // }, []);
+    useEffect(() => {
+        globalLogout = logout;
+    }, []);
 
     // To make other tabs log out if the user logs out in one tab (requires refresh)
     // useEffect(() => {

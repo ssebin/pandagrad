@@ -98,12 +98,12 @@ instance.interceptors.response.use(
     (error) => {
         if (error.response && error.response.status === 500) {
             // Redirect to Internal Server Error page
-            const navigate = useNavigate();
-            navigate("/internal-server-error");
-        } else if (error.response && error.response.status === 401 || error.response.status === 403) {
+            //window.location.href = "/internal-server-error";
+        } else if (error.response && (error.response.status === 403)) {
             // Redirect to Unauthorized page
-            const navigate = useNavigate();
-            navigate("/unauthorized");
+            alert('Your account does not exist or has been deactivated.');
+            console.error('Forbidden: Access denied.');
+            window.location.href = '/unauthorized';
         }
         return Promise.reject(error);
     }

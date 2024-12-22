@@ -60,9 +60,9 @@ class Task extends Model
         $completionDate = $latestUpdate->completion_date
             ? new DateTime($latestUpdate->completion_date)
             : null;
-        // Log::info('Latest Update: ' . json_encode($latestUpdate)); // Log as JSON for better debugging
-        // Log::info('Completion Date: ' . ($completionDate ? $completionDate->format('Y-m-d H:i:s') : 'null'));
-        // Log::info('Semester End Date: ' . $semesterEnd->format('Y-m-d H:i:s'));
+        Log::info('Latest Update: ' . json_encode($latestUpdate)); // Log as JSON for better debugging
+        Log::info('Completion Date: ' . ($completionDate ? $completionDate->format('Y-m-d H:i:s') : 'null'));
+        Log::info('Semester End Date: ' . $semesterEnd->format('Y-m-d H:i:s'));
 
         // Special case: tasks with specific progress statuses
         if (in_array($progressStatus, ['Pending', 'In Progress'])) {
@@ -71,8 +71,10 @@ class Task extends Model
 
         // Check completion date
         if ($completionDate <= $semesterEnd) {
+            log::info('Task completed on time');
             return 'onTrackCompleted';
         } else {
+            log::info('Task completed after semester end date');
             return 'delayedCompleted';
         }
     }

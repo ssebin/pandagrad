@@ -40,13 +40,29 @@ function ManageLecturers() {
                 await axios.post('/api/lecturers', formData);
             }
 
-            alert('Lecturer saved successfully!');
+            alert('Lecturer saved successfully.');
 
             fetchLecturers();
             setIsModalOpen(false);
         } catch (error) {
             console.error('Submission Error:', error.response?.data || error.message);
             alert('Failed to save lecturer. Please try again.');
+        }
+    };
+
+    const handleDelete = async (formData) => {
+        if (!window.confirm("Are you sure you want to delete this lecturer?")) {
+            return;
+        }
+
+        try {
+            await axios.delete(`/api/lecturers/${selectedLecturer.id}`, formData);
+            fetchLecturers();
+            setIsModalOpen(false);
+            alert("Lecturer deleted successfully.");
+        } catch (error) {
+            console.error('Error deleting lecturer:', error.response?.data || error.message);
+            alert("An error occurred. Please try again.");
         }
     };
 
@@ -159,7 +175,7 @@ function ManageLecturers() {
                     <button className="add-semester-button" onClick={handleOpenModal}>Add New Lecturer</button>
                 </div>
             </div>
-            <AddLecturerModal isOpen={isModalOpen} onClose={handleCloseModal} onSubmit={handleSubmit} initialData={selectedLecturer} />
+            <AddLecturerModal isOpen={isModalOpen} onClose={handleCloseModal} onSubmit={handleSubmit} initialData={selectedLecturer} onDelete={handleDelete}/>
             {isLoading ? (
                 <p>Loading...</p>
             ) : (

@@ -40,7 +40,7 @@ function ManageAdmins() {
                 await axios.post('/api/admins', formData);
             }
 
-            alert('Admin saved successfully!');
+            alert('Admin saved successfully.');
     
             fetchAdmins();
             setIsModalOpen(false);
@@ -49,6 +49,23 @@ function ManageAdmins() {
             alert('Failed to save admin. Please try again.');
         }
     };
+
+    const handleDelete = async (formData) => {
+        if (!window.confirm("Are you sure you want to delete this admin?")) {
+            return;
+        }
+
+        try {
+            await axios.delete(`/api/admins/${selectedAdmin.AdminID}`, formData);
+            fetchAdmins();
+            setIsModalOpen(false);
+            alert("Admin deleted successfully.");
+        } catch (error) {
+            console.error('Error deleting admin:', error.response?.data || error.message);
+            alert("An error occurred. Please try again.");
+        }
+    };
+
 
     const fetchAdmins = async () => {
         try {
@@ -157,7 +174,7 @@ function ManageAdmins() {
                     <button className="add-semester-button" onClick={handleOpenModal}>Add New Admin</button>
                 </div>
             </div>
-            <AddAdminModal isOpen={isModalOpen} onClose={handleCloseModal} onSubmit={handleSubmit} initialData={selectedAdmin} />
+            <AddAdminModal isOpen={isModalOpen} onClose={handleCloseModal} onSubmit={handleSubmit} initialData={selectedAdmin} onDelete={handleDelete} />
             {isLoading ? (
                 <p>Loading...</p>
             ) : (

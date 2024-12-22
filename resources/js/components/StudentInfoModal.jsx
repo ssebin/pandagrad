@@ -115,6 +115,7 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
             .then(response => {
                 onUpdate();
                 onClose();
+                alert("Student data updated successfully.");
             })
             .catch(error => {
                 console.error("There was an error updating the student data!", error);
@@ -130,8 +131,10 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
             await axios.delete(`/api/students/${student.id}`);
             onUpdate();
             onClose();
+            alert("Student deleted successfully.");
         } catch (error) {
             console.error('Error deleting student:', error);
+            alert("An error occurred. Please try again.");
         }
     };
 
@@ -164,7 +167,9 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
                     <input className={styles.input} type="text" name="matric_number" value={student.matric_number || ''} onChange={handleChange} required />
 
                     <label className={styles.label}>Program</label>
-                    <select className={styles.select} name="program" value={student.program || ''} onChange={handleChange} required>
+                    <select className={styles.select} name="program" value={student.program || ''} onChange={(e) => {
+                        handleChange(e); // Update the student's program
+                    }} required>
                         <option value="">Select the program</option>
                         <option value="MSE (ST)">MSE (ST)</option>
                         <option value="MCS (AC)">MCS (AC)</option>
@@ -201,14 +206,20 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
                         onChange={handleChange}
                         required
                     >
-                        {supervisors.map(supervisor => (
-                            <option
-                                key={supervisor.id}
-                                value={supervisor.id} // Use `id` as the `value` for simplicity
-                            >
-                                Dr. {supervisor.first_name} {supervisor.last_name}
-                            </option>
-                        ))}
+                        {supervisors
+                            .filter(
+                                supervisor =>
+                                    supervisor.status !== 'Deactivated' && // Exclude deactivated supervisors
+                                    supervisor.program === student.program // Dynamically filter by the selected program
+                            )
+                            .map(supervisor => (
+                                <option
+                                    key={supervisor.id}
+                                    value={supervisor.id} // Use `id` as the `value` for simplicity
+                                >
+                                    Dr. {supervisor.first_name} {supervisor.last_name}
+                                </option>
+                            ))}
                         <option value="null">N/A</option>
                     </select>
 

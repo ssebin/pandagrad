@@ -38,13 +38,13 @@ class LecturerController extends Controller
                 'first_name' => 'required|string',
                 'last_name' => 'required|string',
                 'um_email' => 'required|string|email|unique:lecturers,um_email',
-                'status' => 'required|string',                
+                'status' => 'required|string',
                 'role' => 'required|string',
                 'program' => 'required|string',
                 'remarks' => 'nullable|string',
             ]);
 
-            $validatedData['Password'] = Hash::make('password123');
+            $validatedData['password'] = Hash::make('password123');
 
             Lecturer::create($validatedData);
 
@@ -70,7 +70,7 @@ class LecturerController extends Controller
             'first_name' => 'required|string',
             'last_name' => 'required|string',
             'um_email' => 'required|string|email',
-            'status' => 'required|string',                
+            'status' => 'required|string',
             'role' => 'required|string',
             'program' => 'required|string',
             'remarks' => 'nullable|string',
@@ -79,5 +79,23 @@ class LecturerController extends Controller
         $lecturer->update($validatedData);
 
         return response()->json(['message' => 'Lecturer updated successfully']);
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $lecturer = Lecturer::find($id);
+
+            if (!$lecturer) {
+                return response()->json(['error' => 'Lecturer not found'], 404);
+            }
+
+            $lecturer->delete();
+
+            return response()->json(['message' => 'Lecturer deleted successfully']);
+        } catch (\Exception $e) {
+            log::error($e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

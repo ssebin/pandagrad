@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styles from './addsemestermodal.module.css';
 
-function AddAdminModal({ isOpen, onClose, onSubmit, initialData }) {
+function AddAdminModal({ isOpen, onClose, onSubmit, initialData, onDelete }) {
     const [adminName, setAdminName] = useState('');
     const [umEmail, setUmEmail] = useState('');
     const [remarks, setRemarks] = useState('');
@@ -13,7 +13,7 @@ function AddAdminModal({ isOpen, onClose, onSubmit, initialData }) {
             setAdminName('');
             setUmEmail('');
             setRemarks('');
-            setStatus('');            
+            setStatus('');
         } else if (initialData) {
             setAdminName(initialData.Name || '');
             setUmEmail(initialData.UMEmail || '');
@@ -114,7 +114,9 @@ function AddAdminModal({ isOpen, onClose, onSubmit, initialData }) {
 
                     <div className={styles.buttons}>
                         <button type="button" className={styles.cancelButton} onClick={onClose}>Cancel</button>
-
+                        {initialData && (
+                            <button type="button" className={styles.deleteButton} onClick={onDelete}>Delete</button>
+                        )}
                         <button type="submit" className={styles.saveButton}>
                             {initialData ? 'Update' : 'Add'}
                         </button>

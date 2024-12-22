@@ -132,7 +132,9 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                     <input className={styles.input} type="text" name="matric_number" value={student.matric_number || ''} onChange={handleChange} required />
 
                     <label className={styles.label}>Program</label>
-                    <select className={styles.select} name="program" value={student.program || ''} onChange={handleChange} required>
+                    <select className={styles.select} name="program" value={student.program || ''} onChange={(e) => {
+                        handleChange(e); // Update the student's program
+                    }} required>
                         <option value="">Select the program</option>
                         <option value="MSE (ST)">MSE (ST)</option>
                         <option value="MCS (AC)">MCS (AC)</option>
@@ -158,7 +160,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                                     {intake}
                                 </option>
                             ))}
-                            <option value="null">N/A</option>
+                        <option value="null">N/A</option>
                     </select>
 
                     <label className={styles.label}>Supervisor</label>
@@ -169,14 +171,20 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                         onChange={handleChange}
                         required
                     >
-                        {supervisors.map(supervisor => (
-                            <option
-                                key={supervisor.id}
-                                value={supervisor.id} // Use `id` as the `value` for simplicity
-                            >
-                                Dr. {supervisor.first_name} {supervisor.last_name}
-                            </option>
-                        ))}
+                        {supervisors
+                            .filter(
+                                supervisor =>
+                                    supervisor.status !== 'Deactivated' && // Exclude deactivated supervisors
+                                    supervisor.program === student.program // Ensure programs match
+                            )
+                            .map(supervisor => (
+                                <option
+                                    key={supervisor.id}
+                                    value={supervisor.id} // Use `id` as the `value` for simplicity
+                                >
+                                    Dr. {supervisor.first_name} {supervisor.last_name}
+                                </option>
+                            ))}
                         <option value="null">N/A</option>
                     </select>
 

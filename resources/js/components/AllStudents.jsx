@@ -77,6 +77,7 @@ function AllStudents() {
     const filterPopupRef = useRef(null);
     const { studentsData, isLoading, currentSemester, supervisors, tasks, fetchTasks, fetchStudentsData, semesters } = useContext(StudentContext);
     const [taskColors, setTaskColors] = useState({});
+    const [selectedProgram, setSelectedProgram] = useState("");
 
     let basePath = "";
     if (user.role === "admin") {
@@ -171,13 +172,24 @@ function AllStudents() {
         setShowFilterPopup(false);
     };
 
+    const handleProgramChange = (e) => {
+        setSelectedProgram(e.target.value); // Update the program state when changed
+    };
+
     const mappedStudentsData = studentsData
         ? Object.keys(studentsData).reduce((mappedData, intake) => {
-            const mappedStudents = studentsData[intake].map((student) => {
-                // Find the task object for the student's current task
+            // Filter out deactivated students for this intake
+            const activeStudents = studentsData[intake].filter(student => student.status !== 'Deactivated');
+
+            // Skip this intake if there are no active students
+            if (activeStudents.length === 0) {
+                return mappedData;
+            }
+
+            // Map the active students to include taskCategory
+            const mappedStudents = activeStudents.map((student) => {
                 const task = tasks.find((t) => t.name === student.task);
 
-                // Add taskCategory to each student
                 return {
                     ...student,
                     taskCategory: task ? task.category : 'Unknown', // Default to 'Unknown' if no matching task
@@ -381,16 +393,6 @@ function AllStudents() {
                             <label>Matric Number<span style={{ color: 'red' }}> *</span></label>
                             <input type="text" name="matric_number" placeholder="Matric Number" required />
 
-                            {/* <label>Intake<span style={{ color: 'red' }}> *</span></label>
-                            <select name="intake" required>
-                                <option value="Sem 1, 2021/2022">Sem 1, 2021/2022</option>
-                                <option value="Sem 2, 2021/2022">Sem 2, 2021/2022</option>
-                                <option value="Sem 1, 2022/2023">Sem 1, 2022/2023</option>
-                                <option value="Sem 2, 2022/2023">Sem 2, 2022/2023</option>
-                                <option value="Sem 1, 2023/2024">Sem 1, 2023/2024</option>
-                                <option value="Sem 2, 2023/2024">Sem 2, 2023/2024</option>
-                            </select> */}
-
                             <label>Intake<span style={{ color: 'red' }}> *</span></label>
                             <select name="intake" required>
                                 {semesters &&
@@ -408,7 +410,8 @@ function AllStudents() {
                             </select>
 
                             <label>Program<span style={{ color: 'red' }}> *</span></label>
-                            <select name="program" required>
+                            <select name="program" onChange={handleProgramChange} required>
+                                <option value="">Select the program</option>
                                 <option value="MSE (ST)">MSE (ST)</option>
                                 <option value="MCS (AC)">MCS (AC)</option>
                             </select>
@@ -428,17 +431,23 @@ function AllStudents() {
                             <label>Supervisor<span style={{ color: 'red' }}> *</span></label>
                             <select name="supervisor" required>
                                 <option value="null">N/A</option>
-                                {supervisors.map(supervisor => (
-                                    <option
-                                        key={supervisor.id}
-                                        value={JSON.stringify({
-                                            id: supervisor.id,
-                                            name: `${supervisor.first_name} ${supervisor.last_name}`
-                                        })}
-                                    >
-                                        Dr. {supervisor.first_name} {supervisor.last_name}
-                                    </option>
-                                ))}
+                                {supervisors
+                                    .filter(
+                                        supervisor =>
+                                            supervisor.status !== 'Deactivated' && // Exclude deactivated supervisors
+                                            supervisor.program === selectedProgram // Ensure programs match
+                                    )
+                                    .map(supervisor => (
+                                        <option
+                                            key={supervisor.id}
+                                            value={JSON.stringify({
+                                                id: supervisor.id,
+                                                name: `${supervisor.first_name} ${supervisor.last_name}`
+                                            })}
+                                        >
+                                            Dr. {supervisor.first_name} {supervisor.last_name}
+                                        </option>
+                                    ))}
                             </select>
 
                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
