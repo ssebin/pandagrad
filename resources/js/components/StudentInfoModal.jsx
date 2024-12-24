@@ -12,7 +12,6 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
     const students = studentsData && Object.keys(studentsData).length > 0
         ? Object.values(studentsData).flat()
         : [];
-    console.log('id', student.id);
 
     useEffect(() => {
         if (!isOpen) {
@@ -183,6 +182,7 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
                         onChange={handleChange}
                         required
                     >
+                        <option value="null">N/A</option>
                         {semesters &&
                             Array.from(
                                 new Set(
@@ -194,8 +194,7 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
                                 <option key={intake} value={intake}>
                                     {intake}
                                 </option>
-                            ))}
-                        <option value="null">N/A</option>
+                            ))}                        
                     </select>
 
                     <label className={styles.label}>Supervisor</label>

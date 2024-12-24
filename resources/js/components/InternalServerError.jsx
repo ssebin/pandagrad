@@ -14,7 +14,7 @@ function InternalServerError() {
                 </div>
                 <h1 className="error-title">Internal Server Error</h1>
                 <p className="error-message">Something went wrong on our end.<br></br>Please try again later.</p>
-                <p className="error-contact">If the issue persists, contact the developer: <a href="mailto:hiimsebin1109@gmail.com">hiimsebin1109@gmail.com</a></p>
+                <p className="error-contact">If the issue persists, contact the developer: <a href="mailto:developer@pandagrad.com">developer@pandagrad.com</a></p>
                 <Link to="/" className="error-home-button">Go to homepage</Link>
             </div>
         </div>

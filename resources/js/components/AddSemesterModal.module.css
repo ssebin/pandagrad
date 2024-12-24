@@ -32,7 +32,8 @@
 }
 
 .modalContent input,
-.modalContent select {
+.modalContent select,
+.modalContent textarea {
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #E2E8F0;
@@ -40,6 +41,19 @@
     font-size: 0.9em;
     background-color: white;
     font-family: 'Roboto', sans-serif;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    white-space: pre-line;
+    word-wrap: break-word; /* Ensures long words or URLs wrap to the next line */
+    overflow-wrap: break-word; /* Alternative for broader browser support */
+}
+
+.modalContent textarea {
+    height: auto;
+    min-height: 140px; 
+    max-height: 300px; 
+    resize: none; 
+    margin-top: 10px;
+    width: 93%;
 }
 
 .modalContent input[type="date"] {
@@ -106,4 +120,45 @@
     border: none;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.uploadButton {
+    background: linear-gradient(180deg, #192E59, #0A193B);
+    color: white;
+    padding: 10px 40px;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+    position: relative;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #ccc;
+    margin: 0 10px;
+}
+
+.dividerText {
+    font-size: 0.9em;
+    color: #666;
+    white-space: nowrap;
+}
+
+.successList, .errorList {
+    line-height: 20px;
+}
+
+.h3heading {
+    text-align: center;
 }

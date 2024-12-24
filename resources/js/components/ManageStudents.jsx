@@ -3,13 +3,18 @@ import axios from './axiosConfig.js';
 import { Link } from 'react-router-dom';
 import { FaSearch } from 'react-icons/fa';
 import { StudentContext } from './StudentContext';
-// import AddStudentModal from './AddStudentModal.jsx';
+import AddStudentModal from './AddStudentModal.jsx';
 import StudentInfoModal from './StudentInfoModal';
+import BatchSummaryModal from './BatchSummaryModal';
 import './ManageStudents.css';
 
 function ManageStudents() {
-    const [selectedStudent, setSelectedStudent] = useState(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
+    const [batchSummary, setBatchSummary] = useState(null);
+    const [isBatchSummaryModalOpen, setIsBatchSummaryModalOpen] = useState(false);
+
+    const [selectedStudent, setSelectedStudent] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [searchKeyword, setSearchKeyword] = useState("");
@@ -27,35 +32,48 @@ function ManageStudents() {
         setSelectedStudent(null);
     };
 
+    const handleOpenAddStudentModal = () => {
+        setIsAddStudentModalOpen(true);
+    };
+
+    const handleCloseAddStudentModal = () => {
+        setIsAddStudentModalOpen(false);
+    };
+
+    const handleBatchSummary = (summary) => {
+        setBatchSummary(summary); 
+        setIsBatchSummaryModalOpen(true); 
+    };
+
     useEffect(() => {
         fetchStudentsData();
     }, []);
 
-    const handleSubmit = async (formData) => {
-        try {
-            const duplicate = students.find(
-                (student) => student.siswamail === formData.siswamail
-            );
-            if (duplicate && (!selectedStudent || duplicate.id !== selectedStudent.id)) {
-                alert('This student already exists!');
-                return;
-            }
+    // const handleSubmit = async (formData) => {
+    //     try {
+    //         const duplicate = students.find(
+    //             (student) => student.siswamail === formData.siswamail
+    //         );
+    //         if (duplicate && (!selectedStudent || duplicate.id !== selectedStudent.id)) {
+    //             alert('This student already exists!');
+    //             return;
+    //         }
 
-            if (selectedStudent) {
-                await axios.put(`/api/students/${selectedStudent.id}`, formData);
-            } else {
-                await axios.post('/api/students', formData);
-            }
+    //         if (selectedStudent) {
+    //             await axios.put(`/api/students/${selectedStudent.id}`, formData);
+    //         } else {
+    //             await axios.post('/api/students', formData);
+    //         }
 
-            alert('Student saved successfully!');
+    //         alert('Student saved successfully!');
 
-            fetchStudentsData();
-            setIsModalOpen(false);
-        } catch (error) {
-            console.error('Submission Error:', error.response?.data || error.message);
-            alert('Failed to save student. Please try again.');
-        }
-    };
+    //         fetchStudentsData();
+    //         setIsModalOpen(false);
+    //     } catch (error) {
+    //         console.error('Submission Error:', error.response?.data || error.message);
+    //         alert('Failed to save student. Please try again.');
+    //     }
+    // };
 
     const handleRowClick = (student) => {
         setSelectedStudent(student);
@@ -152,10 +170,15 @@ function ManageStudents() {
                             onChange={handleSearchInputChange}
                         />
                     </div>
-                    <button className="add-semester-button" onClick={handleOpenEditModal}>Add New Student</button>
+                    <button className="add-semester-button" onClick={handleOpenAddStudentModal}>Add New Student</button>
                 </div>
             </div>
-            {/* <AddStudentModal isOpen={isModalOpen} onClose={handleCloseModal} onSubmit={handleSubmit} initialData={selectedStudent} /> */}
+            <AddStudentModal
+                isOpen={isAddStudentModalOpen}
+                onClose={handleCloseAddStudentModal}
+                onUpdate={fetchStudentsData}
+                onBatchSummary={handleBatchSummary}
+            />
 
             {isLoading ? (
                 <p>Loading...</p>
@@ -257,8 +280,15 @@ function ManageStudents() {
                 isOpen={isEditModalOpen}
                 onClose={handleCloseEditModal}
                 onUpdate={fetchStudentsData}
-                currentSemester={currentSemester}
-                onSubmit={handleSubmit}
+                currentSemester={currentSemester}                
+            />
+
+            <BatchSummaryModal
+                isOpen={isBatchSummaryModalOpen}
+                summary={batchSummary}
+                onClose={() => {
+                    setIsBatchSummaryModalOpen(false);
+                }}
             />
         </div>
     );

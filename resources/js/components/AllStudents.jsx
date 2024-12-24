@@ -178,6 +178,10 @@ function AllStudents() {
 
     const mappedStudentsData = studentsData
         ? Object.keys(studentsData).reduce((mappedData, intake) => {
+            if (intake == "Unspecified") {
+                return mappedData;
+            }
+
             // Filter out deactivated students for this intake
             const activeStudents = studentsData[intake].filter(student => student.status !== 'Deactivated');
 

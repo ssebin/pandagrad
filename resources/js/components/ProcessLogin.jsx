@@ -62,8 +62,8 @@ function ProcessLogin() {
                         }
 
                         if (role === 'student') {
-                            encryptAndStore('has_study_plan', user.has_study_plan ? 'true' : 'false');
-                            console.log('Stored has_study_plan:', user.has_study_plan ? 'true' : 'false');
+                            encryptAndStore('has_study_plan', userData.has_study_plan ? 'true' : 'false');
+                            console.log('Stored has_study_plan:', userData.has_study_plan ? 'true' : 'false');
                         }
 
                         // Redirect the user to the correct page based on their role

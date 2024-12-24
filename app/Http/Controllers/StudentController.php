@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use App\Mail\NewAccountNotification;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use datetime;
@@ -70,6 +73,7 @@ class StudentController extends Controller
 
         // Hash the password
         $validatedData['password'] = Hash::make('password123');
+        $validatedData['profile_pic'] = $validatedData['profile_pic'] ?? '/images/profile-pic.png';
 
         // Check if a supervisor is selected and fetch their details
         if ($request->filled('supervisor_id')) {
@@ -86,13 +90,108 @@ class StudentController extends Controller
         // Create the student record
         $student = Student::create($validatedData);
 
-        // Calculate and save the max semester
-        $intake = $validatedData['intake'];
-        $maxSem = $this->calculateMaxSemester($intake);
-        $student->max_sem = $maxSem;
+        // Calculate and save the max semester        
+        if ($request->filled('intake')) {
+            $intake = $validatedData['intake'];
+            $maxSem = $this->calculateMaxSemester($intake);
+            $student->max_sem = $maxSem;
+        }
         $student->save();
 
+        try {
+            Mail::to($student->siswamail)->send(new NewAccountNotification($student->siswamail, 'student'));
+            log::info('Email sent to ' . $student->siswamail);
+        } catch (\Exception $e) {
+            Log::error("Failed to send email to {$student->siswamail}: " . $e->getMessage());
+        }
+
         return response()->json(['message' => 'Student added successfully', 'student' => $student], 201);
+    }
+
+
+    public function batchCreate(Request $request)
+    {
+        try {
+            // Validate the file input
+            $request->validate([
+                'file' => 'required|mimes:xlsx,xls', // Only Excel files are allowed
+            ]);
+
+            $file = $request->file('file');
+
+            // Load the uploaded Excel file
+            $spreadsheet = IOFactory::load($file->getRealPath());
+            $sheet = $spreadsheet->getActiveSheet();
+            $rows = $sheet->toArray(null, true, true, true);
+
+            $students = [];
+            $errors = [];
+            $seenSiswamails = [];
+
+            // Loop through rows (skipping the header)
+            foreach ($rows as $index => $row) {
+                //if ($index === 1) continue; // Skip the header row
+
+                $siswamail = $row['A'] ?? null;
+
+                Log::info("Processing Row {$index}: ", $row);
+
+                // Validate each row
+                if (!$siswamail || !str_ends_with($siswamail, '@siswa.um.edu.my')) {
+                    $errors[] = "{$siswamail} (Row {$index}: invalid format)";
+                    continue;
+                }
+
+                // Check for duplicates within the uploaded file
+                if (in_array($siswamail, $seenSiswamails)) {
+                    $errors[] = "{$siswamail} (Row {$index}: duplicated in the file)";
+                    continue;
+                }
+                $seenSiswamails[] = $siswamail;
+
+                // Check for duplicates in the database
+                if (Student::where('siswamail', $siswamail)->exists()) {
+                    $errors[] = "{$siswamail} (Row {$index}: duplicate in database)";
+                    continue;
+                }
+
+                // Prepare student data
+                $students[] = [
+                    'siswamail' => $siswamail,
+                    'password' => Hash::make('password123'), // Default password
+                    'profile_pic' => '/images/profile-pic.png', // Default profile picture
+                ];
+            }
+
+            // Insert valid students into the database
+            if (!empty($students)) {
+                Student::insert($students);
+
+                // foreach ($students as $student) {
+                //     try {
+                //         Mail::to($student['siswamail'])->send(new NewAccountNotification($student['siswamail'], 'student'));
+                //         log::info('Email sent to ' . $student['siswamail']);
+                //     } catch (\Exception $e) {
+                //         Log::error("Failed to send email to {$student['siswamail']}: " . $e->getMessage());
+                //     }
+                // }
+            }
+
+            log::info('Success Count:', [count($students)]);
+            log::info('Error Count:', [count($errors)]);
+            log::info('Errors:', [$errors]);
+
+            // Return response
+            return response()->json([
+                'message' => 'Batch creation completed.',
+                'success_count' => count($students),
+                'error_count' => count($errors),
+                'successful_entries' => $students, // Return the successfully added students
+                'error_details' => $errors,       // Return the list of errors
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'An error occurred while processing the file: ' . $e->getMessage()], 500);
+        }
     }
 
     public function show($id, Request $request)
@@ -150,6 +249,13 @@ class StudentController extends Controller
         }
 
         $validatedData = $this->validateStudent($request);
+
+        // Check if the intake has been updated
+        if ($validatedData['intake'] !== $student->intake) {
+            // Recalculate the max_sem based on the new intake
+            $validatedData['max_sem'] = $this->calculateMaxSemester($validatedData['intake']);
+        }
+
         $student->update($validatedData);
 
         return response()->json(['message' => 'Student updated successfully']);
@@ -202,7 +308,7 @@ class StudentController extends Controller
         return $request->validate([
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'siswamail' => 'nullable|string|email|max:255',
+            'siswamail' => 'required|string|email|max:255',
             'supervisor_id' => 'nullable|integer',
             'status' => 'nullable|string|max:255',
             'intake' => 'nullable|string|max:255',

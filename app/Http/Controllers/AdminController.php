@@ -6,6 +6,8 @@ use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NewAccountNotification;
 
 class AdminController extends Controller
 {
@@ -29,7 +31,14 @@ class AdminController extends Controller
 
             $validatedData['Password'] = Hash::make('password123');
     
-            Admin::create($validatedData);
+            $admin = Admin::create($validatedData);
+
+            try {
+                Mail::to($admin->UMEmail)->send(new NewAccountNotification($admin->UMEmail, 'admin'));
+                log::info('Email sent to ' . $admin->UMEmail);
+            } catch (\Exception $e) {
+                Log::error("Failed to send email to {$admin->UMEmail}: " . $e->getMessage());
+            }
     
             return response()->json(['message' => 'Admin added successfully']);
         } catch (\Illuminate\Validation\ValidationException $e) {

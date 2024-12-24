@@ -19,7 +19,15 @@ class AuthController extends Controller
     // Redirect to Google for authentication
     public function redirectToGoogle()
     {
-        return Socialite::driver('google')->stateless()->redirect();
+        $googleUrl = Socialite::driver('google')
+            ->stateless()
+            ->redirect()
+            ->getTargetUrl();
+
+        // Append 'prompt=select_account'
+        $googleUrl .= '&prompt=select_account';
+
+        return redirect()->to($googleUrl);
     }
 
     public function handleGoogleCallback()
@@ -122,32 +130,32 @@ class AuthController extends Controller
             //}
 
             // Check if the user is a student
-            if (str_ends_with($email, '@siswa.um.edu.my')) {
-                $student = Student::where('siswamail', $email)->first();
-                if ($student) {
-                    if ($student->status === 'Deactivated') {
-                        return redirect()->to('http://127.0.0.1:8000/unauthorized')->with('error', 'Your account is deactivated.');
-                    }
-                    $lastSeenAt = $student->last_active_at ?? $student->last_login_at  ?? $student->created_at ?? '2000-01-01 00:00:00';
-                    $unreadNotifications = Notification::where('recipient_id', $student->id)
-                        ->whereNull('read_at')
-                        ->where('created_at', '>', $lastSeenAt)
-                        ->get();
-                    $student->update(['last_login_at' => now()]);
-                    $role = 'student';
-                    $token = $student->createToken('student-token')->plainTextToken;
-                    // return response()->json([
-                    //     'token' => $token,
-                    //     'role' => $role,
-                    //     'user' => $student,
-                    //     'unread_notifications' => $unreadNotifications,
-                    // ]);
-                    // Pass the role along with the token
-                    return redirect()->to('http://127.0.0.1:8000/process-login?token=' . $token . '&role=' . $role . '&unread_notifications=' . urlencode(json_encode($unreadNotifications)));
-                } else {
-                    return response()->json(['error' => 'Student not found'], 403);
+            // if (str_ends_with($email, '@siswa.um.edu.my')) {
+            $student = Student::where('siswamail', $email)->first();
+            if ($student) {
+                if ($student->status === 'Deactivated') {
+                    return redirect()->to('http://127.0.0.1:8000/unauthorized')->with('error', 'Your account is deactivated.');
                 }
-            }
+                $lastSeenAt = $student->last_active_at ?? $student->last_login_at  ?? $student->created_at ?? '2000-01-01 00:00:00';
+                $unreadNotifications = Notification::where('recipient_id', $student->id)
+                    ->whereNull('read_at')
+                    ->where('created_at', '>', $lastSeenAt)
+                    ->get();
+                $student->update(['last_login_at' => now()]);
+                $role = 'student';
+                $token = $student->createToken('student-token')->plainTextToken;
+                // return response()->json([
+                //     'token' => $token,
+                //     'role' => $role,
+                //     'user' => $student,
+                //     'unread_notifications' => $unreadNotifications,
+                // ]);
+                // Pass the role along with the token
+                return redirect()->to('http://127.0.0.1:8000/process-login?token=' . $token . '&role=' . $role . '&unread_notifications=' . urlencode(json_encode($unreadNotifications)));
+            } //else {
+            //     return response()->json(['error' => 'Student not found'], 403);
+            // }
+            // }
 
             // In Google Callback Handler
             return redirect()->to('http://127.0.0.1:8000/unauthorized');

@@ -6,7 +6,8 @@ use Illuminate\Http\Request;;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Mail;
+use App\Mail\NewAccountNotification;
 use App\Models\Lecturer;
 
 class LecturerController extends Controller
@@ -46,7 +47,14 @@ class LecturerController extends Controller
 
             $validatedData['password'] = Hash::make('password123');
 
-            Lecturer::create($validatedData);
+            $lecturer = Lecturer::create($validatedData);
+
+            try {
+                Mail::to($lecturer->um_email)->send(new NewAccountNotification($lecturer->um_email, 'lecturer'));
+                log::info('Email sent to ' . $lecturer->um_email);
+            } catch (\Exception $e) {
+                Log::error("Failed to send email to {$lecturer->um_email}: " . $e->getMessage());
+            }
 
             return response()->json(['message' => 'Lecturer added successfully']);
         } catch (\Illuminate\Validation\ValidationException $e) {

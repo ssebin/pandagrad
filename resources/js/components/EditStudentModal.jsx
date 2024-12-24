@@ -151,9 +151,11 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                         {semesters &&
                             Array.from(
                                 new Set(
-                                    semesters.map(
-                                        semester => `Sem ${semester.semester}, ${semester.academic_year}`
-                                    )
+                                    semesters
+                                        .sort((a, b) => a.id - b.id) // Sort semesters by ID in ascending order
+                                        .map(
+                                            semester => `Sem ${semester.semester}, ${semester.academic_year}`
+                                        )
                                 )
                             ).map(intake => (
                                 <option key={intake} value={intake}>

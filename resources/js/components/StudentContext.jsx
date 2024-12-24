@@ -45,51 +45,58 @@ export const StudentProvider = ({ children }) => {
                 students = studentResponse.data;
             }
 
-                const nationalitiesById = students.reduce((acc, student) => {
-                    acc[student.id] = student.nationality;
-                    return acc;
-                }, {});
-                setNationalities(nationalitiesById);
+            const nationalitiesById = students.reduce((acc, student) => {
+                acc[student.id] = student.nationality;
+                return acc;
+            }, {});
+            setNationalities(nationalitiesById);
 
-                students.forEach(student => {
+            students.forEach(student => {
+                if (student.intake) {
                     student.currentSemester = calculateStudentSemester(student.intake, currentSem);
-                });
+                } else {
+                    student.currentSemester = null; // No intake, so no current semester
+                }
+            });
 
-                // Group students by intake
-                const groupedStudents = students.reduce((acc, student) => {
-                    const intake = student.intake;
-                    if (!acc[intake]) {
-                        acc[intake] = [];
-                    }
-                    acc[intake].push(student);
-                    return acc;
-                }, {});
+            // Group students by intake
+            const groupedStudents = students.reduce((acc, student) => {
+                const intake = student.intake || 'Unspecified';
+                if (!acc[intake]) {
+                    acc[intake] = [];
+                }
+                acc[intake].push(student);
+                return acc;
+            }, {});
 
-                // Sort intakes in descending order (oldest to newest)
-                const sortedIntakes = Object.keys(groupedStudents).sort((a, b) => {
-                    const [aSem, aYearRange] = a.split(', ');
-                    const [bSem, bYearRange] = b.split(', ');
-                    const [aYearStart] = aYearRange.split('/').map(Number);
-                    const [bYearStart] = bYearRange.split('/').map(Number);
-                    const aSemNumber = parseInt(aSem.split(' ')[1]);
-                    const bSemNumber = parseInt(bSem.split(' ')[1]);
+            // Sort intakes in descending order (oldest to newest)
+            const sortedIntakes = Object.keys(groupedStudents).sort((a, b) => {
+                if (a === 'Unspecified') return 1; // Place unspecified intakes at the end
+                if (b === 'Unspecified') return -1;
 
-                    if (aYearStart === bYearStart) {
-                        return bSemNumber - aSemNumber;
-                    }
-                    return bYearStart - aYearStart;
-                });
+                const [aSem, aYearRange] = a.split(', ');
+                const [bSem, bYearRange] = b.split(', ');
+                const [aYearStart] = aYearRange.split('/').map(Number);
+                const [bYearStart] = bYearRange.split('/').map(Number);
+                const aSemNumber = parseInt(aSem.split(' ')[1]);
+                const bSemNumber = parseInt(bSem.split(' ')[1]);
 
-                const sortedGroupedStudents = {};
-                sortedIntakes.forEach(intake => {
-                    sortedGroupedStudents[intake] = groupedStudents[intake].sort((a, b) =>
-                        `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
-                    );
-                });
+                if (aYearStart === bYearStart) {
+                    return bSemNumber - aSemNumber;
+                }
+                return bYearStart - aYearStart;
+            });
 
-                setStudentsData(sortedGroupedStudents);
-                console.log('Students Data:', sortedGroupedStudents);
-            
+            const sortedGroupedStudents = {};
+            sortedIntakes.forEach(intake => {
+                sortedGroupedStudents[intake] = groupedStudents[intake].sort((a, b) =>
+                    `${a.first_name} ${a.last_name}`.localeCompare(`${b.first_name} ${b.last_name}`)
+                );
+            });
+
+            setStudentsData(sortedGroupedStudents);
+            console.log('Students Data:', sortedGroupedStudents);
+
         } catch (error) {
             console.error('Failed to fetch students:', error);
         } finally {
@@ -187,7 +194,7 @@ export const StudentProvider = ({ children }) => {
             console.warn('Token is missing. Cannot fetch semesters.');
             return;
         }
-    
+
         fetchSemesters();
     }, [token]);
 
