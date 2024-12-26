@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from './axiosConfig.js';
 import { Link } from 'react-router-dom';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaPlus } from 'react-icons/fa';
 import { StudentContext } from './StudentContext';
 import AddStudentModal from './AddStudentModal.jsx';
 import StudentInfoModal from './StudentInfoModal';
@@ -41,8 +41,8 @@ function ManageStudents() {
     };
 
     const handleBatchSummary = (summary) => {
-        setBatchSummary(summary); 
-        setIsBatchSummaryModalOpen(true); 
+        setBatchSummary(summary);
+        setIsBatchSummaryModalOpen(true);
     };
 
     useEffect(() => {
@@ -170,7 +170,9 @@ function ManageStudents() {
                             onChange={handleSearchInputChange}
                         />
                     </div>
-                    <button className="add-semester-button" onClick={handleOpenAddStudentModal}>Add New Student</button>
+                    <button className="add-student-button" onClick={handleOpenAddStudentModal}>
+                        <FaPlus className="add" /> Add New Student
+                    </button>
                 </div>
             </div>
             <AddStudentModal
@@ -199,7 +201,7 @@ function ManageStudents() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedStudents.sort((a, b) => b.id - a.id).map((student, index) => (
+                                {paginatedStudents.map((student, index) => (
                                     <tr key={student.id} onClick={() => handleRowClick(student)} style={{ cursor: 'pointer' }}>
                                         <td>{students.length - ((currentPage - 1) * itemsPerPage + index)}</td>
                                         <td>{student.first_name || '-'}</td>
@@ -280,7 +282,7 @@ function ManageStudents() {
                 isOpen={isEditModalOpen}
                 onClose={handleCloseEditModal}
                 onUpdate={fetchStudentsData}
-                currentSemester={currentSemester}                
+                currentSemester={currentSemester}
             />
 
             <BatchSummaryModal

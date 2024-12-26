@@ -5,12 +5,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use DateTime;
 
 class Task extends Model
 {
     use HasFactory;
-    protected $fillable = ['name', 'category'];
+    protected $fillable = ['name', 'category', 'unique_identifier', 'task_weight', 'intake_id', 'version_number', 'parent_task_id', 'updated_by'];
+    public $timestamps = true;
+
+    public function setNameAttribute($value)
+    {
+        $this->attributes['name'] = $value;
+        $this->attributes['unique_identifier'] = Str::slug($value, '_');
+    }
 
     public function studyPlans()
     {
@@ -21,9 +29,25 @@ class Task extends Model
     {
         return $this->hasMany(ProgressUpdate::class);
     }
+
     public function admin()
     {
-        return $this->belongsTo(Admin::class); // Assuming you have an Admin model
+        return $this->belongsTo(Admin::class, 'updated_by', 'AdminID');
+    }
+
+    public function intake()
+    {
+        return $this->belongsTo(Intake::class);
+    }
+
+    public function previousVersion()
+    {
+        return $this->belongsTo(Task::class, 'parent_task_id');
+    }
+
+    public function nextVersions()
+    {
+        return $this->hasMany(Task::class, 'parent_task_id');
     }
 
     public function determineStatus($semesterEndDate)

@@ -68,7 +68,7 @@ function AddAdminModal({ isOpen, onClose, onSubmit, initialData, onDelete }) {
             <div className={styles.modalContent} ref={modalRef}>
                 <form onSubmit={handleSubmit}>
                     <div className={styles.formGroup}>
-                        <label>Admin Name</label>
+                        <label>Admin Name<span style={{ color: 'red' }}> *</span></label>
                         <input
                             type="text"
                             value={adminName}
@@ -78,7 +78,7 @@ function AddAdminModal({ isOpen, onClose, onSubmit, initialData, onDelete }) {
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label>UM Email</label>
+                        <label>UM Emai<span style={{ color: 'red' }}> *</span>l</label>
                         <input
                             type="email"
                             value={umEmail}
@@ -103,8 +103,8 @@ function AddAdminModal({ isOpen, onClose, onSubmit, initialData, onDelete }) {
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label>Status</label>
-                        <select value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <label>Status<span style={{ color: 'red' }}> *</span></label>
+                        <select value={status} onChange={(e) => setStatus(e.target.value)} required>
                             <option value="">Select the status</option>
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>

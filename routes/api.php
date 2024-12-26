@@ -10,6 +10,8 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\ProgressUpdateController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\ProgramController;
+use App\Http\Controllers\IntakeController;
 
 // Routes for authenticated users only
 Route::middleware('auth:sanctum')->group(function () {
@@ -27,7 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/students/{id}/update-progress', [StudentController::class, 'updateProgress']);
     Route::post('/students/{studentId}/update-progress', [StudentController::class, 'updateProgress']);
 
-    Route::get('/tasks', [TaskController::class, 'index']);
+    Route::get('/tasks', [TaskController::class, 'indexAll']);
 
     Route::get('/progress-updates', [ProgressUpdateController::class, 'index']);
     Route::post('/progress-updates/{progressUpdateId}/approve', [StudentController::class, 'approveUpdate']);
@@ -58,6 +60,25 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/semesters/current', [SemesterController::class, 'getCurrentSemester']);
 
     Route::post('/update-profile-picture', [StudentController::class, 'updateProfilePicture']);
+
+    Route::get('/programs', [ProgramController::class, 'index']); // List all programs
+    Route::post('/programs', [ProgramController::class, 'store']); // Add a new program
+    Route::put('/programs/{program}', [ProgramController::class, 'update']); // Edit a program
+    Route::delete('/programs/{program}', [ProgramController::class, 'destroy']); // Delete a program
+    Route::post('/programs/{source_program}/duplicate', [ProgramController::class, 'duplicateProgram']); // Duplicate a program
+
+    Route::get('/programs/{program}/intakes', [IntakeController::class, 'index']); // List intakes for a program
+    Route::post('/programs/{program}/intakes', [IntakeController::class, 'store']); // Add a new intake
+    Route::put('/programs/intakes/{intake}', [IntakeController::class, 'update']); // Edit an intake
+    Route::delete('/programs/intakes/{intake}', [IntakeController::class, 'destroy']); // Delete an intake
+    Route::get('/programs/{program}/intakes-with-tasks', [IntakeController::class, 'getIntakesWithTasks']); // List intakes for a program with tasks
+
+    Route::get('/tasks/intake/{intake}', [TaskController::class, 'index']); // List tasks for an intake
+    Route::post('/tasks/intake/{intake}', [TaskController::class, 'store']); // Add a new task
+    Route::put('/tasks/{task}', [TaskController::class, 'update']); // Edit a task
+    Route::delete('/tasks/{task}', [TaskController::class, 'destroy']); // Delete a task
+    Route::post('/tasks/{task}/apply-changes', [TaskController::class, 'applyChanges']); // Apply task changes to intakes
+    Route::post('/tasks/copy-tasks', [TaskController::class, 'copyTasks']); // Copy tasks to a new intake
 });
 
 // Public routes

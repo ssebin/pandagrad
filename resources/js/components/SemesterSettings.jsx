@@ -3,7 +3,7 @@ import axios from './axiosConfig.js';
 import './SemesterSettings.css';
 import { Link } from 'react-router-dom';
 import AddSemesterModal from './AddSemesterModal.jsx';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaPlus } from 'react-icons/fa';
 
 function SemesterSettings() {
     const [semesters, setSemesters] = useState([]);
@@ -105,8 +105,9 @@ function SemesterSettings() {
     };
 
     const filteredSemesters = filterSemesters(semesters);
-    const totalPages = Math.ceil(filteredSemesters.length / itemsPerPage);
-    const paginatedSemesters = filteredSemesters.slice(
+    const sortedSemesters = [...filteredSemesters].sort((a, b) => b.id - a.id);
+    const totalPages = Math.ceil(sortedSemesters.length / itemsPerPage);
+    const paginatedSemesters = sortedSemesters.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
@@ -167,7 +168,10 @@ function SemesterSettings() {
                             onChange={handleSearchInputChange}
                         />
                     </div>
-                    <button className="add-semester-button" onClick={handleOpenModal}>Add New Semester</button>
+
+                    <button className="add-student-button" onClick={handleOpenModal}>
+                        <FaPlus className="add" /> Add New Semester
+                    </button>
                 </div>
             </div>
             <AddSemesterModal isOpen={isModalOpen} onClose={handleCloseModal} onSubmit={handleSubmit} initialData={selectedSemester} semesters={semesters} />
@@ -191,7 +195,7 @@ function SemesterSettings() {
                             <tbody>
                                 {paginatedSemesters.sort((a, b) => b.id - a.id).map((semester, index) => (
                                     <tr key={index} onClick={() => handleRowClick(semester)} style={{ cursor: 'pointer' }}>
-                                        <td>{semesters.length - index}</td>
+                                        <td>{semesters.length - ((currentPage - 1) * itemsPerPage + index)}</td>
                                         <td>{semester.semester}</td>
                                         <td>{semester.academic_year}</td>
                                         <td>{formatDate(semester.start_date)}</td>

@@ -81,12 +81,12 @@ function SemesterModal({ isOpen, onClose, onSubmit, initialData, semesters }) {
         <div className={styles.modalOverlay}>
             <div className={styles.modalContent} ref={modalRef}>
                 <form onSubmit={handleSubmit}>
-                    <label>Semester</label>
+                    <label>Semester<span style={{ color: 'red' }}> *</span></label>
                     <select value={semester} onChange={(e) => setSemester(e.target.value)} required>
                         <option value="1">1</option>
                         <option value="2">2</option>
                     </select>
-                    <label>Academic Year</label>
+                    <label>Academic Year<span style={{ color: 'red' }}> *</span></label>
                     <input
                         type="text"
                         value={academicYear}
@@ -95,9 +95,9 @@ function SemesterModal({ isOpen, onClose, onSubmit, initialData, semesters }) {
                         pattern="\d{4}/\d{4}"
                         required
                     />
-                    <label>Start Date</label>
+                    <label>Start Date<span style={{ color: 'red' }}> *</span></label>
                     <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
-                    <label>End Date</label>
+                    <label>End Date<span style={{ color: 'red' }}> *</span></label>
                     <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} required />
                     <label>Remarks</label>
                     <input type="text" value={remarks || "N/A"} onChange={(e) => setRemarks(e.target.value)} />

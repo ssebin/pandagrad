@@ -80,11 +80,13 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
 
         axios.put(`/api/students/${studentId}`, student)
             .then(response => {
+                alert('Student updated successfully!');
                 onUpdate(studentId);
                 onClose();
             })
             .catch(error => {
                 console.error("There was an error updating the student data!", error);
+                alert("There was an error updating the student data. Please try again.");
             });
     };
 
@@ -95,11 +97,13 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
 
         try {
             await axios.delete(`/api/students/${studentId}`);
+            alert('Student deleted successfully!');
             onClose(); // Close the modal
             fetchStudentsData(); // Fetch the updated student data
             navigate('/admin/all-students'); // Redirect to all students page
         } catch (error) {
             console.error('Error deleting student:', error);
+            alert('Failed to delete student. Please try again.');
         }
     };
 
@@ -119,19 +123,19 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
             {renderOverlay()}
             <div className={styles.editStudentPopup}>
                 <form className={styles.form}>
-                    <label className={styles.label}>First Name</label>
+                    <label className={styles.label}>First Name<span style={{ color: 'red' }}> *</span></label>
                     <input className={styles.input} type="text" name="first_name" value={student.first_name || ''} onChange={handleChange} required />
 
-                    <label className={styles.label}>Last Name</label>
+                    <label className={styles.label}>Last Name<span style={{ color: 'red' }}> *</span></label>
                     <input className={styles.input} type="text" name="last_name" value={student.last_name || ''} onChange={handleChange} required />
 
-                    <label className={styles.label}>Siswamail</label>
+                    <label className={styles.label}>Siswamail<span style={{ color: 'red' }}> *</span></label>
                     <input className={styles.input} type="email" name="siswamail" value={student.siswamail || ''} onChange={handleChange} required />
 
-                    <label className={styles.label}>Matric Number</label>
+                    <label className={styles.label}>Matric Number<span style={{ color: 'red' }}> *</span></label>
                     <input className={styles.input} type="text" name="matric_number" value={student.matric_number || ''} onChange={handleChange} required />
 
-                    <label className={styles.label}>Program</label>
+                    <label className={styles.label}>Program<span style={{ color: 'red' }}> *</span></label>
                     <select className={styles.select} name="program" value={student.program || ''} onChange={(e) => {
                         handleChange(e); // Update the student's program
                     }} required>
@@ -140,7 +144,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                         <option value="MCS (AC)">MCS (AC)</option>
                     </select>
 
-                    <label className={styles.label}>Intake</label>
+                    <label className={styles.label}>Intake<span style={{ color: 'red' }}> *</span></label>
                     <select
                         className={styles.select}
                         name="intake"
@@ -165,7 +169,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                         <option value="null">N/A</option>
                     </select>
 
-                    <label className={styles.label}>Supervisor</label>
+                    <label className={styles.label}>Supervisor<span style={{ color: 'red' }}> *</span></label>
                     <select
                         className={styles.select}
                         name="supervisor_id"
@@ -196,14 +200,14 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                     <label className={styles.label}>CGPA</label>
                     <input className={styles.input} type="number" step="0.01" name="cgpa" value={student.cgpa || ''} onChange={handleChange} />
 
-                    <label className={styles.label}>Nationality</label>
+                    <label className={styles.label}>Nationality<span style={{ color: 'red' }}> *</span></label>
                     <select className={styles.select} name="nationality" value={student.nationality || ''} onChange={handleChange} required>
                         <option value="">Select the nationality</option>
                         <option value="Malaysian">Malaysian</option>
                         <option value="Non-Malaysian">Non-Malaysian</option>
                     </select>
 
-                    <label className={styles.label}>Student Status</label>
+                    <label className={styles.label}>Student Status<span style={{ color: 'red' }}> *</span></label>
                     <select className={styles.select} name="status" value={student.status || ''} onChange={handleChange} required>
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>

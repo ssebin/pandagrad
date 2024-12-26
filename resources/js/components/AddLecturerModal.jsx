@@ -90,7 +90,7 @@ function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) 
             <div className={styles.modalContent} ref={modalRef}>
                 <form onSubmit={handleSubmit}>
                     <div className={styles.formGroup}>
-                        <label>First Name</label>
+                        <label>First Name<span style={{ color: 'red' }}> *</span></label>
                         <input
                             type="text"
                             value={firstName}
@@ -99,7 +99,7 @@ function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) 
                         />
                     </div>
                     <div className={styles.formGroup}>
-                        <label>Last Name</label>
+                        <label>Last Name<span style={{ color: 'red' }}> *</span></label>
                         <input
                             type="text"
                             value={lastName}
@@ -109,7 +109,7 @@ function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) 
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label>UM Email</label>
+                        <label>UM Email<span style={{ color: 'red' }}> *</span></label>
                         <input
                             type="email"
                             value={umEmail}
@@ -119,8 +119,8 @@ function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) 
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label>Role</label>
-                        <select value={role} onChange={(e) => setRole(e.target.value)}>
+                        <label>Role<span style={{ color: 'red' }}> *</span></label>
+                        <select value={role} onChange={(e) => setRole(e.target.value)} required>
                             <option value="">Select the role</option>
                             <option value="supervisor">Supervisor</option>
                             <option value="coordinator">Coordinator</option>
@@ -129,8 +129,8 @@ function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) 
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label>Program</label>
-                        <select value={program} onChange={(e) => setProgram(e.target.value)}>
+                        <label>Program<span style={{ color: 'red' }}> *</span></label>
+                        <select value={program} onChange={(e) => setProgram(e.target.value)} required>
                             <option value="">Select the program</option>
                             <option value="MSE (ST)">MSE (ST)</option>
                             <option value="MCS (AC)">MCS (AC)</option>
@@ -148,8 +148,8 @@ function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) 
                     </div>
 
                     <div className={styles.formGroup}>
-                        <label>Status</label>
-                        <select value={status} onChange={(e) => setStatus(e.target.value)}>
+                        <label>Status<span style={{ color: 'red' }}> *</span></label>
+                        <select value={status} onChange={(e) => setStatus(e.target.value)} required>
                             <option value="">Select the status</option>
                             <option value="Active">Active</option>
                             <option value="Inactive">Inactive</option>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from './axiosConfig.js';
 import { Link } from 'react-router-dom';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaPlus } from 'react-icons/fa';
 import AddAdminModal from './AddAdminModal.jsx';
 import './ManageAdmins.css';
 
@@ -33,7 +33,7 @@ function ManageAdmins() {
                 alert('An admin with the same UM Email already exists!');
                 return;
             }
-    
+
             if (selectedAdmin) {
                 await axios.put(`/api/admins/${selectedAdmin.AdminID}`, formData);
             } else {
@@ -41,7 +41,7 @@ function ManageAdmins() {
             }
 
             alert('Admin saved successfully.');
-    
+
             fetchAdmins();
             setIsModalOpen(false);
         } catch (error) {
@@ -106,8 +106,9 @@ function ManageAdmins() {
     };
 
     const filteredAdmins = filterAdmins(admins);
-    const totalPages = Math.ceil(filteredAdmins.length / itemsPerPage);
-    const paginatedAdmins = filteredAdmins.slice(
+    const sortedAdmins = [...filteredAdmins].sort((a, b) => b.AdminID - a.AdminID);
+    const totalPages = Math.ceil(sortedAdmins.length / itemsPerPage);
+    const paginatedAdmins = sortedAdmins.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
@@ -171,7 +172,9 @@ function ManageAdmins() {
                             onChange={handleSearchInputChange}
                         />
                     </div>
-                    <button className="add-semester-button" onClick={handleOpenModal}>Add New Admin</button>
+                    <button className="add-student-button" onClick={handleOpenModal}>
+                        <FaPlus className="add" /> Add New Admin
+                    </button>
                 </div>
             </div>
             <AddAdminModal isOpen={isModalOpen} onClose={handleCloseModal} onSubmit={handleSubmit} initialData={selectedAdmin} onDelete={handleDelete} />
@@ -192,7 +195,7 @@ function ManageAdmins() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedAdmins.sort((a, b) => b.AdminID - a.AdminID).map((admin, index) => (
+                                {paginatedAdmins.map((admin, index) => (
                                     <tr key={admin.AdminID} onClick={() => handleRowClick(admin)} style={{ cursor: 'pointer' }}>
                                         <td>{admins.length - ((currentPage - 1) * itemsPerPage + index)}</td>
                                         <td>{admin.Name}</td>

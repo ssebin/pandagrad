@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from './axiosConfig.js';
 import { Link } from 'react-router-dom';
-import { FaSearch } from 'react-icons/fa';
+import { FaSearch, FaPlus } from 'react-icons/fa';
 import AddLecturerModal from './AddLecturerModal.jsx';
 import './ManageLecturers.css';
 
@@ -107,8 +107,9 @@ function ManageLecturers() {
     };
 
     const filteredLecturers = filterLecturers(lecturers);
-    const totalPages = Math.ceil(filteredLecturers.length / itemsPerPage);
-    const paginatedLecturers = filteredLecturers.slice(
+    const sortedLecturers = [...filteredLecturers].sort((a, b) => b.id - a.id);
+    const totalPages = Math.ceil(sortedLecturers.length / itemsPerPage);
+    const paginatedLecturers = sortedLecturers.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
     );
@@ -172,10 +173,12 @@ function ManageLecturers() {
                             onChange={handleSearchInputChange}
                         />
                     </div>
-                    <button className="add-semester-button" onClick={handleOpenModal}>Add New Lecturer</button>
+                    <button className="add-student-button" onClick={handleOpenModal}>
+                        <FaPlus className="add" /> Add New Lecturer
+                    </button>
                 </div>
             </div>
-            <AddLecturerModal isOpen={isModalOpen} onClose={handleCloseModal} onSubmit={handleSubmit} initialData={selectedLecturer} onDelete={handleDelete}/>
+            <AddLecturerModal isOpen={isModalOpen} onClose={handleCloseModal} onSubmit={handleSubmit} initialData={selectedLecturer} onDelete={handleDelete} />
             {isLoading ? (
                 <p>Loading...</p>
             ) : (
@@ -195,7 +198,7 @@ function ManageLecturers() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedLecturers.sort((a, b) => b.id - a.id).map((lecturer, index) => (
+                                {paginatedLecturers.map((lecturer, index) => (
                                     <tr key={lecturer.id} onClick={() => handleRowClick(lecturer)} style={{ cursor: 'pointer' }}>
                                         <td>{lecturers.length - ((currentPage - 1) * itemsPerPage + index)}</td>
                                         <td>{lecturer.first_name}</td>

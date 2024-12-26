@@ -18,11 +18,12 @@ function AddStudentModal({ isOpen, onClose, onUpdate, onBatchSummary }) {
     };
 
     const handleSubmitSiswamail = async (e) => {
+        e.preventDefault();
+
         if (!window.confirm("Are you sure you want to add a new student?")) {
             return;
         }
-
-        e.preventDefault();
+        
         try {
             // Add the default profile_pic value
             await axios.post('/api/students', {
@@ -40,11 +41,12 @@ function AddStudentModal({ isOpen, onClose, onUpdate, onBatchSummary }) {
     };
 
     const handleSubmitExcel = async (e) => {
+        e.preventDefault();
+
         if (!window.confirm("Are you sure you want to add new student(s)?")) {
             return;
         }
-
-        e.preventDefault();
+        
         if (!file) {
             alert('Please upload an Excel file.');
             return;
