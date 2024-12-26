@@ -78,6 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/tasks/{task}', [TaskController::class, 'update']); // Edit a task
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']); // Delete a task
     Route::post('/tasks/{task}/apply-changes', [TaskController::class, 'applyChanges']); // Apply task changes to intakes
+    Route::post('/tasks/{task}/apply-delete', [TaskController::class, 'applyDelete']); // Apply task deletion to intakes
     Route::post('/tasks/copy-tasks', [TaskController::class, 'copyTasks']); // Copy tasks to a new intake
 });
 

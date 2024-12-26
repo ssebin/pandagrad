@@ -33,7 +33,8 @@
 
 .modalContent input,
 .modalContent select,
-.modalContent textarea {
+.modalContent textarea,
+.select {
     padding: 10px;
     margin-bottom: 15px;
     border: 1px solid #E2E8F0;
@@ -45,7 +46,12 @@
     white-space: pre-line;
     word-wrap: break-word; /* Ensures long words or URLs wrap to the next line */
     overflow-wrap: break-word; /* Alternative for broader browser support */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
 }
+
+.select{}
 
 .modalContent textarea {
     height: auto;

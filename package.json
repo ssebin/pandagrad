@@ -26,6 +26,7 @@
         "react-mermaid2": "^0.1.4",
         "react-oauth2-login": "^1.0.3",
         "react-router-dom": "^6.23.1",
+        "react-select": "^5.9.0",
         "uuid": "^11.0.3"
     }
 }

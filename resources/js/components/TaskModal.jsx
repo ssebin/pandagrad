@@ -2,12 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import styles from './addsemestermodal.module.css';
 import axios from 'axios';
 import { retrieveAndDecrypt } from "./storage";
+import Select from 'react-select';
 
-function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted }) {
+function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, programId, intakeId }) {
     const [name, setName] = useState('');
     const [category, setCategory] = useState('');
     const [taskWeight, setTaskWeight] = useState('');
     const [versionNumber, setVersionNumber] = useState('');
+    const [applyToOption, setApplyToOption] = useState('this'); // 'this', 'all', 'custom'
+    const [intakes, setIntakes] = useState([]);
+    const [selectedIntakes, setSelectedIntakes] = useState([]);
     const token = retrieveAndDecrypt('token');
     const modalRef = useRef(null);
 
@@ -19,6 +23,23 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted }) {
             setVersionNumber(task.version_number || '');
         }
     }, [isOpen, task]);
+
+    const intakeOptions = intakes.map(intake => ({
+        value: intake.id,
+        label: `Semester ${intake.intake_semester} ${intake.intake_year}`,
+    }));
+
+    useEffect(() => {
+        if (isOpen) {
+            axios.get(`/api/programs/${programId}/intakes`, {
+                headers: { Authorization: `Bearer ${token}` },
+            }).then(response => {
+                setIntakes(response.data);
+            }).catch(error => {
+                console.error('Error fetching intakes:', error);
+            });
+        }
+    }, [isOpen]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -40,6 +61,27 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted }) {
                     },
                 }
             );
+            const updatedTask = response.data;
+
+            // Determine intake IDs to apply changes to
+            let intakeIds = [];
+            if (applyToOption === 'all') {
+                intakeIds = intakes.map(intake => intake.id);
+            } else if (applyToOption === 'custom') {
+                intakeIds = selectedIntakes.map(intake => intake.value);
+            }
+
+            // Remove current intake ID from the list since we've already created the task there
+            intakeIds = intakeIds.filter(id => id !== parseInt(intakeId));
+
+            // Apply changes to other intakes if any
+            if (intakeIds.length > 0) {
+                await axios.post(
+                    `/api/tasks/${updatedTask.id}/apply-changes`,
+                    { intake_ids: intakeIds },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+            }
 
             alert('Task updated successfully!');
             onTaskUpdated(response.data);
@@ -50,21 +92,55 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted }) {
         }
     };
 
+    const handleClose = () => {
+        setName('');
+        setCategory('');
+        setTaskWeight('');
+        setApplyToOption('this');
+        onClose();
+    };
+
     const handleDelete = async () => {
         if (!window.confirm("Are you sure you want to delete this task? This action cannot be undone.")) {
             return;
         }
 
         try {
-            await axios.delete(`/api/tasks/${task.id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
+            let intakeIds = [];
+
+            if (applyToOption === 'this') {
+                // Delete only in this intake
+                await axios.delete(`/api/tasks/${task.id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+            } else {
+                if (applyToOption === 'all') {
+                    intakeIds = intakes.map((intake) => intake.id);
+                } else if (applyToOption === 'custom') {
+                    intakeIds = selectedIntakes.map((intake) => intake.value);
+                }
+
+                // Ensure current intake is included if necessary
+                if (!intakeIds.includes(parseInt(intakeId))) {
+                    intakeIds.push(parseInt(intakeId));
+                }
+
+                await axios.post(
+                    `/api/tasks/${task.id}/apply-delete`,
+                    { intake_ids: intakeIds },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+            }
 
             alert('Task deleted successfully!');
             onTaskDeleted(task.id);
-            onClose();
+            handleClose();
         } catch (error) {
             alert('An error occurred while deleting the task. Please try again.');
             console.error('Error deleting task:', error);
@@ -130,6 +206,29 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted }) {
                             readOnly
                         />
                     </div>
+                    <div className={styles.formGroup}>
+                        <label>Apply to<span style={{ color: 'red' }}> *</span></label>
+                        <select value={applyToOption} onChange={(e) => setApplyToOption(e.target.value)} required>
+                            <option value="this">This Intake Only</option>
+                            <option value="all">All Intakes</option>
+                            <option value="custom">Selected Intakes</option>
+                        </select>
+                    </div>
+                    {applyToOption === 'custom' && (
+                        <div className={styles.formGroup}>
+                            <label>Select Intakes<span style={{ color: 'red' }}> *</span></label>
+                            <Select
+                                isMulti
+                                options={intakes.map(intake => ({
+                                    value: intake.id,
+                                    label: `Semester ${intake.intake_semester}, ${intake.intake_year}`,
+                                }))}
+                                value={selectedIntakes}
+                                onChange={setSelectedIntakes}
+                                required
+                            />
+                        </div>
+                    )}
                     <div className={styles.buttons}>
                         <button type="button" className={styles.cancelButton} onClick={onClose}>
                             Cancel

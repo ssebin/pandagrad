@@ -252,12 +252,15 @@ function TaskList() {
                 task={selectedTask}
                 onTaskUpdated={handleTaskUpdated}
                 onTaskDeleted={handleTaskDeleted}
+                programId={programId}
+                intakeId={intakeId}
             />
             <AddTaskModal
                 isOpen={isAddTaskModalOpen}
                 onClose={() => setIsAddTaskModalOpen(false)}
                 intakeId={intakeId}
                 onTaskAdded={handleTaskAdded}
+                programId={programId}
             />
         </div>
     );

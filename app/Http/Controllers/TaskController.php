@@ -8,6 +8,7 @@ use App\Models\TaskVersion;
 use App\Models\Intake;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class TaskController extends Controller
 {
@@ -36,12 +37,15 @@ class TaskController extends Controller
             'task_weight' => 'required|integer|min:1|max:10',
         ]);
 
+        $taskCode = Str::uuid()->toString();
+
         // Create the first version
         $task = $intake->tasks()->create(array_merge($validated, [
             'version_number' => 1, // First version
             'parent_task_id' => null, // No parent for the first version
             'updated_by' => auth()->id(), // The admin making the change
             'intake_id' => $intake->id, // The intake the task belongs to
+            'task_code' => $taskCode,
         ]));
         return response()->json($task, 201);
     }
@@ -59,6 +63,7 @@ class TaskController extends Controller
             'version_number' => $task->version_number + 1, // Increment version
             'parent_task_id' => $task->id, // Link to the previous version
             'updated_by' => auth()->id(), // Track the admin making the update
+            'task_code' => $task->task_code, // Preserve the task_code
         ]));
 
         return response()->json($newTask);
@@ -66,8 +71,37 @@ class TaskController extends Controller
 
     public function destroy(Task $task)
     {
-        $task->delete();
+        // Find all versions of the task in the same intake using the task_code
+        $tasksToDelete = Task::where('task_code', $task->task_code)
+            ->where('intake_id', $task->intake_id)
+            ->get();
+
+        foreach ($tasksToDelete as $t) {
+            $t->delete();
+        }
+
         return response()->json(['message' => 'Task deleted successfully']);
+    }
+
+    public function applyDelete(Request $request, Task $task)
+    {
+        $validated = $request->validate([
+            'intake_ids' => 'required|array',
+            'intake_ids.*' => 'exists:intakes,id',
+        ]);
+
+        foreach ($validated['intake_ids'] as $intakeId) {
+            // Find all versions of the task in the specified intake
+            $tasksToDelete = Task::where('task_code', $task->task_code)
+                ->where('intake_id', $intakeId)
+                ->get();
+
+            foreach ($tasksToDelete as $t) {
+                $t->delete();
+            }
+        }
+
+        return response()->json(['message' => 'Tasks deleted successfully']);
     }
 
     public function applyChanges(Request $request, Task $task)
@@ -80,10 +114,32 @@ class TaskController extends Controller
         $taskData = $task->only(['name', 'category', 'task_weight']);
 
         foreach ($validated['intake_ids'] as $intakeId) {
-            Task::updateOrCreate(
-                ['name' => $task->name, 'intake_id' => $intakeId],
-                $taskData
-            );
+            // Find the latest version of the task in the specified intake using task_code
+            $existingTask = Task::where('intake_id', $intakeId)
+                ->where('task_code', $task->task_code)
+                ->whereNotIn('id', function ($query) {
+                    $query->select('parent_task_id')->from('tasks')->whereNotNull('parent_task_id');
+                })->first();
+
+            if ($existingTask) {
+                // Create a new version
+                Task::create(array_merge($taskData, [
+                    'intake_id' => $intakeId,
+                    'version_number' => $existingTask->version_number + 1,
+                    'parent_task_id' => $existingTask->id,
+                    'updated_by' => auth()->id(),
+                    'task_code' => $existingTask->task_code,
+                ]));
+            } else {
+                // Create a new task with the same task_code
+                Task::create(array_merge($taskData, [
+                    'intake_id' => $intakeId,
+                    'version_number' => $task->version_number, // Use the current task's version_number
+                    'parent_task_id' => null,
+                    'updated_by' => auth()->id(),
+                    'task_code' => $task->task_code,
+                ]));
+            }
         }
 
         return response()->json(['message' => 'Changes applied successfully']);
@@ -96,7 +152,6 @@ class TaskController extends Controller
             'destination_intake_id' => 'required|exists:intakes,id',
         ]);
 
-        // Initialize the mapping from old task IDs to new task IDs
         $taskIdMap = [];
 
         // Retrieve tasks ordered by 'id' ascending
