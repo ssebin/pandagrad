@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import styles from './addsemestermodal.module.css';
 import axios from 'axios';
 import { retrieveAndDecrypt } from "./storage";
-import Select from 'react-select';
+import Select, { components } from 'react-select';
 
 function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, programId, intakeId }) {
     const [name, setName] = useState('');
@@ -92,11 +92,22 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
         }
     };
 
+    const handleSelectChange = (selectedOptions) => {
+        if (selectedOptions) {
+            // Sort the selected options by id
+            const sortedOptions = [...selectedOptions].sort((a, b) => a.value - b.value);
+            setSelectedIntakes(sortedOptions);
+        } else {
+            setSelectedIntakes([]);
+        }
+    };
+
     const handleClose = () => {
         setName('');
         setCategory('');
         setTaskWeight('');
         setApplyToOption('this');
+        setSelectedIntakes([]);
         onClose();
     };
 
@@ -163,6 +174,32 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
         };
     }, [isOpen, onClose]);
 
+    const CustomClearIndicator = (props) => {
+        const {
+            innerProps: { ref, ...restInnerProps },
+        } = props;
+        return (
+            <div
+                {...restInnerProps}
+                ref={ref}
+                onMouseDown={(e) => {
+                    e.stopPropagation();
+                    if (restInnerProps.onMouseDown) {
+                        restInnerProps.onMouseDown(e);
+                    }
+                }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (restInnerProps.onClick) {
+                        restInnerProps.onClick(e);
+                    }
+                }}
+            >
+                {components.ClearIndicator(props)}
+            </div>
+        );
+    };
+
     if (!isOpen || !task) {
         return null;
     }
@@ -177,6 +214,7 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
+                            placeholder="Enter Task Name"
                             required
                         />
                     </div>
@@ -186,6 +224,7 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
                             type="text"
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
+                            placeholder="Enter Task Category"
                             required
                         />
                     </div>
@@ -195,6 +234,7 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
                             type="number"
                             value={taskWeight}
                             onChange={(e) => setTaskWeight(e.target.value)}
+                            placeholder="Enter Task Weight"
                             required
                         />
                     </div>
@@ -217,15 +257,80 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
                     {applyToOption === 'custom' && (
                         <div className={styles.formGroup}>
                             <label>Select Intakes<span style={{ color: 'red' }}> *</span></label>
+
                             <Select
                                 isMulti
-                                options={intakes.map(intake => ({
+                                options={intakes.map((intake) => ({
                                     value: intake.id,
                                     label: `Semester ${intake.intake_semester}, ${intake.intake_year}`,
                                 }))}
                                 value={selectedIntakes}
-                                onChange={setSelectedIntakes}
+                                onChange={handleSelectChange}
                                 required
+                                components={{ ClearIndicator: CustomClearIndicator }}
+                                styles={{
+                                    control: (provided, state) => ({
+                                        ...provided,
+                                        marginTop: '10px',
+                                        marginBottom: '15px',
+                                        paddingLeft: '3px',
+                                        border: '1px solid #DDDDDD',
+                                        borderRadius: '10px',
+                                        fontSize: '0.9em',
+                                        boxShadow:
+                                            state.isFocused
+                                                ? '0 0 0 1px #192e59'
+                                                : '0 4px 4px rgba(0, 0, 0, 0.1)',
+                                        '&:hover': {
+                                            borderColor: '#E2E8F0',
+                                        },
+                                    }),
+                                    input: (provided) => ({
+                                        ...provided,
+                                        margin: '0px',
+                                        fontSize: '1em',
+                                    }),
+                                    valueContainer: (provided) => ({
+                                        ...provided,
+                                        padding: '10px 10px',
+                                    }),
+                                    multiValue: (provided) => ({
+                                        ...provided,
+                                        backgroundColor: '#f0f0f0',
+                                    }),
+                                    multiValueLabel: (provided) => ({
+                                        ...provided,
+                                        color: '#333',
+                                        fontSize: '1em',
+                                    }),
+                                    multiValueRemove: (provided) => ({
+                                        ...provided,
+                                        color: '#666',
+                                        ':hover': {
+                                            backgroundColor: '#e91e255b',
+                                            color: '#333',
+                                        },
+                                    }),
+                                    option: (provided, state) => ({
+                                        ...provided,
+                                        backgroundColor: state.isSelected
+                                            ? '#3182ce'
+                                            : state.isFocused
+                                                ? '#ebf8ff'
+                                                : 'white',
+                                        color: state.isSelected ? 'white' : 'black',
+                                        padding: '10px',
+                                    }),
+                                    menu: (provided) => ({
+                                        ...provided,
+                                        borderRadius: '10px',
+                                        marginTop: '5px',
+                                    }),
+                                    menuList: (provided) => ({
+                                        ...provided,
+                                        padding: '0',
+                                    }),
+                                }}
                             />
                         </div>
                     )}

@@ -4,6 +4,7 @@ import styles from './UpdateProgressModal.module.css';
 import { StudentContext } from './StudentContext';
 import { useParams } from 'react-router-dom';
 import { retrieveAndDecrypt } from "./storage.js";
+import Select, { components } from 'react-select';
 
 function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
     const { id } = useParams();
@@ -25,6 +26,8 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
     const { tasks, nationalities, supervisors, studentsData, currentSemester } = useContext(StudentContext);
     const fileInputRef = useRef(null);
     const dateInputRef = useRef(null);
+    const [selectedTasksPerSemester, setSelectedTasksPerSemester] = useState({});
+    const [tempSelectedTasksPerSemester, setTempSelectedTasksPerSemester] = useState({});
 
     useEffect(() => {
         if (isOpen) {
@@ -43,6 +46,8 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
             setDescription('');
             setExtraFields({});
             setDropdownVisible([]);
+            setSelectedTasksPerSemester({});
+            setTempSelectedTasksPerSemester({});
 
             // Filter tasks and group them based on nationality
             const studentNationality = nationalities[studentId] || 'Unknown'; // Default to 'Unknown'
@@ -67,6 +72,14 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
             setTasksOptions(categorizedTasks); // Set categorized tasks
         }
     }, [isOpen, tasks, nationalities, studentId]);
+
+    const groupedOptions = Object.keys(tasksOptions).map((category) => ({
+        label: category,
+        options: tasksOptions[category].map((task) => ({
+            value: task.id,
+            label: task.name,
+        })),
+    }));
 
     // Close dropdown when clicked outside
     // useEffect(() => {
@@ -106,6 +119,32 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                 }));
             }
         });
+    };
+
+    const CustomClearIndicator = (props) => {
+        const {
+            innerProps: { ref, ...restInnerProps },
+        } = props;
+        return (
+            <div
+                {...restInnerProps}
+                ref={ref}
+                onMouseDown={(e) => {
+                    e.stopPropagation();
+                    if (restInnerProps.onMouseDown) {
+                        restInnerProps.onMouseDown(e);
+                    }
+                }}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (restInnerProps.onClick) {
+                        restInnerProps.onClick(e);
+                    }
+                }}
+            >
+                {components.ClearIndicator(props)}
+            </div>
+        );
     };
 
     // Add and remove event listener for outside clicks
@@ -156,6 +195,8 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
         setEvidence(null);
         setLink('');
         setDescription('');
+        setSelectedTasksPerSemester({});
+        setTempSelectedTasksPerSemester({});
 
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -165,9 +206,41 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
         }
     }, [updateType]);
 
+    // useEffect(() => {
+    //     const allTasks = Object.values(tasksOptions).flat();
+    //     const selectedTasksFormatted = tempSelectedTasks.map((taskId) => {
+    //         const task = allTasks.find((t) => t.id === taskId);
+    //         if (task) {
+    //             return { value: task.id, label: task.name };
+    //         } else {
+    //             console.warn(`Task with id ${taskId} ${task} not found in allTasks`);
+    //             return null;
+    //         }
+    //     });
+    //     setSelectedTasks(selectedTasksFormatted);
+    // }, [tempSelectedTasks, tasksOptions]);
+
     useEffect(() => {
-        //console.log('Evidence state updated:', evidence);
-    }, [evidence]);
+        const allTasks = Object.values(tasksOptions).flat();
+        const updatedSelectedTasks = {};
+
+        for (let semesterIndex in tempSelectedTasksPerSemester) {
+            const tempSelectedTasks = tempSelectedTasksPerSemester[semesterIndex];
+            const selectedTasksFormatted = tempSelectedTasks.map((taskId) => {
+                const task = allTasks.find((t) => t.id === taskId);
+                if (task) {
+                    return { value: task.id, label: task.name };
+                } else {
+                    console.warn(`Task with id ${taskId} not found`);
+                    return null;
+                }
+            }).filter((item) => item !== null);
+
+            updatedSelectedTasks[semesterIndex] = selectedTasksFormatted;
+        }
+
+        setSelectedTasksPerSemester(updatedSelectedTasks);
+    }, [tempSelectedTasksPerSemester, tasksOptions]);
 
     // const fetchSupervisors = async () => {
     //     try {
@@ -261,6 +334,33 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
 
 
     const [selectedTasks, setSelectedTasks] = useState([]); // Track selected tasks
+
+    const handleSelectChange = (semesterIndex, selectedOptions) => {
+        const sortedOptions = selectedOptions
+            ? [...selectedOptions].sort((a, b) => a.value - b.value)
+            : [];
+
+        setSelectedTasksPerSemester((prevSelectedTasks) => ({
+            ...prevSelectedTasks,
+            [semesterIndex]: sortedOptions || [],
+        }));
+
+        // Update tempSelectedTasksPerSemester if needed
+        const selectedIds = sortedOptions.map((option) => option.value);
+
+        // Update tempSelectedTasksPerSemester if needed
+        setTempSelectedTasksPerSemester((prevTempSelectedTasks) => ({
+            ...prevTempSelectedTasks,
+            [semesterIndex]: selectedIds,
+        }));
+    };
+
+    // const handleSelectChange = (selectedOptions) => {
+    //     setSelectedTasks(selectedOptions || []);
+    //     // If you need to update tempSelectedTasks (array of IDs)
+    //     const selectedIds = selectedOptions ? selectedOptions.map((option) => option.value) : [];
+    //     setTempSelectedTasks(selectedIds);
+    //   };
 
     const handleTaskChange = (task) => {
         //console.log('Task selected/deselected:', task);
@@ -688,55 +788,82 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                                         Semester {index + 1}
                                         <span style={{ color: 'red' }}> *</span>
                                     </label>
-
-
                                     <div>
                                         <div ref={(el) => { dropdownRefs.current[index] = el }} className={`${styles.dropdown} ${dropdownVisible[index] ? styles.show : ""}`}>
-                                            <button
-                                                type="button"
-                                                className={styles.dropdownButton}
-                                                onClick={() => handleDropdownToggle(index)}
-                                            >
-                                                Select Tasks <span className={styles.dropdownIcon}>+</span>
-                                            </button>
-                                            <div className={styles.dropdownContent}>
-                                                {Object.keys(tasksOptions).map(category => (
-                                                    <div key={category}>
-                                                        <strong>{category}</strong>
-                                                        {Array.isArray(tasksOptions[category]) &&
-                                                            tasksOptions[category].map(task => (
-                                                                <label key={task.id} className={styles.checkboxLabel}>
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        name={`task-${index}-${task.id}`}
-                                                                        value={task.id}
-                                                                        checked={tempSelectedTasks.includes(task.id)}
-                                                                        onChange={() => handleTaskChange(task)}
-                                                                    />
-                                                                    {task.name}
-                                                                </label>
-                                                            ))}
-                                                    </div>
-                                                ))}
-                                                <button
-                                                    type="button"
-                                                    className={styles.applyButton}
-                                                    onClick={() => handleApplyButton(index)}
-                                                >
-                                                    Apply
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div className={styles.selectedtasks}>
-                                            {sortedTasks.length > 0
-                                                ? sortedTasks
-                                                    .map((taskId) => {
-                                                        const task = Object.values(tasksOptions).flat().find((t) => t.id === taskId);
-                                                        return task ? task.name : '';
-                                                    })
-                                                    .filter(Boolean)
-                                                    .join(', ')
-                                                : 'No tasks selected'}
+                                            <Select
+                                                isMulti
+                                                options={groupedOptions}
+                                                value={selectedTasksPerSemester[index] || []}
+                                                onChange={(selectedOptions) => handleSelectChange(index, selectedOptions)}
+                                                styles={{
+                                                    control: (provided, state) => ({
+                                                        ...provided,
+                                                        marginTop: '10px',
+                                                        marginBottom: '15px',
+                                                        marginLeft: '10px',
+                                                        paddingLeft: '3px',
+                                                        border: '1px solid #DDDDDD',
+                                                        borderRadius: '10px',
+                                                        fontSize: '0.8em',
+                                                        width: '94%',
+                                                        boxShadow:
+                                                            state.isFocused
+                                                                ? '0 0 0 1px #192e59'
+                                                                : '0 2px 4px rgba(0, 0, 0, 0.2)',
+                                                        '&:hover': {
+                                                            borderColor: '#E2E8F0',
+                                                        },
+                                                    }),
+                                                    input: (provided) => ({
+                                                        ...provided,
+                                                        margin: '0px',
+                                                        fontSize: '1em',
+                                                    }),
+                                                    valueContainer: (provided) => ({
+                                                        ...provided,
+                                                        padding: '10px 10px',
+                                                    }),
+                                                    multiValue: (provided) => ({
+                                                        ...provided,
+                                                        backgroundColor: '#f0f0f0',
+                                                    }),
+                                                    multiValueLabel: (provided) => ({
+                                                        ...provided,
+                                                        color: '#333',
+                                                        fontSize: '1em',
+                                                    }),
+                                                    multiValueRemove: (provided) => ({
+                                                        ...provided,
+                                                        color: '#666',
+                                                        ':hover': {
+                                                            backgroundColor: '#e91e255b',
+                                                            color: '#333',
+                                                        },
+                                                    }),
+                                                    option: (provided, state) => ({
+                                                        ...provided,
+                                                        backgroundColor: state.isSelected
+                                                            ? '#3182ce'
+                                                            : state.isFocused
+                                                                ? '#ebf8ff'
+                                                                : 'white',
+                                                        color: state.isSelected ? 'white' : 'black',
+                                                        padding: '10px',
+                                                    }),
+                                                    menu: (provided) => ({
+                                                        ...provided,
+                                                        borderRadius: '10px',
+                                                        marginTop: '5px',
+                                                    }),
+                                                    menuList: (provided) => ({
+                                                        ...provided,
+                                                        padding: '14px',
+                                                        fontSize: '0.8em',
+                                                    }),
+                                                }}
+                                                components={{ ClearIndicator: CustomClearIndicator }}
+                                                required
+                                            />
                                         </div>
                                     </div>
                                 </div>

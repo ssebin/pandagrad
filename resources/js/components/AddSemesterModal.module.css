@@ -33,15 +33,14 @@
 
 .modalContent input,
 .modalContent select,
-.modalContent textarea,
-.select {
+.modalContent textarea {
     padding: 10px;
     margin-bottom: 15px;
-    border: 1px solid #E2E8F0;
+    border: 1px solid #e2e8f0;
     border-radius: 10px;
     font-size: 0.9em;
     background-color: white;
-    font-family: 'Roboto', sans-serif;
+    font-family: "Roboto", sans-serif;
     box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
     white-space: pre-line;
     word-wrap: break-word; /* Ensures long words or URLs wrap to the next line */
@@ -51,25 +50,23 @@
     -moz-appearance: none;
 }
 
-.select{}
-
 .modalContent textarea {
     height: auto;
-    min-height: 140px; 
-    max-height: 300px; 
-    resize: none; 
+    min-height: 140px;
+    max-height: 300px;
+    resize: none;
     margin-top: 10px;
     width: 93%;
 }
 
 .modalContent input[type="date"] {
-    font-family: 'Roboto', sans-serif;
+    font-family: "Roboto", sans-serif;
 }
 
 .modalContent input[readonly],
 .modalContent textarea[readonly],
 .modalContent a {
-     /* Grey out text for readonly inputs */
+    /* Grey out text for readonly inputs */
     background-color: #f9f9f9;
 }
 
@@ -93,13 +90,13 @@
 
 .cancelButton {
     background-color: transparent;
-    color: #192E59;
+    color: #192e59;
     border: none;
     cursor: pointer;
 }
 
 .deleteButton {
-    background-color: #E91E25;
+    background-color: #e91e25;
     color: white;
     padding: 10px 40px;
     cursor: pointer;
@@ -109,7 +106,7 @@
 }
 
 .saveButton {
-    background: linear-gradient(180deg, #192E59, #0A193B);
+    background: linear-gradient(180deg, #192e59, #0a193b);
     color: white;
     padding: 10px 50px;
     cursor: pointer;
@@ -119,7 +116,7 @@
 }
 
 .addButton {
-    background: linear-gradient(180deg, #192E59, #0A193B);
+    background: linear-gradient(180deg, #192e59, #0a193b);
     color: white;
     padding: 10px 50px;
     cursor: pointer;
@@ -129,7 +126,7 @@
 }
 
 .uploadButton {
-    background: linear-gradient(180deg, #192E59, #0A193B);
+    background: linear-gradient(180deg, #192e59, #0a193b);
     color: white;
     padding: 10px 40px;
     cursor: pointer;
@@ -148,7 +145,7 @@
 
 .divider::before,
 .divider::after {
-    content: '';
+    content: "";
     flex: 1;
     height: 1px;
     background: #ccc;
@@ -161,7 +158,8 @@
     white-space: nowrap;
 }
 
-.successList, .errorList {
+.successList,
+.errorList {
     line-height: 20px;
 }
 
