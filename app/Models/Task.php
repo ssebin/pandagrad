@@ -11,7 +11,7 @@ use DateTime;
 class Task extends Model
 {
     use HasFactory;
-    protected $fillable = ['name', 'category', 'unique_identifier', 'task_weight', 'intake_id', 'version_number', 'parent_task_id', 'updated_by', 'task_code'];
+    protected $fillable = ['name', 'category', 'unique_identifier', 'task_weight', 'intake_id', 'version_number', 'parent_task_id', 'updated_by', 'task_code', 'apply_to_option', 'selected_intake_ids',];
     public $timestamps = true;
 
     public function setNameAttribute($value)

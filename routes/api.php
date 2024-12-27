@@ -51,7 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/admins', [AdminController::class, 'index']);
     Route::post('/admins', [AdminController::class, 'store']);
     Route::put('/admins/{AdminID}', [AdminController::class, 'update']);
-    Route::delete('/admins/{AdminID}', [AdminController::class, 'destroy']);    
+    Route::delete('/admins/{AdminID}', [AdminController::class, 'destroy']);
 
     Route::get('/semesters', [SemesterController::class, 'index']);
     Route::post('/semesters', [SemesterController::class, 'store']);
@@ -80,6 +80,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/tasks/{task}/apply-changes', [TaskController::class, 'applyChanges']); // Apply task changes to intakes
     Route::post('/tasks/{task}/apply-delete', [TaskController::class, 'applyDelete']); // Apply task deletion to intakes
     Route::post('/tasks/copy-tasks', [TaskController::class, 'copyTasks']); // Copy tasks to a new intake
+    Route::get('/tasks/{task}/versions', [TaskController::class, 'getTaskVersions']); // Get all versions of a task
+    Route::get('/tasks/{task}/latest-version-number', [TaskController::class, 'getLatestVersionNumber']); // Get the latest version number of a task
+    Route::post('/tasks/{task}/revert', [TaskController::class, 'revert']);
 });
 
 // Public routes

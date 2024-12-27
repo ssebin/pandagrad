@@ -35,6 +35,9 @@ class TaskController extends Controller
             'name' => 'required|string|max:255',
             'category' => 'required|string|max:255',
             'task_weight' => 'required|integer|min:1|max:10',
+            'apply_to_option' => 'required|string|in:this,all,custom',
+            'selected_intake_ids' => 'nullable|array',
+            'selected_intake_ids.*' => 'exists:intakes,id',
         ]);
 
         $taskCode = Str::uuid()->toString();
@@ -46,6 +49,8 @@ class TaskController extends Controller
             'updated_by' => auth()->id(), // The admin making the change
             'intake_id' => $intake->id, // The intake the task belongs to
             'task_code' => $taskCode,
+            'apply_to_option' => $validated['apply_to_option'],
+            'selected_intake_ids' => isset($validated['selected_intake_ids']) ? json_encode($validated['selected_intake_ids']) : null,
         ]));
         return response()->json($task, 201);
     }
@@ -56,14 +61,22 @@ class TaskController extends Controller
             'name' => 'required|string|max:255',
             'category' => 'required|string|max:255',
             'task_weight' => 'required|integer|min:1',
+            'apply_to_option' => 'required|string|in:this,all,custom',
+            'selected_intake_ids' => 'nullable|array',
+            'selected_intake_ids.*' => 'exists:intakes,id',
         ]);
+
+        $latestVersionNumber = Task::where('task_code', $task->task_code)->max('version_number') ?? 0;
+        $newVersionNumber = $latestVersionNumber + 1;
 
         $newTask = Task::create(array_merge($validated, [
             'intake_id' => $task->intake_id, // Preserve the intake association
-            'version_number' => $task->version_number + 1, // Increment version
+            'version_number' => $newVersionNumber,
             'parent_task_id' => $task->id, // Link to the previous version
             'updated_by' => auth()->id(), // Track the admin making the update
             'task_code' => $task->task_code, // Preserve the task_code
+            'apply_to_option' => $validated['apply_to_option'],
+            'selected_intake_ids' => isset($validated['selected_intake_ids']) ? json_encode($validated['selected_intake_ids']) : null,
         ]));
 
         return response()->json($newTask);
@@ -109,11 +122,19 @@ class TaskController extends Controller
         $validated = $request->validate([
             'intake_ids' => 'required|array',
             'intake_ids.*' => 'exists:intakes,id',
+            'apply_to_option' => 'required|string|in:this,all,custom',
         ]);
 
         $taskData = $task->only(['name', 'category', 'task_weight']);
 
+        $selectedIntakeIds = $validated['intake_ids'];
+        $applyToOption = $validated['apply_to_option'];
+
         foreach ($validated['intake_ids'] as $intakeId) {
+            if ($intakeId == $task->intake_id) {
+                continue;
+            }
+
             // Find the latest version of the task in the specified intake using task_code
             $existingTask = Task::where('intake_id', $intakeId)
                 ->where('task_code', $task->task_code)
@@ -125,10 +146,12 @@ class TaskController extends Controller
                 // Create a new version
                 Task::create(array_merge($taskData, [
                     'intake_id' => $intakeId,
-                    'version_number' => $existingTask->version_number + 1,
+                    'version_number' => $task->version_number,
                     'parent_task_id' => $existingTask->id,
                     'updated_by' => auth()->id(),
                     'task_code' => $existingTask->task_code,
+                    'apply_to_option' => $applyToOption,
+                    'selected_intake_ids' => json_encode($selectedIntakeIds),
                 ]));
             } else {
                 // Create a new task with the same task_code
@@ -138,6 +161,8 @@ class TaskController extends Controller
                     'parent_task_id' => null,
                     'updated_by' => auth()->id(),
                     'task_code' => $task->task_code,
+                    'apply_to_option' => $applyToOption,
+                    'selected_intake_ids' => json_encode($selectedIntakeIds),
                 ]));
             }
         }
@@ -189,28 +214,75 @@ class TaskController extends Controller
         return response()->json(['message' => 'Tasks copied successfully']);
     }
 
-    public function getTaskVersions(Intake $intake, $taskName)
+    public function getTaskVersions(Task $task)
     {
-        $versions = Task::where('intake_id', $intake->id)
-            ->where('name', $taskName)
+        $versions = Task::where('task_code', $task->task_code)
+            ->where('intake_id', $task->intake_id)
+            ->with('admin')
             ->orderBy('version_number', 'desc')
             ->get();
 
         return response()->json($versions);
     }
 
+    public function getLatestVersionNumber(Task $task)
+    {
+        $latestVersion = Task::where('task_code', $task->task_code)
+            ->where('intake_id', $task->intake_id)
+            ->orderBy('version_number', 'desc')
+            ->first();
+
+        return response()->json(['latest_version_number' => $latestVersion->version_number]);
+    }
+
     public function revert(Request $request, Task $task)
     {
-        $revertedTask = Task::create([
-            'name' => $task->name,
-            'category' => $task->category,
-            'task_weight' => $task->task_weight,
-            'intake_id' => $task->intake_id,
-            'version_number' => $task->version_number + 1, // New version
-            'parent_task_id' => $task->id, // Link to the reverted version
-            'updated_by' => auth()->id(), // Track the admin making the change
-        ]);
+        // Get the latest global version number for the task_code
+        $latestVersionNumber = Task::where('task_code', $task->task_code)->max('version_number') ?? 0;
+        $newVersionNumber = $latestVersionNumber + 1;
 
-        return response()->json($revertedTask);
+        // Get the intakes where the revert should be applied
+        $applyToOption = $task->apply_to_option;
+        $selectedIntakeIds = json_decode($task->selected_intake_ids, true);
+
+        if ($applyToOption === 'all') {
+            // Get all intakes for the program
+            $intakeIds = Intake::where('program_id', $task->intake->program_id)->pluck('id')->toArray();
+        } elseif ($applyToOption === 'custom') {
+            // Use the selected_intake_ids
+            $intakeIds = $selectedIntakeIds ?? [];
+        } else {
+            // 'this' intake only
+            $intakeIds = [$task->intake_id];
+        }
+
+        foreach ($intakeIds as $intakeId) {
+            // Find the latest task in this intake
+            $latestTaskInIntake = Task::where('task_code', $task->task_code)
+                ->where('intake_id', $intakeId)
+                ->orderBy('version_number', 'desc')
+                ->first();
+
+            if ($latestTaskInIntake) {
+                // Create a new version copying data from the selected task
+                $newVersion = Task::create([
+                    'name' => $task->name,
+                    'category' => $task->category,
+                    'task_weight' => $task->task_weight,
+                    'intake_id' => $intakeId,
+                    'version_number' => $newVersionNumber,
+                    'parent_task_id' => $latestTaskInIntake->id,
+                    'updated_by' => auth()->id(),
+                    'task_code' => $task->task_code,
+                    'apply_to_option' => $task->apply_to_option,
+                    'selected_intake_ids' => $task->selected_intake_ids,
+                ]);
+            } else {
+                // If no existing task in this intake, skip this intake
+                continue;
+            }
+        }
+
+        return response()->json(['message' => 'Task reverted successfully']);
     }
 }

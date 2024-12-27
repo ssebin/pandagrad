@@ -4,7 +4,7 @@ import axios from 'axios';
 import { retrieveAndDecrypt } from "./storage";
 import Select, { components } from 'react-select';
 
-function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, programId, intakeId }) {
+function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, programId, intakeId, isVersionView = false }) {
     const [name, setName] = useState('');
     const [category, setCategory] = useState('');
     const [taskWeight, setTaskWeight] = useState('');
@@ -12,17 +12,32 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
     const [applyToOption, setApplyToOption] = useState('this'); // 'this', 'all', 'custom'
     const [intakes, setIntakes] = useState([]);
     const [selectedIntakes, setSelectedIntakes] = useState([]);
+    const [latestVersionNumber, setLatestVersionNumber] = useState(null);
     const token = retrieveAndDecrypt('token');
     const modalRef = useRef(null);
 
     useEffect(() => {
-        if (isOpen && task) {
+        if (isOpen && task && intakes.length > 0) {
             setName(task.name || '');
             setCategory(task.category || '');
             setTaskWeight(task.task_weight || '');
             setVersionNumber(task.version_number || '');
+            setApplyToOption(task.apply_to_option || 'this');
+
+            if (task.apply_to_option === 'custom' && task.selected_intake_ids) {
+                const intakeIds = JSON.parse(task.selected_intake_ids);
+                const selected = intakes
+                    .filter((intake) => intakeIds.includes(intake.id))
+                    .map((intake) => ({
+                        value: intake.id,
+                        label: `Semester ${intake.intake_semester}, ${intake.intake_year}`,
+                    }));
+                setSelectedIntakes(selected);
+            } else {
+                setSelectedIntakes([]);
+            }
         }
-    }, [isOpen, task]);
+    }, [isOpen, task, intakes]);
 
     const intakeOptions = intakes.map(intake => ({
         value: intake.id,
@@ -39,7 +54,28 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
                 console.error('Error fetching intakes:', error);
             });
         }
-    }, [isOpen]);
+    }, [isOpen, programId, token]);
+
+    useEffect(() => {
+        if (isOpen && task && task.id && isVersionView) {
+            console.log('Task in useEffect:', task);
+            // Fetch the latest version number
+            const fetchLatestVersion = async () => {
+                try {
+                    const response = await axios.get(
+                        `/api/tasks/${task.id}/latest-version-number`,
+                        {
+                            headers: { Authorization: `Bearer ${token}` },
+                        }
+                    );
+                    setLatestVersionNumber(response.data.latest_version_number);
+                } catch (error) {
+                    console.error('Error fetching latest version number:', error);
+                }
+            };
+            fetchLatestVersion();
+        }
+    }, [isOpen, task, isVersionView, token]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -48,19 +84,27 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
         }
 
         try {
+            const payload = {
+                name: name,
+                category: category,
+                task_weight: taskWeight,
+                apply_to_option: applyToOption,
+            };
+
+            if (applyToOption === 'custom') {
+                payload.selected_intake_ids = selectedIntakes.map((intake) => intake.value);
+            }
+
             const response = await axios.put(
                 `/api/tasks/${task.id}`,
-                {
-                    name: name,
-                    category: category,
-                    task_weight: taskWeight,
-                },
+                payload,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 }
             );
+
             const updatedTask = response.data;
 
             // Determine intake IDs to apply changes to
@@ -72,13 +116,13 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
             }
 
             // Remove current intake ID from the list since we've already created the task there
-            intakeIds = intakeIds.filter(id => id !== parseInt(intakeId));
+            // intakeIds = intakeIds.filter(id => id !== parseInt(intakeId));
 
             // Apply changes to other intakes if any
             if (intakeIds.length > 0) {
                 await axios.post(
                     `/api/tasks/${updatedTask.id}/apply-changes`,
-                    { intake_ids: intakeIds },
+                    { intake_ids: intakeIds, apply_to_option: applyToOption, },
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
             }
@@ -158,6 +202,29 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
         }
     };
 
+    const handleRevert = async () => {
+        if (!window.confirm('Are you sure you want to revert to this version?')) {
+            return;
+        }
+
+        try {
+            await axios.post(
+                `/api/tasks/${task.id}/revert`,
+                {},
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+
+            alert('Task reverted successfully!');
+            onTaskUpdated();
+            onClose();
+        } catch (error) {
+            alert('An error occurred while reverting the task. Please try again.');
+            console.error('Error reverting task:', error);
+        }
+    };
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -216,6 +283,7 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
                             onChange={(e) => setName(e.target.value)}
                             placeholder="Enter Task Name"
                             required
+                            readOnly={isVersionView}
                         />
                     </div>
                     <div className={styles.formGroup}>
@@ -226,6 +294,7 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
                             onChange={(e) => setCategory(e.target.value)}
                             placeholder="Enter Task Category"
                             required
+                            readOnly={isVersionView}
                         />
                     </div>
                     <div className={styles.formGroup}>
@@ -236,6 +305,7 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
                             onChange={(e) => setTaskWeight(e.target.value)}
                             placeholder="Enter Task Weight"
                             required
+                            readOnly={isVersionView}
                         />
                     </div>
                     <div className={styles.formGroup}>
@@ -248,7 +318,13 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
                     </div>
                     <div className={styles.formGroup}>
                         <label>Apply to<span style={{ color: 'red' }}> *</span></label>
-                        <select value={applyToOption} onChange={(e) => setApplyToOption(e.target.value)} required>
+                        <select
+                            value={applyToOption}
+                            onChange={(e) => setApplyToOption(e.target.value)}
+                            required
+                            disabled={isVersionView}
+                            className={`${isVersionView ? styles.disabledSelect : ''}`}
+                        >
                             <option value="this">This Intake Only</option>
                             <option value="all">All Intakes</option>
                             <option value="custom">Selected Intakes</option>
@@ -268,9 +344,11 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
                                 onChange={handleSelectChange}
                                 required
                                 components={{ ClearIndicator: CustomClearIndicator }}
+                                isDisabled={isVersionView}
                                 styles={{
                                     control: (provided, state) => ({
                                         ...provided,
+                                        backgroundColor: isVersionView ? '#f9f9f9' : provided.backgroundColor,
                                         marginTop: '10px',
                                         marginBottom: '15px',
                                         paddingLeft: '3px',
@@ -338,12 +416,21 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
                         <button type="button" className={styles.cancelButton} onClick={onClose}>
                             Cancel
                         </button>
-                        <button type="button" className={styles.deleteButton} onClick={handleDelete}>
-                            Delete
-                        </button>
-                        <button type="submit" className={styles.saveButton}>
-                            Save
-                        </button>
+                        {isVersionView && task.version_number !== latestVersionNumber && (
+                            <button type="button" className={styles.deleteButton} onClick={handleRevert}>
+                                Revert to this version
+                            </button>
+                        )}
+                        {!isVersionView && (
+                            <button type="button" className={styles.deleteButton} onClick={handleDelete}>
+                                Delete
+                            </button>
+                        )}
+                        {!isVersionView && (
+                            <button type="submit" className={styles.saveButton}>
+                                Save
+                            </button>
+                        )}
                     </div>
                 </form>
             </div>

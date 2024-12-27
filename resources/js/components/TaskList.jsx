@@ -180,6 +180,7 @@ function TaskList() {
                             <th>Category</th>
                             <th>Task Weight</th>
                             <th>Version Number</th>
+                            <th>Version History</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -190,6 +191,19 @@ function TaskList() {
                                 <td>{task.category}</td>
                                 <td>{task.task_weight}</td>
                                 <td>{task.version_number}</td>
+                                <td>
+                                    <Link
+                                        to={`/admin/admin-settings/program-structures/${programId}/${intakeId}/${task.id}`}
+                                        state={{
+                                            programName: programName,
+                                            intakeSemester: intakeSemester,
+                                            intakeYear: intakeYear,
+                                            intakeName: intakeName,
+                                        }}
+                                    >
+                                        View
+                                    </Link>
+                                </td>
                             </tr>
                         ))}
                     </tbody>

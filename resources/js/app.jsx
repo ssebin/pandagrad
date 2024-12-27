@@ -22,6 +22,7 @@ import ManageLecturers from './components/ManageLecturers';
 import ManageAdmins from './components/ManageAdmins';
 import IntakeList from './components/IntakeList';
 import TaskList from './components/TaskList';
+import TaskVersionList from './components/TaskVersionList.jsx';
 
 function App() {
     return (
@@ -47,6 +48,7 @@ function App() {
                 <Route path="admin-settings/program-structures" element={<ProgramStructures />} />
                 <Route path="admin-settings/program-structures/:programId" element={<IntakeList />} />
                 <Route path="admin-settings/program-structures/:programId/:intakeId" element={<TaskList />} />
+                <Route path="admin-settings/program-structures/:programId/:intakeId/:taskId" element={<TaskVersionList />} />
                 <Route path="admin-settings/manage-users/students" element={<ManageStudents />} />
                 <Route path="admin-settings/manage-users/lecturers" element={<ManageLecturers />} />
                 <Route path="admin-settings/manage-users/admins" element={<ManageAdmins />} />

@@ -70,6 +70,18 @@
     background-color: #f9f9f9;
 }
 
+.disabledSelect {
+    background-color: #f9f9f9 !important;
+    color: black;     
+    cursor: default;    
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);                  
+}
+
+.disabledSelect option {
+    color: black;
+}
+
 .buttons {
     padding: 10px 0px;
     border: none;

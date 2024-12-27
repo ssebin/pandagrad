@@ -30,6 +30,10 @@
     width: 120px; 
 }
 
+.task-table th:nth-child(6), .task-table td:nth-child(6) {
+    width: 120px; 
+}
+
 .task-table tbody tr {
     cursor: pointer;
 }

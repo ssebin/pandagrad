@@ -29,19 +29,27 @@ function AddTaskModal({ isOpen, onClose, intakeId, onTaskAdded, programId }) {
         }
 
         try {
+            const payload = {
+                name: name,
+                category: category,
+                task_weight: taskWeight,
+                apply_to_option: applyToOption,
+            };
+
+            if (applyToOption === 'custom') {
+                payload.selected_intake_ids = selectedIntakes.map((intake) => intake.value);
+            }
+
             const response = await axios.post(
                 `/api/tasks/intake/${intakeId}`,
-                {
-                    name: name,
-                    category: category,
-                    task_weight: taskWeight,
-                },
+                payload,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 }
             );
+
             const newTask = response.data;
 
             // Determine intake IDs to apply changes to
@@ -53,13 +61,13 @@ function AddTaskModal({ isOpen, onClose, intakeId, onTaskAdded, programId }) {
             }
 
             // Remove current intake ID from the list since we've already created the task there
-            intakeIds = intakeIds.filter(id => id !== parseInt(intakeId));
+            // intakeIds = intakeIds.filter(id => id !== parseInt(intakeId));
 
             // Apply changes to other intakes if any
             if (intakeIds.length > 0) {
                 await axios.post(
                     `/api/tasks/${newTask.id}/apply-changes`,
-                    { intake_ids: intakeIds },
+                    { intake_ids: intakeIds, apply_to_option: applyToOption, },
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
             }
