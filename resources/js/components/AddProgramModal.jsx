@@ -1,12 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import styles from './addsemestermodal.module.css';
 import { retrieveAndDecrypt } from "./storage";
 import axios from 'axios';
+import { StudentContext } from './StudentContext';
 
 function AddProgramModal({ isOpen, onClose, onProgramAdded }) {
     const [programName, setProgramName] = useState('');
     const [duplicateFromProgramId, setDuplicateFromProgramId] = useState('');
-    const [programs, setPrograms] = useState([]);
+    const { programs, fetchPrograms } = useContext(StudentContext);
     const token = retrieveAndDecrypt('token');
     const modalRef = useRef(null);
 
@@ -63,19 +64,6 @@ function AddProgramModal({ isOpen, onClose, onProgramAdded }) {
     };
 
     useEffect(() => {
-        const fetchPrograms = async () => {
-            try {
-                const response = await axios.get('/api/programs', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-                setPrograms(response.data);
-            } catch (error) {
-                console.error('Error fetching programs:', error);
-            }
-        };
-
         fetchPrograms();
     }, [token]);
 

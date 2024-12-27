@@ -41,7 +41,7 @@ class LecturerController extends Controller
                 'um_email' => 'required|string|email|unique:lecturers,um_email',
                 'status' => 'required|string',
                 'role' => 'required|string',
-                'program' => 'required|string',
+                'program_id' => 'required|exists:programs,id',
                 'remarks' => 'nullable|string',
             ]);
 
@@ -80,7 +80,7 @@ class LecturerController extends Controller
             'um_email' => 'required|string|email',
             'status' => 'required|string',
             'role' => 'required|string',
-            'program' => 'required|string',
+            'program_id' => 'required|exists:programs,id',
             'remarks' => 'nullable|string',
         ]);
 

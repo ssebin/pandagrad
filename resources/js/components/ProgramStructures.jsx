@@ -1,36 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { retrieveAndDecrypt } from "./storage";
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import './ProgramStructures.css';
 import { FaPlus } from 'react-icons/fa';
 import AddProgramModal from './AddProgramModal';
+import { StudentContext } from './StudentContext';
 
 function ProgramStructures() {
-    const [programs, setPrograms] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const token = retrieveAndDecrypt('token');
+    const { programs, fetchPrograms } = useContext(StudentContext);
 
     useEffect(() => {
-        const fetchPrograms = async () => {
-            try {
-                const response = await axios.get('/api/programs', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-                setPrograms(response.data);
-            } catch (error) {
-                console.error('Error fetching programs:', error);
-            }
-        };
-
         fetchPrograms();
-    }, []);
+    }, [token]);
 
     const handleAddProgram = (newProgram) => {
-        // Update the program list with the newly added program
-        setPrograms((prevPrograms) => [...prevPrograms, newProgram]);
+        fetchPrograms();
+        isModalOpen(false);
     };
 
     return (

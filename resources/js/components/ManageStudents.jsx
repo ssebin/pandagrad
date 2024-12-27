@@ -18,7 +18,7 @@ function ManageStudents() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [searchKeyword, setSearchKeyword] = useState("");
-    const { studentsData, fetchStudentsData, currentSemester, isLoading } = useContext(StudentContext);
+    const { studentsData, fetchStudentsData, currentSemester, isLoading, programs, fetchPrograms, intakesById } = useContext(StudentContext);
 
     const students = studentsData ? Object.values(studentsData).flat() : [];
 
@@ -49,31 +49,27 @@ function ManageStudents() {
         fetchStudentsData();
     }, []);
 
-    // const handleSubmit = async (formData) => {
-    //     try {
-    //         const duplicate = students.find(
-    //             (student) => student.siswamail === formData.siswamail
-    //         );
-    //         if (duplicate && (!selectedStudent || duplicate.id !== selectedStudent.id)) {
-    //             alert('This student already exists!');
-    //             return;
-    //         }
+    useEffect(() => {
+        if (!programs || programs.length === 0) {
+            fetchPrograms();
+        }
+    }, [programs]);
 
-    //         if (selectedStudent) {
-    //             await axios.put(`/api/students/${selectedStudent.id}`, formData);
-    //         } else {
-    //             await axios.post('/api/students', formData);
-    //         }
+    const programIdToName = programs
+    ? programs.reduce((acc, program) => {
+        acc[String(program.id)] = program.name;
+        return acc;
+    }, {})
+    : {};  
 
-    //         alert('Student saved successfully!');
+    const intakeIdToName = intakesById
+    ? Object.keys(intakesById).reduce((acc, intakeId) => {
+        const intake = intakesById[intakeId];
+        acc[parseInt(intakeId)] = `Sem ${intake.intake_semester}, ${intake.intake_year}`;
+        return acc;
+    }, {})
+    : {};
 
-    //         fetchStudentsData();
-    //         setIsModalOpen(false);
-    //     } catch (error) {
-    //         console.error('Submission Error:', error.response?.data || error.message);
-    //         alert('Failed to save student. Please try again.');
-    //     }
-    // };
 
     const handleRowClick = (student) => {
         setSelectedStudent(student);
@@ -88,12 +84,14 @@ function ManageStudents() {
 
     const filterStudents = (students) => {
         return students.filter((student) => {
+            const programName = programIdToName[String(student.program_id)] || 'Unknown Program';
+            const intakeName = intakeIdToName[String(student.program_id)] || 'Unknown Program';
             return (
                 (student.first_name && student.first_name.toLowerCase().includes(searchKeyword)) ||
                 (student.last_name && student.last_name.toLowerCase().includes(searchKeyword)) ||
                 (student.siswamail && student.siswamail.toLowerCase().includes(searchKeyword)) ||
-                (student.program && student.program.toLowerCase().includes(searchKeyword)) ||
-                (student.intake && student.intake.toLowerCase().includes(searchKeyword)) ||
+                (programName && programName.toLowerCase().includes(searchKeyword)) ||
+                (intakeName && intakeName.toLowerCase().includes(searchKeyword)) ||
                 (student.supervisor_name && student.supervisor_name.toLowerCase().includes(searchKeyword)) ||
                 (student.task && student.task.toLowerCase().includes(searchKeyword)) ||
                 (student.task_status && student.task_status.toLowerCase().includes(searchKeyword)) ||
@@ -207,8 +205,8 @@ function ManageStudents() {
                                         <td>{student.first_name || '-'}</td>
                                         <td>{student.last_name || '-'}</td>
                                         <td>{student.siswamail || '-'}</td>
-                                        <td>{student.program || '-'}</td>
-                                        <td>{student.intake || '-'}</td>
+                                        <td>{programIdToName[String(student.program_id)] || '-'}</td>
+                                        <td>{intakeIdToName[String(student.intake_id)] || '-'}</td>
                                         <td>{student.supervisor_name || '-'}</td>
                                         <td>
                                             <span className={`status-${(student.status).toLowerCase()}`}>

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import axios from './axiosConfig.js';
 import { Link } from 'react-router-dom';
 import { FaSearch, FaPlus } from 'react-icons/fa';
 import AddLecturerModal from './AddLecturerModal.jsx';
 import './ManageLecturers.css';
+import { StudentContext } from './StudentContext';
 
 function ManageLecturers() {
     const [lecturers, setLecturers] = useState([]);
@@ -13,6 +14,7 @@ function ManageLecturers() {
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
     const [searchKeyword, setSearchKeyword] = useState("");
+    const { programs, fetchPrograms } = useContext(StudentContext);
 
     const handleOpenModal = () => {
         setSelectedLecturer(null);
@@ -83,6 +85,19 @@ function ManageLecturers() {
         fetchLecturers();
     }, []);
 
+    useEffect(() => {
+        if (!programs || programs.length === 0) {
+            fetchPrograms();
+        }
+    }, [programs]);
+
+    const programIdToName = programs
+        ? programs.reduce((acc, program) => {
+            acc[String(program.id)] = program.name;
+            return acc;
+        }, {})
+        : {};
+
     const handleRowClick = (lecturer) => {
         setSelectedLecturer(lecturer);
         setIsModalOpen(true);
@@ -95,11 +110,12 @@ function ManageLecturers() {
 
     const filterLecturers = (lecturers) => {
         return lecturers.filter((lecturer) => {
+            const programName = programIdToName[String(lecturer.program_id)] || 'Unknown Program';
             return (
                 (lecturer.first_name && lecturer.first_name.toLowerCase().includes(searchKeyword)) ||
                 (lecturer.last_name && lecturer.last_name.toLowerCase().includes(searchKeyword)) ||
                 (lecturer.um_email && lecturer.um_email.toLowerCase().includes(searchKeyword)) ||
-                (lecturer.program && lecturer.program.toLowerCase().includes(searchKeyword)) ||
+                (programName && programName.toLowerCase().includes(searchKeyword)) ||
                 (lecturer.role && lecturer.role.toLowerCase().includes(searchKeyword)) ||
                 (lecturer.status && lecturer.status.toLowerCase().includes(searchKeyword))
             );
@@ -209,7 +225,7 @@ function ManageLecturers() {
                                                 ? 'Supervisor & Coordinator'
                                                 : lecturer.role.charAt(0).toUpperCase() + lecturer.role.slice(1).toLowerCase()}
                                         </td>
-                                        <td>{lecturer.program}</td>
+                                        <td>{programIdToName[String(lecturer.program_id)] || 'Unknown Program'}</td>
                                         <td className="remarks-cell"><i>{lecturer.remarks || '-'}</i></td>
                                         <td>
                                             <span className={`status-${(lecturer.status).toLowerCase()}`}>{lecturer.status}</span>

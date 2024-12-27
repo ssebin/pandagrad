@@ -14,20 +14,21 @@ class Student extends Authenticatable
     protected $fillable = [
         'first_name',
         'last_name',
-        'siswamail', 
-        'status',       
+        'siswamail',
+        'status',
         'intake',
-        'semester',     
-        'program',
-        'research',     
-        'task',         
+        'semester',
+        'program_id',
+        'intake_id',
+        'research',
+        'task',
         'profile_pic',
-        'progress',     
-        'track_status', 
-        'cgpa',         
+        'progress',
+        'track_status',
+        'cgpa',
         'matric_number',
-        'remarks',      
-        'supervisor_id', 
+        'remarks',
+        'supervisor_id',
         'has_study_plan',
         'nationality',
         'password',
@@ -62,5 +63,15 @@ class Student extends Authenticatable
         return $this->supervisor
             ? $this->supervisor->first_name . ' ' . $this->supervisor->last_name
             : null;
+    }
+
+    public function program()
+    {
+        return $this->belongsTo(Program::class, 'program_id');
+    }
+
+    public function intake()
+    {
+        return $this->belongsTo(Intake::class, 'intake_id');
     }
 }

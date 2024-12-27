@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { retrieveAndDecrypt } from './storage';
@@ -8,11 +8,11 @@ import { FaSearch, FaPlus, FaPencilAlt } from 'react-icons/fa';
 import EditIntakeModal from './EditIntakeModal';
 import TaskModal from './TaskModal';
 import AddTaskModal from './AddTaskModal';
+import { StudentContext } from './StudentContext';
 
 function TaskList() {
     const navigate = useNavigate();
     const { programId, intakeId } = useParams();
-    const [tasks, setTasks] = useState([]);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage] = useState(10);
@@ -29,23 +29,13 @@ function TaskList() {
     const [intakeName, setIntakeName] = useState(initalIntakeName);
     const [selectedTask, setSelectedTask] = useState(null);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-
-    const fetchTasks = async () => {
-        try {
-            const response = await axios.get(`/api/tasks/intake/${intakeId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            setTasks(response.data);
-        } catch (error) {
-            console.error('Error fetching tasks:', error);
-        }
-    };
+    const { tasksByIntake, fetchTasks } = useContext(StudentContext);
 
     useEffect(() => {
-        fetchTasks();
+        fetchTasks(intakeId);
     }, [intakeId, token]);
+
+    const tasks = tasksByIntake[intakeId] || [];
 
     const handleRowClick = (task) => {
         setSelectedTask(task);
@@ -53,17 +43,18 @@ function TaskList() {
     };
 
     const handleTaskUpdated = () => {
-        fetchTasks();
+        fetchTasks(intakeId);
         setIsTaskModalOpen(false);
     };
 
     const handleTaskDeleted = () => {
-        fetchTasks();
+        fetchTasks(intakeId);
         setIsTaskModalOpen(false);
     };
 
     const handleTaskAdded = (newTask) => {
-        setTasks((prevTasks) => [...prevTasks, newTask]);
+        fetchTasks(intakeId);
+        setIsAddTaskModalOpen(false);
     };
 
     const handleIntakeUpdate = (updatedIntake) => {

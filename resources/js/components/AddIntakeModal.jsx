@@ -60,7 +60,7 @@ function AddIntakeModal({ isOpen, onClose, programId, onIntakeAdded }) {
             }
 
             onIntakeAdded(newIntake);
-            onClose();
+            handleClose();
         } catch (error) {
             console.error('Error adding intake or duplicating tasks:', error);
             alert('An error occurred while adding the intake or duplicating tasks.');

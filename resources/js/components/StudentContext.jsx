@@ -12,6 +12,10 @@ export const StudentProvider = ({ children }) => {
     const [tasks, setTasks] = useState([]);
     const [semesters, setSemesters] = useState([]);
     const [nationalities, setNationalities] = useState({});
+    const [programs, setPrograms] = useState([]);
+    const [intakesByProgram, setIntakesByProgram] = useState({});
+    const [tasksByIntake, setTasksByIntake] = useState({});
+    const [intakesById, setIntakesById] = useState({});
 
     const fetchStudentsData = async () => {
         try {
@@ -51,35 +55,74 @@ export const StudentProvider = ({ children }) => {
             }, {});
             setNationalities(nationalitiesById);
 
+            // **5. Collect Unique Program IDs**
+            // Collect Unique Program IDs, excluding null or undefined
+            const programIds = [...new Set(
+                students
+                    .map(student => student.program_id)
+                    .filter(programId => programId != null) // Exclude null and undefined values
+            )];
+
+            // **6. Fetch Intakes for Each Program**
+            const intakePromises = programIds.map(programId =>
+                axios
+                    .get(`/api/programs/${programId}/intakes`, { headers })
+                    .then(response => ({ programId, intakes: response.data }))
+                    .catch(error => {
+                        console.error(`Error fetching intakes for program ${programId}:`, error);
+                        return { programId, intakes: [] }; // Return empty array on error
+                    })
+            );
+
+            const intakeResults = await Promise.all(intakePromises);
+
+            // **7. Combine All Intakes into One Array**
+            const intakes = intakeResults.flatMap(result => result.intakes);
+
+            // **8. Create a Mapping of intake_id to Intake Object**
+            const intakesById = intakes.reduce((acc, intake) => {
+                acc[intake.id] = intake;
+                return acc;
+            }, {});
+
+            setIntakesById(intakesById);
+
+            // **9. Attach Intake Details to Each Student**
             students.forEach(student => {
-                if (student.intake) {
-                    student.currentSemester = calculateStudentSemester(student.intake, currentSem);
+                const intake = intakesById[student.intake_id];
+
+                if (intake) {
+                    student.intake = intake; // Attach the full intake object to the student
+                    student.intakeLabel = `Sem ${intake.intake_semester}, ${intake.intake_year}`;
+                    student.currentSemester = calculateStudentSemester(intake, currentSem);
                 } else {
+                    student.intake = null;
+                    student.intakeLabel = 'Unspecified';
                     student.currentSemester = null; // No intake, so no current semester
                 }
             });
 
-            // Group students by intake
+            // **10. Group Students by Intake Label**
             const groupedStudents = students.reduce((acc, student) => {
-                const intake = student.intake || 'Unspecified';
-                if (!acc[intake]) {
-                    acc[intake] = [];
+                const intakeLabel = student.intakeLabel;
+                if (!acc[intakeLabel]) {
+                    acc[intakeLabel] = [];
                 }
-                acc[intake].push(student);
+                acc[intakeLabel].push(student);
                 return acc;
             }, {});
 
-            // Sort intakes in descending order (oldest to newest)
+            // **11. Sort Intakes in Descending Order**
             const sortedIntakes = Object.keys(groupedStudents).sort((a, b) => {
                 if (a === 'Unspecified') return 1; // Place unspecified intakes at the end
                 if (b === 'Unspecified') return -1;
 
-                const [aSem, aYearRange] = a.split(', ');
-                const [bSem, bYearRange] = b.split(', ');
+                const [aSemLabel, aYearRange] = a.split(', ');
+                const [bSemLabel, bYearRange] = b.split(', ');
+                const aSemNumber = parseInt(aSemLabel.replace('Sem ', ''));
+                const bSemNumber = parseInt(bSemLabel.replace('Sem ', ''));
                 const [aYearStart] = aYearRange.split('/').map(Number);
                 const [bYearStart] = bYearRange.split('/').map(Number);
-                const aSemNumber = parseInt(aSem.split(' ')[1]);
-                const bSemNumber = parseInt(bSem.split(' ')[1]);
 
                 if (aYearStart === bYearStart) {
                     return bSemNumber - aSemNumber;
@@ -87,6 +130,7 @@ export const StudentProvider = ({ children }) => {
                 return bYearStart - aYearStart;
             });
 
+            // **12. Prepare the Sorted Grouped Students Data**
             const sortedGroupedStudents = {};
             sortedIntakes.forEach(intake => {
                 sortedGroupedStudents[intake] = groupedStudents[intake].sort((a, b) =>
@@ -94,6 +138,7 @@ export const StudentProvider = ({ children }) => {
                 );
             });
 
+            // **13. Set the Students Data State**
             setStudentsData(sortedGroupedStudents);
             console.log('Students Data:', sortedGroupedStudents);
 
@@ -101,6 +146,51 @@ export const StudentProvider = ({ children }) => {
             console.error('Failed to fetch students:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const fetchPrograms = async () => {
+        const token = retrieveAndDecrypt('token');
+        const headers = { Authorization: `Bearer ${token}` };
+
+        try {
+            const response = await axios.get('/api/programs', { headers });
+            setPrograms(response.data);
+            console.log('Programs:', response.data);
+        } catch (error) {
+            console.error('Error fetching programs:', error);
+        }
+    };
+
+    const fetchIntakes = async (programId) => {
+        const token = retrieveAndDecrypt('token');
+        const headers = { Authorization: `Bearer ${token}` };
+
+        try {
+            const response = await axios.get(`/api/programs/${programId}/intakes`, { headers });
+            setIntakesByProgram((prevIntakes) => ({
+                ...prevIntakes,
+                [programId]: response.data,
+            }));
+            console.log(`Intakes for program ${programId}:`, response.data);
+        } catch (error) {
+            console.error(`Error fetching intakes for program ${programId}:`, error);
+        }
+    };
+
+    const fetchTasks = async (intakeId) => {
+        const token = retrieveAndDecrypt('token');
+        const headers = { Authorization: `Bearer ${token}` };
+
+        try {
+            const response = await axios.get(`/api/tasks/intake/${intakeId}`, { headers });
+            setTasksByIntake((prevTasks) => ({
+                ...prevTasks,
+                [intakeId]: response.data,
+            }));
+            console.log(`Tasks for intake ${intakeId}:`, response.data);
+        } catch (error) {
+            console.error(`Error fetching tasks for intake ${intakeId}:`, error);
         }
     };
 
@@ -115,7 +205,7 @@ export const StudentProvider = ({ children }) => {
         }
     };
 
-    const fetchTasks = async () => {
+    const fetchAllTasks = async () => {
         const token = retrieveAndDecrypt('token');
         const headers = { Authorization: `Bearer ${token}` };
 
@@ -154,12 +244,13 @@ export const StudentProvider = ({ children }) => {
 
     // Calculate a student's current semester based on intake and current semester
     const calculateStudentSemester = (intake, currentSemester) => {
-        const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
-        const [currentYearStart] = currentYearRange.split('/').map(Number);
+        if (!intake) return null;
 
-        const [intakeSem, intakeYearRange] = intake.split(', ');
+        const { intake_semester: intakeSem, intake_year: intakeYearRange } = intake;
+        const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
+
+        const [currentYearStart] = currentYearRange.split('/').map(Number);
         const [intakeYearStart] = intakeYearRange.split('/').map(Number);
-        const intakeSemNumber = parseInt(intakeSem.split(' ')[1]);
 
         let semesterCount = (currentYearStart - intakeYearStart) * 2;
 
@@ -167,7 +258,7 @@ export const StudentProvider = ({ children }) => {
             semesterCount += 1;
         }
 
-        if (intakeSemNumber === 2) {
+        if (intakeSem === 2) {
             semesterCount -= 1;
         }
 
@@ -183,8 +274,9 @@ export const StudentProvider = ({ children }) => {
         }
         fetchStudentsData();
         fetchSupervisors();
-        fetchTasks();
         fetchSemesters();
+        fetchPrograms();
+        fetchAllTasks();
     }, []);
 
     const token = retrieveAndDecrypt('token');
@@ -199,7 +291,28 @@ export const StudentProvider = ({ children }) => {
     }, [token]);
 
     return (
-        <StudentContext.Provider value={{ studentsData, setStudentsData, currentSemester, isLoading, fetchStudentsData, supervisors, fetchSupervisors, tasks, nationalities, semesters, fetchSemesters, fetchTasks }}>
+        <StudentContext.Provider
+            value={{
+                studentsData,
+                setStudentsData,
+                currentSemester,
+                isLoading,
+                fetchStudentsData,
+                supervisors,
+                fetchSupervisors,
+                programs,
+                fetchPrograms,
+                intakesByProgram,
+                fetchIntakes,
+                tasksByIntake,
+                fetchTasks,
+                nationalities,
+                semesters,
+                fetchSemesters,
+                fetchAllTasks,
+                tasks,
+                intakesById,
+            }}>
             {children}
         </StudentContext.Provider>
     );

@@ -21,7 +21,7 @@ class Lecturer extends Authenticatable
         'last_login_at',
         'last_active_at',
         'remarks',
-        'program',
+        'program_id',
         'password',
     ];
 
@@ -36,5 +36,9 @@ class Lecturer extends Authenticatable
     {
         return $this->students()->get();
     }
-}
 
+    public function program()
+    {
+        return $this->belongsTo(Program::class, 'program_id');
+    }
+}

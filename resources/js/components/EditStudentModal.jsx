@@ -7,7 +7,7 @@ import { StudentContext } from './StudentContext';
 function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemester }) {
     const navigate = useNavigate();
     const { id } = useParams();
-    const { studentsData, supervisors, fetchStudentsData, semesters } = useContext(StudentContext);
+    const { studentsData, supervisors, fetchStudentsData, programs, intakesByProgram, fetchIntakes } = useContext(StudentContext);
 
     // Flatten the studentsData object (merge all semester arrays into one array)
     const allStudents = Object.values(studentsData).flat();
@@ -15,20 +15,38 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
     // Find the student by ID
     const initialStudent = allStudents.find(s => s.id === parseInt(id));
 
-    const [student, setStudent] = useState(initialStudent);
+    const [student, setStudent] = useState(initialStudent || {});
+
+    const [selectedProgramId, setSelectedProgramId] = useState(null);
+    const [selectedSupervisorId, setSelectedSupervisorId] = useState(null);
+
+    const intakes = selectedProgramId ? intakesByProgram[selectedProgramId] || [] : [];
+
+    const handleProgramChange = (e) => {
+        const programId = e.target.value;
+        setSelectedProgramId(programId); // Update the selected program ID
+        setSelectedSupervisorId(null); // Reset the selected supervisor ID
+        fetchIntakes(programId); // Fetch intakes for the selected program
+    };
 
     useEffect(() => {
-        setStudent(initialStudent);
+        if (initialStudent) {
+            setStudent(initialStudent);
+            setSelectedProgramId(initialStudent.program_id);
+            setSelectedSupervisorId(initialStudent.supervisor_id);
+            fetchIntakes(initialStudent.program_id);
+        }
     }, [initialStudent]);
 
 
     const calculateStudentSemester = (intake) => {
-        const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
-        const [currentYearStart, currentYearEnd] = currentYearRange.split('/').map(Number);
+        if (!intake) return null;
 
-        const [intakeSem, intakeYearRange] = intake.split(', ');
-        const [intakeYearStart, intakeYearEnd] = intakeYearRange.split('/').map(Number);
-        const intakeSemNumber = parseInt(intakeSem.split(' ')[1]);
+        const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
+        const { intake_semester: intakeSem, intake_year: intakeYearRange } = intake;
+
+        const [currentYearStart] = currentYearRange.split('/').map(Number);
+        const [intakeYearStart] = intakeYearRange.split('/').map(Number);
 
         let semesterCount = (currentYearStart - intakeYearStart) * 2;
 
@@ -36,7 +54,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
             semesterCount += 1;
         }
 
-        if (intakeSemNumber === 2) {
+        if (intakeSem === 2) {
             semesterCount -= 1;
         }
 
@@ -47,15 +65,25 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
         const { name, value } = e.target;
 
         setStudent((prevStudent) => {
-            // Create a copy of the current student state
             const updatedStudent = { ...prevStudent, [name]: value };
 
-            // Handle special cases
-            if (name === 'intake') {
-                // Update the semester based on the intake value
-                updatedStudent.semester = calculateStudentSemester(value);
+            if (name === 'program_id') {
+                const programId = value;
+                setSelectedProgramId(programId);
+                setSelectedSupervisorId(null);
+                fetchIntakes(programId);
+
+                // Reset supervisor and intake-related fields
+                updatedStudent.supervisor_id = null;
+                updatedStudent.supervisor = null;
+                updatedStudent.intake_id = null;
+                updatedStudent.semester = null;
+            } else if (name === 'intake_id') {
+                const intakeId = parseInt(value);
+                const selectedIntake = intakes.find(intake => intake.id === intakeId);
+                updatedStudent.intake_id = selectedIntake ? selectedIntake.id : null;
+                updatedStudent.semester = calculateStudentSemester(selectedIntake);
             } else if (name === 'supervisor_id') {
-                // Update both supervisor_id and supervisor (first name only)
                 const selectedSupervisor = supervisors.find(supervisor => supervisor.id === parseInt(value));
                 updatedStudent.supervisor_id = selectedSupervisor ? selectedSupervisor.id : null;
                 updatedStudent.supervisor = selectedSupervisor ? selectedSupervisor.first_name : null;
@@ -135,37 +163,46 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                     <label className={styles.label}>Matric Number<span style={{ color: 'red' }}> *</span></label>
                     <input className={styles.input} type="text" name="matric_number" value={student.matric_number || ''} onChange={handleChange} required />
 
-                    <label className={styles.label}>Program<span style={{ color: 'red' }}> *</span></label>
-                    <select className={styles.select} name="program" value={student.program || ''} onChange={(e) => {
-                        handleChange(e); // Update the student's program
-                    }} required>
+                    <label className={styles.label}>
+                        Program<span style={{ color: 'red' }}> *</span>
+                    </label>
+                    <select
+                        className={styles.select}
+                        name="program_id"
+                        value={student.program_id || ''}
+                        onChange={handleChange}
+                        required
+                    >
                         <option value="">Select the program</option>
-                        <option value="MSE (ST)">MSE (ST)</option>
-                        <option value="MCS (AC)">MCS (AC)</option>
+                        {programs && programs.length > 0 ? (
+                            programs.map((program) => (
+                                <option key={program.id} value={program.id}>
+                                    {program.name}
+                                </option>
+                            ))
+                        ) : (
+                            <option value="">Loading programs...</option>
+                        )}
                     </select>
 
                     <label className={styles.label}>Intake<span style={{ color: 'red' }}> *</span></label>
                     <select
                         className={styles.select}
-                        name="intake"
-                        value={student?.intake || ''}
+                        name="intake_id"
+                        value={student.intake_id || ''}
                         onChange={handleChange}
                         required
                     >
-                        {semesters &&
-                            Array.from(
-                                new Set(
-                                    semesters
-                                        .sort((a, b) => a.id - b.id) // Sort semesters by ID in ascending order
-                                        .map(
-                                            semester => `Sem ${semester.semester}, ${semester.academic_year}`
-                                        )
-                                )
-                            ).map(intake => (
-                                <option key={intake} value={intake}>
-                                    {intake}
-                                </option>
-                            ))}
+                        <option value="">Select the intake</option>
+                        {intakes &&
+                            intakes
+                                .sort((a, b) => a.id - b.id)
+                                .map(intake => (
+                                    <option key={intake.id} value={intake.id}>
+                                        Sem {intake.intake_semester}, {intake.intake_year}
+                                    </option>
+                                ))
+                        }
                         <option value="null">N/A</option>
                     </select>
 
@@ -177,11 +214,12 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                         onChange={handleChange}
                         required
                     >
+                        <option value="">Select the supervisor</option>
                         {supervisors
                             .filter(
                                 supervisor =>
                                     supervisor.status !== 'Deactivated' && // Exclude deactivated supervisors
-                                    supervisor.program === student.program // Ensure programs match
+                                    supervisor.program_id === student.program_id // Ensure programs match
                             )
                             .map(supervisor => (
                                 <option

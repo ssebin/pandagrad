@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import { StudentContext } from './StudentContext';
 import styles from './addsemestermodal.module.css';
 
 function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) {
@@ -7,8 +8,9 @@ function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) 
     const [umEmail, setUmEmail] = useState('');
     const [status, setStatus] = useState('');
     const [role, setRole] = useState('');
-    const [program, setProgram] = useState('');
+    const [programId, setProgramId] = useState('');
     const [remarks, setRemarks] = useState('');
+    const { programs } = useContext(StudentContext);
 
     const modalRef = useRef(null);
 
@@ -19,7 +21,7 @@ function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) 
             setLastName('');
             setUmEmail('');
             setRole('');
-            setProgram('');
+            setProgramId('');
             setRemarks('');
             setStatus('');
         } else if (initialData) {
@@ -27,7 +29,7 @@ function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) 
             setLastName(initialData.last_name || '');
             setUmEmail(initialData.um_email || '');
             setRole(initialData.role || '');
-            setProgram(initialData.program || '');
+            setProgramId(initialData.program_id || '');
             setRemarks(initialData.remarks || '');
             setStatus(initialData.status || '');
         }
@@ -64,7 +66,7 @@ function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) 
         } else if (!role) {
             alert("Role is required.");
             return;
-        } else if (!program) {
+        } else if (!programId) {
             alert("Program is required.");
             return;
         }
@@ -76,7 +78,7 @@ function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) 
                 um_email: umEmail,
                 status: status,
                 role: role,
-                program: program,
+                program_id: programId,
                 remarks: remarks,
                 id: initialData?.id, // Include the ID if editing
             });
@@ -130,10 +132,17 @@ function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) 
 
                     <div className={styles.formGroup}>
                         <label>Program<span style={{ color: 'red' }}> *</span></label>
-                        <select value={program} onChange={(e) => setProgram(e.target.value)} required>
+                        <select value={programId} onChange={(e) => setProgramId(e.target.value)} required>
                             <option value="">Select the program</option>
-                            <option value="MSE (ST)">MSE (ST)</option>
-                            <option value="MCS (AC)">MCS (AC)</option>
+                            {programs && programs.length > 0 ? (
+                                programs.map((program) => (
+                                    <option key={program.id} value={program.id}>
+                                        {program.name}
+                                    </option>
+                                ))
+                            ) : (
+                                <option value="" disabled>Loading programs...</option>
+                            )}
                         </select>
                     </div>
 

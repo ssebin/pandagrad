@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { retrieveAndDecrypt } from './storage';
@@ -6,11 +6,12 @@ import './ProgramStructures.css';
 import { FaPlus, FaPencilAlt } from 'react-icons/fa';
 import EditProgramModal from './EditProgramModal';
 import AddIntakeModal from './AddIntakeModal';
+import { StudentContext } from './StudentContext';
 
 function IntakeList() {
     const navigate = useNavigate();
     const { programId } = useParams();
-    const [intakes, setIntakes] = useState([]);
+    const { intakesByProgram, fetchIntakes } = useContext(StudentContext);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -22,20 +23,7 @@ function IntakeList() {
 
 
     useEffect(() => {
-        const fetchIntakes = async () => {
-            try {
-                const intakesResponse = await axios.get(`/api/programs/${programId}/intakes`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-                setIntakes(intakesResponse.data);
-            } catch (error) {
-                console.error('Error fetching program or intakes:', error);
-            }
-        };
-
-        fetchIntakes();
+        fetchIntakes(programId);
     }, [programId, token]);
 
     useEffect(() => {
@@ -52,8 +40,11 @@ function IntakeList() {
     };
 
     const handleIntakeAdded = (newIntake) => {
-        setIntakes((prevIntakes) => [...prevIntakes, newIntake]);
+        fetchIntakes(programId);
+        setIsAddModalOpen(false);
     };
+
+    const intakes = intakesByProgram[programId] || [];
 
     const sortedIntakes = intakes.sort((a, b) => a.id - b.id);
     const totalPages = Math.ceil(sortedIntakes.length / itemsPerPage);

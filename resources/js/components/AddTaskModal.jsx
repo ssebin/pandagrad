@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import styles from './addsemestermodal.module.css';
 import axios from 'axios';
 import { retrieveAndDecrypt } from "./storage";
 import Select, { components } from 'react-select';
+import { StudentContext } from './StudentContext';
 
 function AddTaskModal({ isOpen, onClose, intakeId, onTaskAdded, programId }) {
     const [name, setName] = useState('');
@@ -12,8 +13,10 @@ function AddTaskModal({ isOpen, onClose, intakeId, onTaskAdded, programId }) {
     const token = retrieveAndDecrypt('token');
     const modalRef = useRef(null);
     const [applyToOption, setApplyToOption] = useState('this'); // 'this', 'all', 'custom'
-    const [intakes, setIntakes] = useState([]);
     const [selectedIntakes, setSelectedIntakes] = useState([]);
+    const { intakesByProgram } = useContext(StudentContext);
+    
+    const intakes = intakesByProgram[programId] || [] ;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -104,18 +107,6 @@ function AddTaskModal({ isOpen, onClose, intakeId, onTaskAdded, programId }) {
         value: intake.id,
         label: `Semester ${intake.intake_semester} ${intake.intake_year}`,
     }));
-
-    useEffect(() => {
-        if (isOpen) {
-            axios.get(`/api/programs/${programId}/intakes`, {
-                headers: { Authorization: `Bearer ${token}` },
-            }).then(response => {
-                setIntakes(response.data);
-            }).catch(error => {
-                console.error('Error fetching intakes:', error);
-            });
-        }
-    }, [isOpen]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {

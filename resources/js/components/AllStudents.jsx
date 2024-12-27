@@ -38,12 +38,13 @@ const getProgressColor = (status) => {
 };
 
 const calculateStudentSemester = (intake, currentSemester) => {
-    const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
-    const [currentYearStart, currentYearEnd] = currentYearRange.split('/').map(Number);
+    if (!intake) return null;
 
-    const [intakeSem, intakeYearRange] = intake.split(', ');
-    const [intakeYearStart, intakeYearEnd] = intakeYearRange.split('/').map(Number);
-    const intakeSemNumber = parseInt(intakeSem.split(' ')[1]);
+    const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
+    const { intake_semester: intakeSem, intake_year: intakeYearRange } = intake;
+
+    const [currentYearStart] = currentYearRange.split('/').map(Number);
+    const [intakeYearStart] = intakeYearRange.split('/').map(Number);
 
     let semesterCount = (currentYearStart - intakeYearStart) * 2;
 
@@ -51,7 +52,7 @@ const calculateStudentSemester = (intake, currentSemester) => {
         semesterCount += 1;
     }
 
-    if (intakeSemNumber === 2) {
+    if (intakeSem === 2) {
         semesterCount -= 1;
     }
 
@@ -59,7 +60,6 @@ const calculateStudentSemester = (intake, currentSemester) => {
 };
 
 function AllStudents() {
-    // const [studentsData, setStudentsData] = useState({});
     const [searchKeyword, setSearchKeyword] = useState("");
     const [tempFilters, setTempFilters] = useState({
         programs: [],
@@ -75,9 +75,32 @@ function AllStudents() {
     const [showAddStudentPopup, setShowAddStudentPopup] = useState(false);
     const { user } = useUser();
     const filterPopupRef = useRef(null);
-    const { studentsData, isLoading, currentSemester, supervisors, tasks, fetchTasks, fetchStudentsData, semesters } = useContext(StudentContext);
+    const { studentsData, isLoading, currentSemester, supervisors, fetchAllTasks, tasks, fetchStudentsData, intakesByProgram, fetchIntakes, programs, fetchPrograms } = useContext(StudentContext);
     const [taskColors, setTaskColors] = useState({});
-    const [selectedProgram, setSelectedProgram] = useState("");
+    const [selectedProgramId, setSelectedProgramId] = useState(null);
+    const [selectedIntakeId, setSelectedIntakeId] = useState(null);
+    const [selectedSupervisorId, setSelectedSupervisorId] = useState(null);
+    const [filteredStudentsData, setFilteredStudentsData] = useState({});
+
+    const intakes = selectedProgramId ? intakesByProgram[selectedProgramId] || [] : [];
+
+    const [student, setStudent] = useState({
+        first_name: '',
+        last_name: '',
+        siswamail: '',
+        supervisor_id: '',
+        status: '',
+        intake_id: '',
+        semester: '',
+        program_id: '',
+        task: 'Core Courses', // Default task
+        profile_pic: '/images/profile-pic.png', // Default profile picture
+        progress: 0,
+        track_status: 'On Track',
+        matric_number: '',
+        remarks: '',
+        password: 'password123', // Default password
+    });
 
     let basePath = "";
     if (user.role === "admin") {
@@ -114,12 +137,30 @@ function AllStudents() {
         } else {
             // Fetch tasks only if not already fetched
             const fetchIfNeeded = async () => {
-                await fetchTasks();
+                await fetchAllTasks();
             };
 
             fetchIfNeeded();
         }
     }, [tasks]); // Dependency on tasks only
+
+    useEffect(() => {
+        if (!programs || programs.length === 0) {
+            fetchPrograms(); 
+        }
+    }, [programs]);
+
+    // useEffect(() => {
+    //     const newFilteredData = {};
+    //     for (const intakeKey in mappedStudentsData) {
+    //         const students = mappedStudentsData[intakeKey];
+    //         const filtered = filterStudents(students);
+    //         if (filtered.length > 0) {
+    //             newFilteredData[intakeKey] = filtered;
+    //         }
+    //     }
+    //     setFilteredStudentsData(newFilteredData);
+    // }, [mappedStudentsData, filters, searchKeyword]);
 
     const generateTaskColors = (tasks) => {
         const baseColors = [
@@ -153,12 +194,47 @@ function AllStudents() {
         return `rgba(${rgbColor}, ${opacity})`;
     };
 
+    const programIdToName = programs
+        ? programs.reduce((acc, program) => {
+            acc[String(program.id)] = program.name;
+            return acc;
+        }, {})
+        : {};    
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        setStudent((prevStudent) => {
+            const updatedStudent = { ...prevStudent, [name]: value };
+
+            if (name === 'program_id') {
+                setSelectedProgramId(value);
+                // Reset dependent fields
+                updatedStudent.intake_id = '';
+                updatedStudent.supervisor_id = '';
+                setSelectedIntakeId(null);
+                setSelectedSupervisorId(null);
+                fetchIntakes(value);
+            } else if (name === 'intake_id') {
+                setSelectedIntakeId(value);
+                // Calculate the semester based on intake
+                const selectedIntake = intakes.find(intake => intake.id === parseInt(value));
+                updatedStudent.semester = calculateStudentSemester(selectedIntake, currentSemester);
+            } else if (name === 'supervisor_id') {
+                setSelectedSupervisorId(value);
+            }
+
+            return updatedStudent;
+        });
+    };
+
     const handleSearchInputChange = (e) => {
         setSearchKeyword(e.target.value.toLowerCase());
     };
 
     const handleTempFilterChange = (filterType, value) => {
         const newFilters = { ...tempFilters };
+    
         if (newFilters[filterType].includes(value)) {
             newFilters[filterType] = newFilters[filterType].filter(item => item !== value);
         } else {
@@ -173,17 +249,27 @@ function AllStudents() {
     };
 
     const handleProgramChange = (e) => {
-        setSelectedProgram(e.target.value); // Update the program state when changed
+        const programId = e.target.value;
+        setSelectedProgramId(programId); // Update the selected program ID
+        setSelectedIntakeId(null); // Reset the selected intake ID
+        setSelectedSupervisorId(null); // Reset the selected supervisor ID
+        fetchIntakes(programId); // Fetch intakes for the selected program
+    };
+
+    const handleIntakeChange = (e) => {
+        const intakeId = e.target.value;
+        setSelectedIntakeId(intakeId);
+        fetchTasks(intakeId); // Fetch tasks for the selected intake
     };
 
     const mappedStudentsData = studentsData
-        ? Object.keys(studentsData).reduce((mappedData, intake) => {
-            if (intake == "Unspecified") {
+        ? Object.keys(studentsData).reduce((mappedData, intakeKey) => {
+            if (intakeKey == "Unspecified") {
                 return mappedData;
             }
 
             // Filter out deactivated students for this intake
-            const activeStudents = studentsData[intake].filter(student => student.status !== 'Deactivated');
+            const activeStudents = studentsData[intakeKey].filter(student => student.status !== 'Deactivated');
 
             // Skip this intake if there are no active students
             if (activeStudents.length === 0) {
@@ -193,14 +279,16 @@ function AllStudents() {
             // Map the active students to include taskCategory
             const mappedStudents = activeStudents.map((student) => {
                 const task = tasks.find((t) => t.name === student.task);
+                const supervisor = supervisors.find(s => s.id === student.supervisor_id);
 
                 return {
                     ...student,
                     taskCategory: task ? task.category : 'Unknown', // Default to 'Unknown' if no matching task
+                    supervisor,
                 };
             });
 
-            return { ...mappedData, [intake]: mappedStudents };
+            return { ...mappedData, [intakeKey]: mappedStudents };
         }, {})
         : {};
 
@@ -217,7 +305,7 @@ function AllStudents() {
                     (student.matric_number && student.matric_number.toLowerCase().includes(searchKeyword.toLowerCase())) ||
                     (student.research && student.research.toLowerCase().includes(searchKeyword.toLowerCase())) ||
                     (student.status && student.status.toLowerCase().includes(searchKeyword.toLowerCase()))) &&
-                (filters.programs.length === 0 || filters.programs.includes(student.program)) &&
+                (filters.programs.length === 0 || filters.programs.includes(student.program_id)) &&
                 (filters.tasks.length === 0 || filters.tasks.includes(taskCategory)) &&
                 (filters.progress.length === 0 || filters.progress.includes(student.track_status))
             );
@@ -231,27 +319,18 @@ function AllStudents() {
             return;
         }
 
-        let selectedSupervisor = event.target.supervisor.value !== "null"
-            ? JSON.parse(event.target.supervisor.value)
-            : { id: null, name: null };
+        // Basic validation
+        if (!student.first_name || !student.last_name || !student.siswamail || !student.program_id || !student.intake_id) {
+            alert('Please fill in all required fields.');
+            return;
+        }
 
         const newStudent = {
-            first_name: event.target.first_name.value,
-            last_name: event.target.last_name.value,
-            siswamail: event.target.siswamail.value,
-            //supervisor: selectedSupervisor.name, // Save supervisor's name
-            supervisor_id: selectedSupervisor.id, // Save supervisor's ID
-            status: event.target.status.value,
-            intake: event.target.intake.value,
-            semester: calculateStudentSemester(event.target.intake.value, currentSemester),
-            program: event.target.program.value,
-            task: "Core Courses",
-            profile_pic: "/images/profile-pic.png",
-            progress: 0,
-            track_status: "On Track",
-            matric_number: event.target.matric_number.value,
-            remarks: "",
-            password: "password123", // default password
+            ...student,
+            program_id: parseInt(student.program_id),
+            intake_id: parseInt(student.intake_id),
+            supervisor_id: student.supervisor_id !== 'null' ? parseInt(student.supervisor_id) : null,
+            // Ensure numbers are converted appropriately
         };
 
         try {
@@ -320,22 +399,16 @@ function AllStudents() {
                         {user?.role === 'admin' && (
                             <div className="filter-category">
                                 <h4>Program</h4>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={tempFilters.programs.includes('MSE (ST)')}
-                                        onChange={() => handleTempFilterChange('programs', 'MSE (ST)')}
-                                    />
-                                    MSE (ST)
-                                </label>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={tempFilters.programs.includes('MCS (AC)')}
-                                        onChange={() => handleTempFilterChange('programs', 'MCS (AC)')}
-                                    />
-                                    MCS (AC)
-                                </label>
+                                {programs.map((program) => (
+                                    <label key={program.id}>
+                                        <input
+                                            type="checkbox"
+                                            checked={tempFilters.programs.includes(program.id)}
+                                            onChange={() => handleTempFilterChange('programs', program.id)}
+                                        />
+                                        {program.name}
+                                    </label>
+                                ))}
                             </div>
                         )}
                         <div className="filter-category">
@@ -386,42 +459,75 @@ function AllStudents() {
                     <div className="add-student-popup">
                         <form onSubmit={handleAddStudent}>
                             <label>First Name<span style={{ color: 'red' }}> *</span></label>
-                            <input type="text" name="first_name" placeholder="First Name" required />
+                            <input type="text" name="first_name" value={student.first_name} onChange={handleChange} placeholder="First Name" required />
 
                             <label>Last Name<span style={{ color: 'red' }}> *</span></label>
-                            <input type="text" name="last_name" placeholder="Last Name" required />
+                            <input type="text" name="last_name" value={student.last_name} onChange={handleChange} placeholder="Last Name" required />
 
                             <label>Siswamail<span style={{ color: 'red' }}> *</span></label>
-                            <input type="email" name="siswamail" placeholder="Siswamail" required />
+                            <input type="email" name="siswamail" value={student.siswamail} onChange={handleChange} placeholder="Siswamail" required />
 
                             <label>Matric Number<span style={{ color: 'red' }}> *</span></label>
-                            <input type="text" name="matric_number" placeholder="Matric Number" required />
-
-                            <label>Intake<span style={{ color: 'red' }}> *</span></label>
-                            <select name="intake" required>
-                                {semesters &&
-                                    Array.from(
-                                        new Set(
-                                            semesters.map(
-                                                semester => `Sem ${semester.semester}, ${semester.academic_year}`
-                                            )
-                                        )
-                                    ).map(intake => (
-                                        <option key={intake} value={intake}>
-                                            {intake}
-                                        </option>
-                                    ))}
-                            </select>
+                            <input type="text" name="matric_number" value={student.matric_number} onChange={handleChange} placeholder="Matric Number" required />
 
                             <label>Program<span style={{ color: 'red' }}> *</span></label>
-                            <select name="program" onChange={handleProgramChange} required>
+                            <select
+                                name="program_id"
+                                value={student.program_id}
+                                onChange={handleChange}
+                                required
+                            >
                                 <option value="">Select the program</option>
-                                <option value="MSE (ST)">MSE (ST)</option>
-                                <option value="MCS (AC)">MCS (AC)</option>
+                                {programs.map((program) => (
+                                    <option key={program.id} value={program.id}>
+                                        {program.name}
+                                    </option>
+                                ))}
+                            </select>
+
+                            {student.program_id && (
+                                <>
+                                    <label>Intake<span style={{ color: 'red' }}> *</span></label>
+                                    <select
+                                        name="intake_id"
+                                        value={student.intake_id}
+                                        onChange={handleChange}
+                                        required
+                                    >
+                                        <option value="">Select the intake</option>
+                                        {intakes.map((intake) => (
+                                            <option key={intake.id} value={intake.id}>
+                                                Semester {intake.intake_semester}, {intake.intake_year}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </>
+                            )}
+
+                            <label>Supervisor<span style={{ color: 'red' }}> *</span></label>
+                            <select
+                                name="supervisor_id"
+                                value={student.supervisor_id}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Select the supervisor</option>
+                                {supervisors
+                                    .filter(
+                                        supervisor =>
+                                            supervisor.status !== 'Deactivated' &&
+                                            supervisor.program_id === parseInt(student.program_id)
+                                    )
+                                    .map(supervisor => (
+                                        <option key={supervisor.id} value={supervisor.id}>
+                                            Dr. {supervisor.first_name} {supervisor.last_name}
+                                        </option>
+                                    ))}
+                                <option value="null">N/A</option>
                             </select>
 
                             <label>Status<span style={{ color: 'red' }}> *</span></label>
-                            <select name="status" required>
+                            <select name="status" value={student.status} onChange={handleChange} required>
                                 <option value="Active">Active</option>
                                 <option value="Inactive">Inactive</option>
                                 <option value="GoT">GoT</option>
@@ -430,28 +536,6 @@ function AllStudents() {
                                 <option value="Withdrawn">Withdrawn</option>
                                 <option value="TI">Terminated (I)</option>
                                 <option value="TF">Terminated (F)</option>
-                            </select>
-
-                            <label>Supervisor<span style={{ color: 'red' }}> *</span></label>
-                            <select name="supervisor" required>
-                                <option value="null">N/A</option>
-                                {supervisors
-                                    .filter(
-                                        supervisor =>
-                                            supervisor.status !== 'Deactivated' && // Exclude deactivated supervisors
-                                            supervisor.program === selectedProgram // Ensure programs match
-                                    )
-                                    .map(supervisor => (
-                                        <option
-                                            key={supervisor.id}
-                                            value={JSON.stringify({
-                                                id: supervisor.id,
-                                                name: `${supervisor.first_name} ${supervisor.last_name}`
-                                            })}
-                                        >
-                                            Dr. {supervisor.first_name} {supervisor.last_name}
-                                        </option>
-                                    ))}
                             </select>
 
                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
@@ -477,6 +561,7 @@ function AllStudents() {
                                     {mappedStudentsData[intake] &&
                                         filterStudents(mappedStudentsData[intake]).map((student, idx) => {
                                             const task = tasks.find(t => t.name === student.task);
+                                            const programName = programIdToName[String(student.program_id)] || 'Unknown Program';
                                             const taskCategory = task ? task.category : 'Unknown';
 
                                             return (
@@ -498,7 +583,7 @@ function AllStudents() {
                                                                 {student.status}
                                                             </span>
                                                         </div>
-                                                        <p className="semester">Semester {student.currentSemester} - {student.program}</p>
+                                                        <p className="semester">Semester {student.currentSemester} - {programName}</p>
                                                         <p className="research">{student.research}</p>
                                                         <div className="task-profile">
                                                             <div className="task" style={{ backgroundColor: `${getTaskColor(student.taskCategory, 0.2)}`, color: `${getTaskColor(student.taskCategory, 1)}`, padding: '3px 8px', borderRadius: '5px' }}>{student.taskCategory || 'Unknown'}</div>
