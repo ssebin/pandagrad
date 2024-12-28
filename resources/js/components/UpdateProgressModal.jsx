@@ -32,9 +32,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
     const nationality = student.nationality;
     const intakeId = student.intake_id;
 
-    console.log("nationality: ", nationality);
-    console.log("intakeId: ", intakeId);
-
     useEffect(() => {
         if (isOpen) {
             const semestersArray = formData.semesters_no
@@ -70,7 +67,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
             fetchTasks(intakeId);
         }
 
-        console.log("tasksByIntake: ", tasksByIntake);
     }, [intakeId, tasksByIntake, fetchTasks]);
 
     useEffect(() => {

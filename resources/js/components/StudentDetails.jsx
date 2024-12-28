@@ -176,7 +176,7 @@ function StudentDetails() {
                         <h1>
                             {student.first_name} {student.last_name}
                         </h1>
-                        <span className={`status ${statusClass}`}>
+                        <span className={styles[`status-${statusClass}`]}>
                             {studentStatus}
                         </span>
                     </div>

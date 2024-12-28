@@ -188,11 +188,6 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                     const lastSemesterEndDates = getLastSemesterEndDates(studyPlan, semesterData);
                                     // Determine the status with the updated logic
                                     const status = determineStatus(taskData, lastSemesterEndDates);
-                                    //console.log(`Task "${taskData.name}" status:`, status);
-
-                                    // console.log("Task Data:", taskData);
-                                    // console.log("Semester End Date:", semesterEndDate);
-                                    //console.log("Status:", status);
 
                                     return (
                                         <div
@@ -248,158 +243,161 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                                 </p>
 
                                                 {taskData.progress_updates && taskData.progress_updates.length > 0 ? (
-                                                    taskData.progress_updates.map((update, updateIndex) => {
-                                                        return (
-                                                            <div key={updateIndex} className={styles.updateContainer}>
-                                                                <span className={styles.status}>
-                                                                    {update.status || ""}
-                                                                </span>
-                                                                {update.course_name_1 && (
-                                                                    <div className={styles.courseGrade}>
-                                                                        <span>1. {update.course_name_1}</span>
-                                                                        <span> ({update.grade_1 || ""})</span>
-                                                                    </div>
-                                                                )}
-                                                                {update.course_name_2 && (
-                                                                    <div className={styles.courseGrade}>
-                                                                        <span>2. {update.course_name_2}</span>
-                                                                        <span> ({update.grade_2 || ""})</span>
-                                                                    </div>
-                                                                )}
-                                                                {update.course_name_3 && (
-                                                                    <div className={styles.courseGrade}>
-                                                                        <span>3. {update.course_name_3}</span>
-                                                                        <span> ({update.grade_3 || ""})</span>
-                                                                    </div>
-                                                                )}
-                                                                {update.course_name_4 && (
-                                                                    <div className={styles.courseGrade}>
-                                                                        <span>4. {update.course_name_4}</span>
-                                                                        <span> ({update.grade_4 || ""})</span>
-                                                                    </div>
-                                                                )}
-                                                                {update.course_name_5 && (
-                                                                    <div className={styles.courseGrade}>
-                                                                        <span>5. {update.course_name_5}</span>
-                                                                        <span> ({update.grade_5 || ""})</span>
-                                                                    </div>
-                                                                )}
-                                                                {update.progress_status && (
-                                                                    <div className={styles.progressStatus}>
-                                                                        Progress Status: {update.progress_status || ""}
-                                                                    </div>
-                                                                )}
-                                                                {update.grade && (
-                                                                    <div className={styles.finalGrade}>
-                                                                        Grade: {update.grade || ""}
-                                                                    </div>
-                                                                )}
+                                                    taskData.progress_updates
+                                                        .slice() // Create a shallow copy to avoid mutating the original array
+                                                        .sort((a, b) => new Date(a.updated_at) - new Date(b.updated_at))
+                                                        .map((update, updateIndex) => {
+                                                            return (
+                                                                <div key={updateIndex} className={styles.updateContainer}>
+                                                                    <span className={styles.status}>
+                                                                        {update.status || ""}
+                                                                    </span>
+                                                                    {update.course_name_1 && (
+                                                                        <div className={styles.courseGrade}>
+                                                                            <span>1. {update.course_name_1}</span>
+                                                                            <span> ({update.grade_1 || ""})</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.course_name_2 && (
+                                                                        <div className={styles.courseGrade}>
+                                                                            <span>2. {update.course_name_2}</span>
+                                                                            <span> ({update.grade_2 || ""})</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.course_name_3 && (
+                                                                        <div className={styles.courseGrade}>
+                                                                            <span>3. {update.course_name_3}</span>
+                                                                            <span> ({update.grade_3 || ""})</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.course_name_4 && (
+                                                                        <div className={styles.courseGrade}>
+                                                                            <span>4. {update.course_name_4}</span>
+                                                                            <span> ({update.grade_4 || ""})</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.course_name_5 && (
+                                                                        <div className={styles.courseGrade}>
+                                                                            <span>5. {update.course_name_5}</span>
+                                                                            <span> ({update.grade_5 || ""})</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.progress_status && (
+                                                                        <div className={styles.progressStatus}>
+                                                                            Progress Status: {update.progress_status || ""}
+                                                                        </div>
+                                                                    )}
+                                                                    {update.grade && (
+                                                                        <div className={styles.finalGrade}>
+                                                                            Grade: {update.grade || ""}
+                                                                        </div>
+                                                                    )}
 
-                                                                {update.cgpa && <div className={styles.cgpa}>CGPA: {update.cgpa}</div>}
-                                                                {update.update_type === "residential_requirement" && (
-                                                                    <div className={styles.residentialRequirement}>
-                                                                        <p>College: {update.residential_college || "N/A"}</p>
-                                                                        <p>
-                                                                            From{" "}
-                                                                            {update.start_date
-                                                                                ? new Date(update.start_date).toLocaleDateString("en-US", {
-                                                                                    year: "numeric",
-                                                                                    month: "short",
-                                                                                    day: "numeric",
-                                                                                })
-                                                                                : "N/A"}{" "}
-                                                                            to{" "}
-                                                                            {update.end_date
-                                                                                ? new Date(update.end_date).toLocaleDateString("en-US", {
-                                                                                    year: "numeric",
-                                                                                    month: "short",
-                                                                                    day: "numeric",
-                                                                                })
-                                                                                : "N/A"}
-                                                                        </p>
+                                                                    {update.cgpa && <div className={styles.cgpa}>CGPA: {update.cgpa}</div>}
+                                                                    {update.update_type === "residential_requirement" && (
+                                                                        <div className={styles.residentialRequirement}>
+                                                                            <p>College: {update.residential_college || "N/A"}</p>
+                                                                            <p>
+                                                                                From{" "}
+                                                                                {update.start_date
+                                                                                    ? new Date(update.start_date).toLocaleDateString("en-US", {
+                                                                                        year: "numeric",
+                                                                                        month: "short",
+                                                                                        day: "numeric",
+                                                                                    })
+                                                                                    : "N/A"}{" "}
+                                                                                to{" "}
+                                                                                {update.end_date
+                                                                                    ? new Date(update.end_date).toLocaleDateString("en-US", {
+                                                                                        year: "numeric",
+                                                                                        month: "short",
+                                                                                        day: "numeric",
+                                                                                    })
+                                                                                    : "N/A"}
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.update_type === 'appointment_supervisor_form' || update.update_type === 'submission_of_appointment_of_supervisor_form' && (
+                                                                        <div className={styles.supervisorDetails}>
+                                                                            {update.supervisor_name && (
+                                                                                <div>
+                                                                                    <strong>Supervisor Name:</strong> {update.supervisor_name}
+                                                                                </div>
+                                                                            )}
+                                                                            {update.research_topic && (
+                                                                                <div>
+                                                                                    <strong>Research Topic:</strong> {update.research_topic}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                    {(update.update_type === 'proposal_defence' || update.update_type === 'candidature_defence') && (
+                                                                        <div className={styles.defenceDetails}>
+                                                                            {update.panels && (
+                                                                                <div>
+                                                                                    <strong>Panels:</strong> {update.panels}
+                                                                                </div>
+                                                                            )}
+                                                                            {update.chairperson && (
+                                                                                <div>
+                                                                                    <strong>Chairperson:</strong> {update.chairperson}
+                                                                                </div>
+                                                                            )}
+                                                                            {(update.pd_date || update.cd_date) && (
+                                                                                <div>
+                                                                                    <strong>Date:</strong> {new Date(update.pd_date || update.cd_date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })}
+                                                                                </div>
+                                                                            )}
+                                                                            {(update.pd_time || update.cd_time) && (
+                                                                                <div>
+                                                                                    <strong>Time:</strong> {new Date(`1970-01-01T${update.pd_time || update.cd_time}:00`).toLocaleTimeString("en-US", {
+                                                                                        hour: "numeric",
+                                                                                        minute: "numeric",
+                                                                                        hour12: true,
+                                                                                    })}
+                                                                                </div>
+                                                                            )}
+                                                                            {(update.pd_venue || update.cd_venue) && (
+                                                                                <div>
+                                                                                    <strong>Venue:</strong> {update.pd_venue || update.cd_venue}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                    {update.evidence && (
+                                                                        <div>
+                                                                            <a href={`/storage/evidence/${update.evidence.split('/').pop()}`}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className={styles.evidence}
+                                                                            >
+                                                                                {update.original_file_name || 'Evidence File'}
+                                                                            </a>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.link && (
+                                                                        <div>
+                                                                            <a href={update.link}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className={styles.link}
+                                                                            >
+                                                                                {update.link}
+                                                                            </a>
+                                                                        </div>
+                                                                    )}
+                                                                    <div className={styles.description}>
+                                                                        {update.description || ""}
                                                                     </div>
-                                                                )}
-                                                                {update.update_type === 'appointment_supervisor_form' || update.update_type === 'submission_of_appointment_of_supervisor_form' && (
-                                                                    <div className={styles.supervisorDetails}>
-                                                                        {update.supervisor_name && (
-                                                                            <div>
-                                                                                <strong>Supervisor Name:</strong> {update.supervisor_name}
-                                                                            </div>
-                                                                        )}
-                                                                        {update.research_topic && (
-                                                                            <div>
-                                                                                <strong>Research Topic:</strong> {update.research_topic}
-                                                                            </div>
-                                                                        )}
+                                                                    <div className={styles.admin}>
+                                                                        <i>{update.completion_date ? new Date(update.completion_date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</i>
                                                                     </div>
-                                                                )}
-                                                                {(update.update_type === 'proposal_defence' || update.update_type === 'candidature_defence') && (
-                                                                    <div className={styles.defenceDetails}>
-                                                                        {update.panels && (
-                                                                            <div>
-                                                                                <strong>Panels:</strong> {update.panels}
-                                                                            </div>
-                                                                        )}
-                                                                        {update.chairperson && (
-                                                                            <div>
-                                                                                <strong>Chairperson:</strong> {update.chairperson}
-                                                                            </div>
-                                                                        )}
-                                                                        {(update.pd_date || update.cd_date) && (
-                                                                            <div>
-                                                                                <strong>Date:</strong> {new Date(update.pd_date || update.cd_date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })}
-                                                                            </div>
-                                                                        )}
-                                                                        {(update.pd_time || update.cd_time) && (
-                                                                            <div>
-                                                                                <strong>Time:</strong> {new Date(`1970-01-01T${update.pd_time || update.cd_time}:00`).toLocaleTimeString("en-US", {
-                                                                                    hour: "numeric",
-                                                                                    minute: "numeric",
-                                                                                    hour12: true,
-                                                                                })}
-                                                                            </div>
-                                                                        )}
-                                                                        {(update.pd_venue || update.cd_venue) && (
-                                                                            <div>
-                                                                                <strong>Venue:</strong> {update.pd_venue || update.cd_venue}
-                                                                            </div>
-                                                                        )}
+                                                                    <div className={styles.admin}>
+                                                                        Updated by {update.admin_name || "Admin"} [{update.updated_at ? new Date(update.updated_at).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}]
                                                                     </div>
-                                                                )}
-                                                                {update.evidence && (
-                                                                    <div>
-                                                                        <a href={`/storage/evidence/${update.evidence.split('/').pop()}`}
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
-                                                                            className={styles.evidence}
-                                                                        >
-                                                                            {update.original_file_name || 'Evidence File'}
-                                                                        </a>
-                                                                    </div>
-                                                                )}
-                                                                {update.link && (
-                                                                    <div>
-                                                                        <a href={update.link}
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
-                                                                            className={styles.link}
-                                                                        >
-                                                                            {update.link}
-                                                                        </a>
-                                                                    </div>
-                                                                )}
-                                                                <div className={styles.description}>
-                                                                    {update.description || ""}
                                                                 </div>
-                                                                <div className={styles.admin}>
-                                                                    <i>{update.completion_date ? new Date(update.completion_date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</i>
-                                                                </div>
-                                                                <div className={styles.admin}>
-                                                                    Updated by {update.admin_name || "Admin"} [{update.updated_at ? new Date(update.updated_at).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}]
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })
+                                                            );
+                                                        })
                                                 ) : (
                                                     <span className={styles.status}></span> // Empty if no progress updates
                                                 )}
@@ -418,7 +416,7 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                     const status = determineStatus(taskData, lastSemesterEndDates);
                                     //console.log(`Task "${taskData.name}" status:`, status);
 
-                                    // console.log("Task Data:", taskData);
+                                    console.log("Task Data:", taskData);
                                     // console.log("Semester End Date:", semesterEndDate);
                                     //console.log("Status:", status);
 
@@ -476,163 +474,166 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                                 </p>
 
                                                 {taskData.progress_updates && taskData.progress_updates.length > 0 ? (
-                                                    taskData.progress_updates.map((update, updateIndex) => (
-                                                        <div key={updateIndex} className={styles.updateContainer}>
+                                                    taskData.progress_updates
+                                                        .slice() // Create a shallow copy to avoid mutating the original array
+                                                        .sort((a, b) => new Date(a.updated_at) - new Date(b.updated_at))
+                                                        .map((update, updateIndex) => (
+                                                            <div key={updateIndex} className={styles.updateContainer}>
 
-                                                            <span className={styles.status}>
-                                                                {update.status || ""}
-                                                            </span>
-                                                            {/* <div className={styles.date}>
+                                                                <span className={styles.status}>
+                                                                    {update.status || ""}
+                                                                </span>
+                                                                {/* <div className={styles.date}>
                                                             {update.completion_date ? new Date(update.completion_date).toLocaleDateString() : ""}
                                                         </div>                             */}
-                                                            {/* Display Course Names and Grades if available */}
-                                                            <div className={styles.taskGroup}>
-                                                                {update.course_name_1 && (
-                                                                    <div className={styles.courseGrade}>
-                                                                        <span>1. {update.course_name_1}&nbsp;</span>
-                                                                        <span> <strong>({update.grade_1 || ""})</strong></span>
+                                                                {/* Display Course Names and Grades if available */}
+                                                                <div className={styles.taskGroup}>
+                                                                    {update.course_name_1 && (
+                                                                        <div className={styles.courseGrade}>
+                                                                            <span>1. {update.course_name_1}&nbsp;</span>
+                                                                            <span> <strong>({update.grade_1 || ""})</strong></span>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.course_name_2 && (
+                                                                        <div className={styles.courseGrade}>
+                                                                            <span>2. {update.course_name_2}&nbsp;</span>
+                                                                            <span> <strong>({update.grade_2 || ""})</strong></span>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.course_name_3 && (
+                                                                        <div className={styles.courseGrade}>
+                                                                            <span>3. {update.course_name_3}&nbsp;</span>
+                                                                            <span> <strong>({update.grade_3 || ""})</strong></span>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.course_name_4 && (
+                                                                        <div className={styles.courseGrade}>
+                                                                            <span>4. {update.course_name_4}&nbsp;</span>
+                                                                            <span> <strong>({update.grade_4 || ""})</strong></span>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.course_name_5 && (
+                                                                        <div className={styles.courseGrade}>
+                                                                            <span>5. {update.course_name_5}&nbsp;</span>
+                                                                            <span> <strong>({update.grade_5 || ""})</strong></span>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.progress_status && (
+                                                                        <div className={styles.progressStatus}>
+                                                                            <strong>{update.progress_status || ""}</strong>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.grade && (
+                                                                        <div className={styles.finalGrade}>
+                                                                            Grade: {update.grade || ""}
+                                                                        </div>
+                                                                    )}
+                                                                    {update.cgpa && <div className={styles.cgpa}>CGPA: {update.cgpa}</div>}
+                                                                    {update.update_type === "residential_requirement" && (
+                                                                        <div className={styles.residentialRequirement}>
+                                                                            <p>College: {update.residential_college || "N/A"}</p>
+                                                                            <p>
+                                                                                Period:{" "}
+                                                                                {update.start_date
+                                                                                    ? new Date(update.start_date).toLocaleDateString("en-GB", {
+                                                                                        year: "numeric",
+                                                                                        month: "short",
+                                                                                        day: "numeric",
+                                                                                    })
+                                                                                    : "N/A"}{" "}
+                                                                                {/* to{" "} */}
+                                                                                {" "}-{" "}
+                                                                                {update.end_date
+                                                                                    ? new Date(update.end_date).toLocaleDateString("en-GB", {
+                                                                                        year: "numeric",
+                                                                                        month: "short",
+                                                                                        day: "numeric",
+                                                                                    })
+                                                                                    : "N/A"}
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.update_type === 'appointment_supervisor_form' || update.update_type === 'submission_of_appointment_of_supervisor_form' && (
+                                                                        <div className={styles.supervisorDetails}>
+                                                                            {update.supervisor_name && (
+                                                                                <div>
+                                                                                    <strong>Supervisor:</strong> Dr. {update.supervisor_name}
+                                                                                </div>
+                                                                            )}
+                                                                            {update.research_topic && (
+                                                                                <div>
+                                                                                    <strong>Research Topic:</strong> {update.research_topic}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                    {(update.update_type === 'proposal_defence' || update.update_type === 'candidature_defence') && (
+                                                                        <div className={styles.defenceDetails}>
+                                                                            {update.panels && (
+                                                                                <div>
+                                                                                    <strong>Panels:</strong> {update.panels}
+                                                                                </div>
+                                                                            )}
+                                                                            {update.chairperson && (
+                                                                                <div>
+                                                                                    <strong>Chairperson:</strong> {update.chairperson}
+                                                                                </div>
+                                                                            )}
+                                                                            {(update.pd_date || update.cd_date) && (
+                                                                                <div>
+                                                                                    <strong>Date:</strong> {new Date(update.pd_date || update.cd_date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })}
+                                                                                </div>
+                                                                            )}
+                                                                            {(update.pd_time || update.cd_time) && (
+                                                                                <div>
+                                                                                    <strong>Time:</strong> {new Date(`1970-01-01T${update.pd_time || update.cd_time}:00`).toLocaleTimeString("en-US", {
+                                                                                        hour: "numeric",
+                                                                                        minute: "numeric",
+                                                                                        hour12: true,
+                                                                                    })}
+                                                                                </div>
+                                                                            )}
+                                                                            {(update.pd_venue || update.cd_venue) && (
+                                                                                <div>
+                                                                                    <strong>Venue:</strong> {update.pd_venue || update.cd_venue}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                    {update.evidence && (
+                                                                        <div>
+                                                                            <a href={`/storage/evidence/${update.evidence.split('/').pop()}`}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className={styles.evidence}
+                                                                            >
+                                                                                {update.original_file_name || 'Evidence File'}
+                                                                            </a>
+                                                                        </div>
+                                                                    )}
+                                                                    {update.link && (
+                                                                        <div>
+                                                                            <a href={update.link}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className={styles.link}
+                                                                            >
+                                                                                {update.link}
+                                                                            </a>
+                                                                        </div>
+                                                                    )}
+                                                                    <div className={styles.description}>
+                                                                        {update.description || ""}
                                                                     </div>
-                                                                )}
-                                                                {update.course_name_2 && (
-                                                                    <div className={styles.courseGrade}>
-                                                                        <span>2. {update.course_name_2}&nbsp;</span>
-                                                                        <span> <strong>({update.grade_2 || ""})</strong></span>
-                                                                    </div>
-                                                                )}
-                                                                {update.course_name_3 && (
-                                                                    <div className={styles.courseGrade}>
-                                                                        <span>3. {update.course_name_3}&nbsp;</span>
-                                                                        <span> <strong>({update.grade_3 || ""})</strong></span>
-                                                                    </div>
-                                                                )}
-                                                                {update.course_name_4 && (
-                                                                    <div className={styles.courseGrade}>
-                                                                        <span>4. {update.course_name_4}&nbsp;</span>
-                                                                        <span> <strong>({update.grade_4 || ""})</strong></span>
-                                                                    </div>
-                                                                )}
-                                                                {update.course_name_5 && (
-                                                                    <div className={styles.courseGrade}>
-                                                                        <span>5. {update.course_name_5}&nbsp;</span>
-                                                                        <span> <strong>({update.grade_5 || ""})</strong></span>
-                                                                    </div>
-                                                                )}
-                                                                {update.progress_status && (
-                                                                    <div className={styles.progressStatus}>
-                                                                        <strong>{update.progress_status || ""}</strong>
-                                                                    </div>
-                                                                )}
-                                                                {update.grade && (
-                                                                    <div className={styles.finalGrade}>
-                                                                        Grade: {update.grade || ""}
-                                                                    </div>
-                                                                )}
-                                                                {update.cgpa && <div className={styles.cgpa}>CGPA: {update.cgpa}</div>}
-                                                                {update.update_type === "residential_requirement" && (
-                                                                    <div className={styles.residentialRequirement}>
-                                                                        <p>College: {update.residential_college || "N/A"}</p>
-                                                                        <p>
-                                                                            Period:{" "}
-                                                                            {update.start_date
-                                                                                ? new Date(update.start_date).toLocaleDateString("en-GB", {
-                                                                                    year: "numeric",
-                                                                                    month: "short",
-                                                                                    day: "numeric",
-                                                                                })
-                                                                                : "N/A"}{" "}
-                                                                            {/* to{" "} */}
-                                                                            {" "}-{" "}
-                                                                            {update.end_date
-                                                                                ? new Date(update.end_date).toLocaleDateString("en-GB", {
-                                                                                    year: "numeric",
-                                                                                    month: "short",
-                                                                                    day: "numeric",
-                                                                                })
-                                                                                : "N/A"}
-                                                                        </p>
-                                                                    </div>
-                                                                )}
-                                                                {update.update_type === 'appointment_supervisor_form' || update.update_type === 'submission_of_appointment_of_supervisor_form' && (
-                                                                    <div className={styles.supervisorDetails}>
-                                                                        {update.supervisor_name && (
-                                                                            <div>
-                                                                                <strong>Supervisor:</strong> Dr. {update.supervisor_name}
-                                                                            </div>
-                                                                        )}
-                                                                        {update.research_topic && (
-                                                                            <div>
-                                                                                <strong>Research Topic:</strong> {update.research_topic}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                                {(update.update_type === 'proposal_defence' || update.update_type === 'candidature_defence') && (
-                                                                    <div className={styles.defenceDetails}>
-                                                                        {update.panels && (
-                                                                            <div>
-                                                                                <strong>Panels:</strong> {update.panels}
-                                                                            </div>
-                                                                        )}
-                                                                        {update.chairperson && (
-                                                                            <div>
-                                                                                <strong>Chairperson:</strong> {update.chairperson}
-                                                                            </div>
-                                                                        )}
-                                                                        {(update.pd_date || update.cd_date) && (
-                                                                            <div>
-                                                                                <strong>Date:</strong> {new Date(update.pd_date || update.cd_date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })}
-                                                                            </div>
-                                                                        )}
-                                                                        {(update.pd_time || update.cd_time) && (
-                                                                            <div>
-                                                                                <strong>Time:</strong> {new Date(`1970-01-01T${update.pd_time || update.cd_time}:00`).toLocaleTimeString("en-US", {
-                                                                                    hour: "numeric",
-                                                                                    minute: "numeric",
-                                                                                    hour12: true,
-                                                                                })}
-                                                                            </div>
-                                                                        )}
-                                                                        {(update.pd_venue || update.cd_venue) && (
-                                                                            <div>
-                                                                                <strong>Venue:</strong> {update.pd_venue || update.cd_venue}
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                                {update.evidence && (
-                                                                    <div>
-                                                                        <a href={`/storage/evidence/${update.evidence.split('/').pop()}`}
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
-                                                                            className={styles.evidence}
-                                                                        >
-                                                                            {update.original_file_name || 'Evidence File'}
-                                                                        </a>
-                                                                    </div>
-                                                                )}
-                                                                {update.link && (
-                                                                    <div>
-                                                                        <a href={update.link}
-                                                                            target="_blank"
-                                                                            rel="noopener noreferrer"
-                                                                            className={styles.link}
-                                                                        >
-                                                                            {update.link}
-                                                                        </a>
-                                                                    </div>
-                                                                )}
-                                                                <div className={styles.description}>
-                                                                    {update.description || ""}
+                                                                </div>
+                                                                <div className={styles.admin}>
+                                                                    <i>{update.completion_date ? new Date(update.completion_date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</i>
+                                                                </div>
+                                                                <div className={styles.admin}>
+                                                                    Updated by {update.admin_name || "Admin"} [{update.updated_at ? new Date(update.updated_at).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}]
                                                                 </div>
                                                             </div>
-                                                            <div className={styles.admin}>
-                                                                <i>{update.completion_date ? new Date(update.completion_date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</i>
-                                                            </div>
-                                                            <div className={styles.admin}>
-                                                                Updated by {update.admin_name || "Admin"} [{update.updated_at ? new Date(update.updated_at).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}]
-                                                            </div>
-                                                        </div>
-                                                    ))
+                                                        ))
                                                 ) : (
                                                     <span className={styles.status}></span> // Empty if no progress updates
                                                 )}

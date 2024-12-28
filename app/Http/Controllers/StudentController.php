@@ -1498,13 +1498,6 @@ class StudentController extends Controller
                 return response()->json(['message' => 'Invalid semesters structure'], 400);
             }
 
-            // Optional: Validate that each semester object contains 'semester' and 'tasks' (if needed)
-            // foreach ($updatedStudyPlan as $semester) {
-            //     if (!isset($semester['semester']) || !isset($semester['tasks']) || !is_array($semester['tasks'])) {
-            //         return response()->json(['message' => 'Invalid semester structure'], 400);
-            //     }
-            // }
-
             // Find the student's study plan
             $studyPlan = StudyPlan::where('student_id', $studentId)->first();
             log::info('Study Plan:', [$studyPlan]);
@@ -1513,7 +1506,19 @@ class StudentController extends Controller
                 return response()->json(['message' => 'Study plan not found'], 404);
             }
 
+            // --- Start of code to handle task ID updates ---
+
+            // Step 1: Fetch the old tasks associated with the study plan before changes
+            $oldTasks = $studyPlan->tasks()->get();
+
+            // Build a mapping of unique_identifier to old task ID
+            $oldTaskMap = $oldTasks->mapWithKeys(function ($task) {
+                return [$task->unique_identifier => $task->id];
+            });
+
             $rollbackData['study_plan'] = $studyPlan->semesters;
+            $rollbackData['old_task_ids'] = $oldTaskMap; // Stores unique_identifier => old_task_id
+
             // Update the study plan
             $studyPlan->semesters = json_encode($updatedStudyPlan); // Convert array to JSON
             log::info('Updated Study Plan:', [$studyPlan->semesters]);
@@ -1538,6 +1543,32 @@ class StudentController extends Controller
             // Sync the tasks in the pivot table
             $studyPlan->tasks()->sync($newTaskIds->all());
             $studyPlan->save();
+
+            // Step 3: Fetch the new tasks associated with the updated study plan
+            $newTasks = $studyPlan->tasks()->get();
+
+            // Build a mapping of unique_identifier to new task ID
+            $newTaskMap = $newTasks->mapWithKeys(function ($task) {
+                return [$task->unique_identifier => $task->id];
+            });
+
+            // Step 4: Build the mapping of old task IDs to new task IDs via unique_identifier
+            $taskIdMapping = []; // old_task_id => new_task_id
+            foreach ($oldTaskMap as $unique_identifier => $oldTaskId) {
+                if (isset($newTaskMap[$unique_identifier])) {
+                    $newTaskId = $newTaskMap[$unique_identifier];
+                    $taskIdMapping[$oldTaskId] = $newTaskId;
+                }
+            }
+            // Step 5: Update the progress_updates to reference the new task IDs
+            foreach ($taskIdMapping as $oldTaskId => $newTaskId) {
+                ProgressUpdate::where('student_id', $studentId)
+                    ->where('task_id', $oldTaskId)
+                    ->update(['task_id' => $newTaskId]);
+            }
+
+            // Save rollback data for progress updates
+            $rollbackData['task_id_mapping'] = $taskIdMapping;
         }
 
         // Handle `extension_candidature_period` updates
@@ -1885,6 +1916,25 @@ class StudentController extends Controller
             if ($studyPlan) {
                 $studyPlan->semesters = $rollbackData['study_plan'];
                 $studyPlan->save();
+
+                // Get the old task IDs
+                $oldTaskMap = collect($rollbackData['old_task_ids']);
+                // Extract old task IDs
+                $oldTaskIdsArray = $oldTaskMap->values()->all(); // Get the IDs
+
+                // Sync the tasks in the pivot table to the old tasks
+                $studyPlan->tasks()->sync($oldTaskIdsArray);
+
+                // Reverse the task ID mapping
+                $taskIdMapping = $rollbackData['task_id_mapping'];
+                $reversedTaskIdMapping = array_flip($taskIdMapping);
+
+                // Update the progress_updates to reference the old task IDs
+                foreach ($reversedTaskIdMapping as $newTaskId => $oldTaskId) {
+                    ProgressUpdate::where('student_id', $studentId)
+                        ->where('task_id', $newTaskId)
+                        ->update(['task_id' => $oldTaskId]);
+                }
             }
         }
 
