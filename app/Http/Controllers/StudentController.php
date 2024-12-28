@@ -11,6 +11,8 @@ use App\Models\Task;
 use App\Models\Semester;
 use App\Models\ProgressUpdate;
 use App\Models\Notification;
+use App\Models\Program;
+use App\Models\Intake;
 use App\Events\RequestNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -69,43 +71,59 @@ class StudentController extends Controller
 
     public function store(Request $request)
     {
-        $validatedData = $this->validateStudent($request);
-
-        // Hash the password
-        $validatedData['password'] = Hash::make('password123');
-        $validatedData['profile_pic'] = $validatedData['profile_pic'] ?? '/images/profile-pic.png';
-
-        // Check if a supervisor is selected and fetch their details
-        if ($request->filled('supervisor_id')) {
-            $validatedData['supervisor_id'] = $request->supervisor_id;
-            $lecturer = Lecturer::find($request->supervisor_id);
-            if ($lecturer) {
-                //$validatedData['supervisor'] = $lecturer->first_name;
-            }
-        } else {
-            $validatedData['supervisor_id'] = null; // N/A case
-            //$validatedData['supervisor'] = null;
-        }
-
-        // Create the student record
-        $student = Student::create($validatedData);
-
-        // Calculate and save the max semester        
-        if ($request->filled('intake')) {
-            $intake = $validatedData['intake'];
-            $maxSem = $this->calculateMaxSemester($intake);
-            $student->max_sem = $maxSem;
-        }
-        $student->save();
-
         try {
-            Mail::to($student->siswamail)->send(new NewAccountNotification($student->siswamail, 'student'));
-            log::info('Email sent to ' . $student->siswamail);
-        } catch (\Exception $e) {
-            Log::error("Failed to send email to {$student->siswamail}: " . $e->getMessage());
-        }
+            $validatedData = $this->validateStudent($request);
 
-        return response()->json(['message' => 'Student added successfully', 'student' => $student], 201);
+            // Hash the password
+            $validatedData['password'] = Hash::make('password123');
+            $validatedData['profile_pic'] = $validatedData['profile_pic'] ?? '/images/profile-pic.png';
+
+            // Check if a supervisor is selected and fetch their details
+            if ($request->filled('supervisor_id')) {
+                $validatedData['supervisor_id'] = $request->supervisor_id;
+                $lecturer = Lecturer::find($request->supervisor_id);
+                if ($lecturer) {
+                    //$validatedData['supervisor'] = $lecturer->first_name;
+                }
+            } else {
+                $validatedData['supervisor_id'] = null; // N/A case
+                //$validatedData['supervisor'] = null;
+            }
+
+            // Create the student record
+            $student = Student::create($validatedData);
+
+            // Calculate and save the max semester        
+            if ($request->filled('intake_id')) {
+                $intake_id = $validatedData['intake_id'];
+                $intake = Intake::find($intake_id);
+
+                if (!$intake) {
+                    // Handle the case where the intake is not found
+                    return response()->json(['error' => 'Invalid intake ID'], 400);
+                }
+
+                // Calculate the max semester
+                $maxSem = $this->calculateMaxSemester($intake);
+
+                $student->max_sem = $maxSem;
+            }
+            $student->save();
+
+            try {
+                Mail::to($student->siswamail)->send(new NewAccountNotification($student->siswamail, 'student'));
+                log::info('Email sent to ' . $student->siswamail);
+            } catch (\Exception $e) {
+                Log::error("Failed to send email to {$student->siswamail}: " . $e->getMessage());
+            }
+
+            return response()->json(['message' => 'Student added successfully', 'student' => $student], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            log::error('Validation error:', [$e->errors()]);
+            return response()->json(['error' => 'Validation error', 'messages' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Registration failed', 'message' => $e->getMessage()], 500);
+        }
     }
 
 
@@ -242,23 +260,60 @@ class StudentController extends Controller
 
     public function update(Request $request, $id)
     {
-        $student = Student::find($id);
+        try {
+            $student = Student::find($id);
 
-        if (!$student) {
-            return response()->json(['error' => 'Student not found'], 404);
+            if (!$student) {
+                return response()->json(['error' => 'Student not found'], 404);
+            }
+
+            $validatedData = $request->validate([
+                'first_name' => 'nullable|string|max:255',
+                'last_name' => 'nullable|string|max:255',
+                'siswamail' => 'required|string|email|max:255|unique:students,siswamail,' . $student->id,
+                'supervisor_id' => 'nullable|integer',
+                'status' => 'nullable|string|max:255',
+                'intake_id' => 'nullable|exists:intakes,id',
+                'semester' => 'nullable|integer',
+                'program_id' => 'nullable|exists:programs,id',
+                'research' => 'nullable|string',
+                'task' => 'nullable|string|max:255',
+                'profile_pic' => 'nullable|string|max:255',
+                'progress' => 'nullable|integer',
+                'track_status' => 'nullable|string|max:255',
+                'cgpa' => 'nullable|numeric|between:0,4.00',
+                'matric_number' => 'nullable|string|max:255|unique:students,matric_number,' . $student->id,
+                'remarks' => 'nullable|string',
+            ]);
+
+            // Check if the intake has been updated
+            if ($validatedData['intake_id'] !== $student->intake_id) {
+                $intake_id = $validatedData['intake_id'];
+
+                // Fetch the Intake record
+                $intake = Intake::find($intake_id);
+
+                if (!$intake) {
+                    // Handle the case where the intake is not found
+                    return response()->json(['error' => 'Invalid intake ID'], 400);
+                }
+
+                // Calculate the max semester
+                $maxSem = $this->calculateMaxSemester($intake);
+
+                // Recalculate the max_sem based on the new intake
+                $validatedData['max_sem'] = $maxSem;
+            }
+
+            $student->update($validatedData);
+
+            return response()->json(['message' => 'Student updated successfully']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            log::error('Validation error:', [$e->errors()]);
+            return response()->json(['error' => 'Validation error', 'messages' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Registration failed', 'message' => $e->getMessage()], 500);
         }
-
-        $validatedData = $this->validateStudent($request);
-
-        // Check if the intake has been updated
-        if ($validatedData['intake'] !== $student->intake) {
-            // Recalculate the max_sem based on the new intake
-            $validatedData['max_sem'] = $this->calculateMaxSemester($validatedData['intake']);
-        }
-
-        $student->update($validatedData);
-
-        return response()->json(['message' => 'Student updated successfully']);
     }
 
     public function destroy($id)
@@ -308,7 +363,7 @@ class StudentController extends Controller
         return $request->validate([
             'first_name' => 'nullable|string|max:255',
             'last_name' => 'nullable|string|max:255',
-            'siswamail' => 'required|string|email|max:255',
+            'siswamail' => 'required|string|email|max:255|unique:students,siswamail',
             'supervisor_id' => 'nullable|integer',
             'status' => 'nullable|string|max:255',
             'intake_id' => 'nullable|exists:intakes,id',
@@ -320,7 +375,7 @@ class StudentController extends Controller
             'progress' => 'nullable|integer',
             'track_status' => 'nullable|string|max:255',
             'cgpa' => 'nullable|numeric|between:0,4.00',
-            'matric_number' => 'nullable|string|max:255',
+            'matric_number' => 'nullable|string|max:255|unique:students,matric_number',
             'remarks' => 'nullable|string',
         ]);
     }
@@ -336,11 +391,27 @@ class StudentController extends Controller
     public function register(Request $request)
     {
         try {
+            // Get the Siswamail from the request (already appended from localStorage)
+            $siswamail = $request->input('siswamail');
+
+            // Validate that siswamail is present
+            if (!$siswamail) {
+                return response()->json(['error' => 'Siswamail is required'], 400);
+            }
+
+            // Find the student based on siswamail
+            $student = Student::where('siswamail', $siswamail)->first();
+
+            // Check if the student exists
+            if (!$student) {
+                return response()->json(['error' => 'Student not found'], 404);
+            }
+
             // Validate the incoming request
             $validatedData = $request->validate([
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
-                'matric_number' => 'required|string|max:255',
+                'matric_number' => 'required|string|max:255|unique:students,matric_number,' . $student->id,
                 'intake_id' => 'nullable|exists:intakes,id',
                 'program_id' => 'nullable|exists:programs,id',
                 'nationality' => 'required|string|max:255',
@@ -351,21 +422,34 @@ class StudentController extends Controller
             if ($request->hasFile('profile_pic')) {
                 $path = $request->file('profile_pic')->store('profile_pics', 'public');
                 $validatedData['profile_pic'] = $path;
+            } else {
+                // Set default profile picture path
+                $validatedData['profile_pic'] = '/images/profile-pic.png'; // Adjust the path as needed
             }
 
             // Get the Siswamail from the request (already appended from localStorage)
-            $siswamail = $request->input('siswamail');
+            // $siswamail = $request->input('siswamail');
 
-            // Find the student based on siswamail
-            $student = Student::where('siswamail', $siswamail)->first();
+            // // Find the student based on siswamail
+            // $student = Student::where('siswamail', $siswamail)->first();
 
-            // Check if the student exists
-            if (!$student) {
-                return response()->json(['error' => 'Student not found'], 404);
+            // // Check if the student exists
+            // if (!$student) {
+            //     return response()->json(['error' => 'Student not found'], 404);
+            // }
+
+            // Assuming you have validated 'intake_id' in your $validatedData
+            $intake_id = $validatedData['intake_id'];
+
+            // Fetch the Intake record
+            $intake = Intake::find($intake_id);
+
+            if (!$intake) {
+                // Handle the case where the intake is not found
+                return response()->json(['error' => 'Invalid intake ID'], 400);
             }
 
-            // Calculate the maximum semester based on intake
-            $intake = $validatedData['intake']; // Expected format: 'Sem X, YYYY/YYYY'
+            // Calculate the max semester
             $maxSem = $this->calculateMaxSemester($intake);
 
             // Update the student data
@@ -373,46 +457,47 @@ class StudentController extends Controller
             $student->max_sem = $maxSem; // Set the calculated max semester
             $student->save();
 
-            return response()->json(['message' => 'Student registered successfully'], 200);
+            // Fetch the updated student data
+            $updatedStudent = Student::where('siswamail', $siswamail)
+                ->with('supervisor') // Include relationships if necessary
+                ->first();
+
+            // Return the updated student data
+            return response()->json($updatedStudent, 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
+            log::error('Validation error:', [$e->errors()]);
             return response()->json(['error' => 'Validation error', 'messages' => $e->errors()], 422);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Registration failed', 'message' => $e->getMessage()], 500);
         }
     }
 
-    /**
-     * Calculate the maximum semester based on the intake.
-     *
-     * @param string $intake
-     * @return string
-     */
     private function calculateMaxSemester($intake)
     {
-        // Parse the intake, expecting format 'sem X, YYYY/YYYY'
-        preg_match('/Sem (\d), (\d{4})\/(\d{4})/', $intake, $matches);
 
-        if (count($matches) === 4) {
-            $semester = (int)$matches[1];
-            $startYear = (int)$matches[2];
-            $endYear = (int)$matches[3];
+        $semester = (int)$intake->intake_semester; // 1 or 2
+        $intakeYear = $intake->intake_year; // e.g., '2023/2024'
 
-            // Calculate the max semester (8th semester after intake)
-            for ($i = 0; $i < 7; $i++) {
-                if ($semester == 1) {
-                    $semester = 2;
-                } else {
-                    $semester = 1;
-                    $startYear++;
-                    $endYear++;
-                }
+        // Split the year range into start and end years
+        [$startYear, $endYear] = explode('/', $intakeYear);
+        $startYear = (int)$startYear;
+        $endYear = (int)$endYear;
+
+        // Calculate the semester that is 8 semesters after the intake
+        // Since the intake semester counts as the first semester,
+        // we need to move forward 7 semesters to reach the "max semester"
+
+        for ($i = 0; $i < 7; $i++) {
+            if ($semester == 1) {
+                $semester = 2;
+            } else {
+                $semester = 1;
+                $startYear++;
+                $endYear++;
             }
-
-            return "Sem $semester, $startYear/$endYear";
         }
 
-        // Return a default or error string if intake format is incorrect
-        return "Invalid intake format";
+        return "Sem $semester, $startYear/$endYear";
     }
 
     // Save the study plan
@@ -652,7 +737,6 @@ class StudentController extends Controller
     {
         try {
             // Fetch the study plan and associated data
-            // In your controller or service
             $studyPlan = StudyPlan::with([
                 'tasks.progressUpdates' => function ($query) use ($studentId) {
                     $query->where('student_id', $studentId);
@@ -663,11 +747,22 @@ class StudentController extends Controller
                 return; // No study plan, nothing to calculate
             }
 
-            // Log::info('Study Plan:', [$studyPlan]);
             Log::info('Current Semester:', [$currentSemester]);
 
-            // Get the intake
-            $intake = $studyPlan->student->intake;
+            // Get the intake of the student
+            $student = $studyPlan->student()->with('intake')->first();
+
+            if (!$student) {
+                Log::error('Student not found.');
+                return response()->json(['error' => 'Student not found'], 404);
+            }
+
+            $intake = $student->intake;
+
+            if (!$intake) {
+                Log::error('Intake not found.');
+                return response()->json(['error' => 'Intake not found'], 404);
+            }
 
             // Get all semesters from the database
             $semesters = Semester::all();
@@ -675,20 +770,55 @@ class StudentController extends Controller
             // Decode the semesters from the study plan
             $studyPlanSemesters = json_decode($studyPlan->semesters, true);
 
-            // Total tasks
-            $totalTasks = collect($studyPlanSemesters)->flatMap(function ($semester) {
-                return $semester['tasks'];
-            })->count();
+            // Initialize total task weight and completed task weight
+            $totalTaskWeight = 0;
+            $completedTaskWeight = 0;
 
-            // Calculate task statuses and progress
-            $fullyCompletedTasks = 0;
             $delayedTasks = [
                 'slightlyDelayed' => false,
                 'veryDelayed' => false,
             ];
 
+            // Build a mapping from task ID to earliest semester number
+            $taskSemesterMap = [];
+
             foreach ($studyPlanSemesters as $studyPlanSemester) {
                 $semesterNumber = $studyPlanSemester['semester'];
+
+                foreach ($studyPlanSemester['tasks'] as $taskId) {
+                    if (!isset($taskSemesterMap[$taskId]) || $semesterNumber < $taskSemesterMap[$taskId]) {
+                        $taskSemesterMap[$taskId] = $semesterNumber;
+                    }
+                }
+            }
+
+            // Collect unique task IDs
+            $uniqueTaskIds = array_keys($taskSemesterMap);
+
+            // Calculate total task weight
+            foreach ($uniqueTaskIds as $taskId) {
+                $task = $studyPlan->tasks->find($taskId);
+
+                if (!$task) {
+                    Log::warning("Task ID {$taskId} not found in study plan tasks.");
+                    continue;
+                }
+
+                // Add the task's weight to totalTaskWeight
+                $totalTaskWeight += $task->task_weight ?? 0;
+                Log::info('Task Name:', [$task->name]);
+            }
+
+            // Loop to determine completed tasks and sum their weights
+            foreach ($uniqueTaskIds as $taskId) {
+                $task = $studyPlan->tasks->find($taskId);
+
+                if (!$task) {
+                    Log::warning("Task ID {$taskId} not found in study plan tasks.");
+                    continue;
+                }
+
+                $semesterNumber = $taskSemesterMap[$taskId];
 
                 // Calculate the academic year and type (odd/even) of the semester
                 [$academicYearStart, $databaseSemester] = $this->getAcademicYearAndDatabaseSemester($semesterNumber, $intake);
@@ -706,69 +836,27 @@ class StudentController extends Controller
 
                 $semesterEndDate = $semester->end_date;
 
-                foreach ($studyPlanSemester['tasks'] as $taskId) {
-                    // Find the task in the study plan's tasks
-                    $task = $studyPlan->tasks->find($taskId);
+                // Get the latest update for this task
+                $latestUpdate = $task->progressUpdates->sortByDesc('updated_at')->first();
+                $taskStatus = $task->determineStatus($semesterEndDate);
+                Log::info('Task Status:', [$taskStatus]);
 
-                    if (!$task) {
-                        Log::warning("Task ID {$taskId} not found in study plan tasks.");
-                        continue;
-                    }
-
-                    // Get the latest update for this task
-                    $latestUpdate = $task->progressUpdates->sortByDesc('updated_at')->first();
-
-                    // Skip the task if there are no updates
-                    if (!$latestUpdate) {
-                        continue;
-                    }
-
-                    // Check the status of the latest update
-                    if ($latestUpdate->approved === 1) {
-                        // Determine task status
-                        $taskStatus = $task->determineStatus($semesterEndDate);
-                        log::info('Task Status:', [$taskStatus]);
-
-                        // Count completed tasks
-                        if (in_array($taskStatus, ['onTrackCompleted', 'delayedCompleted'])) {
-                            $fullyCompletedTasks++;
-                            log::info('Fully Completed Task:', [$task->name]);
-                        }
-
-                        // Check for delayed pending tasks
-                        if ($taskStatus === 'delayedPending') {
-                            if ($semesterNumber < $currentSemester - 1) {
-                                $delayedTasks['veryDelayed'] = true;
-                            } elseif ($semesterNumber === $currentSemester - 1) {
-                                $delayedTasks['slightlyDelayed'] = true;
-                            }
-                        }
+                // Check for delayed pending tasks
+                if ($taskStatus === 'delayedPending') {
+                    if ($semesterNumber < $currentSemester - 1) {
+                        $delayedTasks['veryDelayed'] = true;
+                        Log::info('Very Delayed Task:', [$task->name]);
+                    } elseif ($semesterNumber === $currentSemester - 1) {
+                        $delayedTasks['slightlyDelayed'] = true;
+                        Log::info('Slightly Delayed Task:', [$task->name]);
                     }
                 }
-                // Handle cases where the student is beyond the study plan
-                $lastStudyPlanSemester = count($studyPlanSemesters);
-                if ($currentSemester > $lastStudyPlanSemester) {
-                    foreach ($studyPlanSemesters as $studyPlanSemester) {
-                        $semesterNumber = $studyPlanSemester['semester'];
 
-                        foreach ($studyPlanSemester['tasks'] as $taskId) {
-                            $task = $studyPlan->tasks->find($taskId);
-
-                            if (!$task || $task->progressUpdates->isEmpty()) {
-                                continue;
-                            }
-
-                            $latestUpdate = $task->progressUpdates->sortByDesc('updated_at')->first();
-                            if ($latestUpdate->approved !== 1) {
-                                continue;
-                            }
-
-                            if ($semesterNumber === $lastStudyPlanSemester) {
-                                $delayedTasks['slightlyDelayed'] = true;
-                            } elseif ($semesterNumber < $lastStudyPlanSemester) {
-                                $delayedTasks['veryDelayed'] = true;
-                            }
-                        }
+                if ($latestUpdate && $latestUpdate->approved === 1) {
+                    // If task is completed, add its weight to completedTaskWeight
+                    if (in_array($taskStatus, ['onTrackCompleted', 'delayedCompleted'])) {
+                        $completedTaskWeight += $task->task_weight ?? 0;
+                        Log::info('Completed Task:', [$task->name]);
                     }
                 }
             }
@@ -781,10 +869,11 @@ class StudentController extends Controller
                 $trackStatus = 'Slightly Delayed';
             }
 
-            // Calculate progress percentage
-            $progressPercentage = $totalTasks > 0 ? intval(($fullyCompletedTasks / $totalTasks) * 100) : 0;
-            // log::info('fullyCompletedTasks:', [$fullyCompletedTasks]);
-            // log::info('totalTasks:', [$totalTasks]);
+            // Calculate progress percentage based on task weights
+            $progressPercentage = $totalTaskWeight > 0 ? intval(($completedTaskWeight / $totalTaskWeight) * 100) : 0;
+            Log::info('Completed Task Weight:', [$completedTaskWeight]);
+            Log::info('Total Task Weight:', [$totalTaskWeight]);
+            Log::info('Progress Percentage:', [$progressPercentage]);
 
             // Update the student's progress and track_status
             Student::where('id', $studentId)->update([
@@ -798,6 +887,181 @@ class StudentController extends Controller
         }
     }
 
+    // public function calculateAndUpdateProgress($studentId, $currentSemester)
+    // {
+    //     try {
+    //         $studyPlan = StudyPlan::with([
+    //             'tasks.progressUpdates' => function ($query) use ($studentId) {
+    //                 $query->where('student_id', $studentId);
+    //             },
+    //         ])->where('student_id', $studentId)->first();
+
+    //         if (!$studyPlan) {
+    //             return; // No study plan, nothing to calculate
+    //         }
+
+    //         // Log::info('Study Plan:', [$studyPlan]);
+    //         // Log::info('Current Semester:', [$currentSemester]);
+
+    //         // Get the intake of the student
+    //         $student = $studyPlan->student()->with('intake')->first();
+
+    //         if (!$student) {
+    //             Log::error('Student not found.');
+    //             return response()->json(['error' => 'Student not found'], 404);
+    //         }
+
+    //         $intake = $student->intake;
+
+    //         if (!$intake) {
+    //             Log::error('Intake not found.');
+    //             return response()->json(['error' => 'Intake not found'], 404);
+    //         }
+
+    //         // Get all semesters from the database
+    //         $semesters = Semester::all();
+
+    //         // Decode the semesters from the study plan
+    //         $studyPlanSemesters = json_decode($studyPlan->semesters, true);
+
+    //         // Total tasks
+    //         // $totalTasks = collect($studyPlanSemesters)->flatMap(function ($semester) {
+    //         //     return $semester['tasks'];
+    //         // })->count();
+
+    //         // Calculate task statuses and progress
+    //         //$fullyCompletedTasks = 0;
+    //         $delayedTasks = [
+    //             'slightlyDelayed' => false,
+    //             'veryDelayed' => false,
+    //         ];
+
+    //         $totalTaskWeight = 0;
+    //         $completedTaskWeight = 0;
+
+    //         // Build a mapping from task ID to earliest semester number
+    //         $taskSemesterMap = [];
+
+    //         foreach ($studyPlanSemesters as $studyPlanSemester) {
+    //             $semesterNumber = $studyPlanSemester['semester'];
+
+    //             // Calculate the academic year and type (odd/even) of the semester
+    //             [$academicYearStart, $databaseSemester] = $this->getAcademicYearAndDatabaseSemester($semesterNumber, $intake);
+
+    //             // Find the corresponding semester from the database
+    //             $semester = $semesters->firstWhere(function ($sem) use ($academicYearStart, $databaseSemester) {
+    //                 return $sem->academic_year === "{$academicYearStart}/" . ($academicYearStart + 1) &&
+    //                     $sem->semester == $databaseSemester;
+    //             });
+
+    //             if (!$semester) {
+    //                 Log::warning("Semester {$semesterNumber} not found in database.");
+    //                 continue;
+    //             }
+
+    //             $semesterEndDate = $semester->end_date;
+
+    //             foreach ($studyPlanSemester['tasks'] as $taskId) {
+    //                 // Find the task in the study plan's tasks
+    //                 $task = $studyPlan->tasks->find($taskId);
+
+    //                 if (!$task) {
+    //                     Log::warning("Task ID {$taskId} not found in study plan tasks.");
+    //                     continue;
+    //                 }
+
+    //                 // Add the task's weight to totalTaskWeight
+    //                 $totalTaskWeight += $task->task_weight ?? 0;
+    //                 log::info('Task: ', [$task->name]);
+
+    //                 // Get the latest update for this task
+    //                 $latestUpdate = $task->progressUpdates->sortByDesc('updated_at')->first();
+
+    //                 // Skip the task if there are no updates
+    //                 if (!$latestUpdate) {
+    //                     continue;
+    //                 }
+
+    //                 // Check the status of the latest update
+    //                 if ($latestUpdate->approved === 1) {
+    //                     // Determine task status
+    //                     $taskStatus = $task->determineStatus($semesterEndDate);
+    //                     // log::info('Task Status:', [$taskStatus]);
+
+    //                     // Count completed tasks
+    //                     if (in_array($taskStatus, ['onTrackCompleted', 'delayedCompleted'])) {
+    //                         $completedTaskWeight += $task->task_weight ?? 0;
+    //                         log::info('Fully Completed Task:', [$task->name]);
+    //                     }
+
+    //                     // Check for delayed pending tasks
+    //                     if ($taskStatus === 'delayedPending') {
+    //                         if ($semesterNumber < $currentSemester - 1) {
+    //                             $delayedTasks['veryDelayed'] = true;
+    //                             log::info('Very Delayed Pending Task:', [$task->name]);
+    //                         } elseif ($semesterNumber === $currentSemester - 1) {
+    //                             $delayedTasks['slightlyDelayed'] = true;
+    //                             log::info('Slightly Delayed Pending Task:', [$task->name]);
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //             // Handle cases where the student is beyond the study plan
+    //             $lastStudyPlanSemester = count($studyPlanSemesters);
+    //             if ($currentSemester > $lastStudyPlanSemester) {
+    //                 foreach ($studyPlanSemesters as $studyPlanSemester) {
+    //                     $semesterNumber = $studyPlanSemester['semester'];
+
+    //                     foreach ($studyPlanSemester['tasks'] as $taskId) {
+    //                         $task = $studyPlan->tasks->find($taskId);
+
+    //                         if (!$task || $task->progressUpdates->isEmpty()) {
+    //                             continue;
+    //                         }
+
+    //                         $latestUpdate = $task->progressUpdates->sortByDesc('updated_at')->first();
+    //                         if ($latestUpdate->approved !== 1) {
+    //                             continue;
+    //                         }
+
+    //                         if ($semesterNumber === $lastStudyPlanSemester) {
+    //                             $delayedTasks['slightlyDelayed'] = true;
+    //                         } elseif ($semesterNumber < $lastStudyPlanSemester) {
+    //                             $delayedTasks['veryDelayed'] = true;
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+
+    //         // Determine track_status
+    //         $trackStatus = 'On Track';
+    //         if ($delayedTasks['veryDelayed']) {
+    //             $trackStatus = 'Very Delayed';
+    //         } elseif ($delayedTasks['slightlyDelayed']) {
+    //             $trackStatus = 'Slightly Delayed';
+    //         }
+
+    //         log::info('Total Task Weight:', [$totalTaskWeight]);
+    //         log::info('Completed Task Weight:', [$completedTaskWeight]);
+
+    //         // Calculate progress percentage
+    //         $progressPercentage = $totalTaskWeight > 0 ? intval(($completedTaskWeight / $totalTaskWeight) * 100) : 0;
+
+    //         log::info('Progrss Percentage:', [$progressPercentage]);
+
+    //         // Update the student's progress and track_status
+    //         Student::where('id', $studentId)->update([
+    //             'progress' => $progressPercentage,
+    //             'track_status' => $trackStatus,
+    //         ]);
+
+    //         Log::info("Progress updated for Student ID {$studentId}: {$progressPercentage}% - {$trackStatus}");
+    //     } catch (\Exception $e) {
+    //         Log::error('Failed to calculate progress: ' . $e->getMessage());
+    //     }
+    // }
+
     private function getAcademicYearAndDatabaseSemester($semesterNumber, $intake)
     {
         if (!$intake) {
@@ -805,24 +1069,60 @@ class StudentController extends Controller
             return [null, null];
         }
 
-        // Extract intake semester and academic year
-        [$intakeSemester, $intakeYearRange] = explode(', ', $intake);
+        // Extract intake semester number and intake year
+        $intakeSemesterNumber = (int) $intake->intake_semester; // 1 or 2
+        $intakeYearRange = $intake->intake_year; // e.g., '2023/2024'
+
+        // Extract the starting year of the intake academic year
         [$intakeYearStart] = explode('/', $intakeYearRange);
         $intakeYearStart = (int) $intakeYearStart;
-        $intakeSemesterNumber = (int) explode(' ', $intakeSemester)[1]; // 1 for Sem 1, 2 for Sem 2
 
-        // Calculate total semesters passed
-        $totalSemestersPassed = ($semesterNumber - 1) + ($intakeSemesterNumber - 1);
+        // Calculate total semesters passed since intake
+        $totalSemestersPassed = ($semesterNumber - 1);
 
-        // Determine the academic year offset
-        $yearOffset = floor($totalSemestersPassed / 2); // Every 2 semesters = 1 year
+        // Calculate the sequence number from the intake semester
+        $intakeSemesterSequence = $intakeSemesterNumber - 1; // 0 for Sem 1, 1 for Sem 2
+
+        // Total semester sequence number
+        $totalSemesterSequenceNumber = $intakeSemesterSequence + $totalSemestersPassed;
+
+        // Calculate the academic year offset
+        $yearOffset = floor($totalSemesterSequenceNumber / 2); // Every 2 semesters = 1 year
+
+        // Determine the academic year start
         $academicYearStart = $intakeYearStart + $yearOffset;
 
-        // Determine if it's an odd (1) or even (2) semester
-        $databaseSemester = ($totalSemestersPassed % 2 === 0) ? 1 : 2;
+        // Determine the semester number in the current academic year
+        $databaseSemester = ($totalSemesterSequenceNumber % 2) + 1; // 1 or 2
 
         return [$academicYearStart, $databaseSemester];
     }
+
+    // private function getAcademicYearAndDatabaseSemester($semesterNumber, $intake)
+    // {
+    //     if (!$intake) {
+    //         Log::error('Missing intake data.');
+    //         return [null, null];
+    //     }
+
+    //     // Extract intake semester and academic year
+    //     [$intakeSemester, $intakeYearRange] = explode(', ', $intake);
+    //     [$intakeYearStart] = explode('/', $intakeYearRange);
+    //     $intakeYearStart = (int) $intakeYearStart;
+    //     $intakeSemesterNumber = (int) explode(' ', $intakeSemester)[1]; // 1 for Sem 1, 2 for Sem 2
+
+    //     // Calculate total semesters passed
+    //     $totalSemestersPassed = ($semesterNumber - 1) + ($intakeSemesterNumber - 1);
+
+    //     // Determine the academic year offset
+    //     $yearOffset = floor($totalSemestersPassed / 2); // Every 2 semesters = 1 year
+    //     $academicYearStart = $intakeYearStart + $yearOffset;
+
+    //     // Determine if it's an odd (1) or even (2) semester
+    //     $databaseSemester = ($totalSemestersPassed % 2 === 0) ? 1 : 2;
+
+    //     return [$academicYearStart, $databaseSemester];
+    // }
 
     public function broadcastRequestUpdate($progressUpdate, $message = null)
     {
@@ -1016,30 +1316,83 @@ class StudentController extends Controller
         }
 
         // Define the mapping of update types to task IDs
-        $taskMap = [
-            'bahasa_melayu_course' => 2,
-            'core_courses' => 3,
-            'elective_courses' => 4,
-            'research_methodology_course' => 5,
-            'proposal_defence' => 6,
-            'candidature_defence' => 7,
-            'dissertation_chapters_1_2_3' => 8,
-            'dissertation_all_chapters' => 9,
-            'dissertation_submission_examination' => 10,
-            'dissertation_submission_correction' => 11,
-            'committee_meeting' => 12,
-            'jkit_correction_approval' => 13,
-            'senate_approval' => 14,
-            'appointment_supervisor_form' => 15,
-            'residential_requirement' => 16,
-            'update_status' => null, // No task ID
-            'workshops_attended' => null, // No task ID
-            'change_study_plan' => null, // No task ID
-            'extension_candidature_period' => null, // No task ID
+        // $taskMap = [
+        //     'bahasa_melayu_course' => 2,
+        //     'core_courses' => 3,
+        //     'elective_courses' => 4,
+        //     'research_methodology_course' => 5,
+        //     'proposal_defence' => 6,
+        //     'candidature_defence' => 7,
+        //     'dissertation_chapters_1_2_3' => 8,
+        //     'dissertation_all_chapters' => 9,
+        //     'dissertation_submission_examination' => 10,
+        //     'dissertation_submission_correction' => 11,
+        //     'committee_meeting' => 12,
+        //     'jkit_correction_approval' => 13,
+        //     'senate_approval' => 14,
+        //     'appointment_supervisor_form' => 15,
+        //     'residential_requirement' => 16,
+        //     'update_status' => null, // No task ID
+        //     'workshops_attended' => null, // No task ID
+        //     'change_study_plan' => null, // No task ID
+        //     'extension_candidature_period' => null, // No task ID
+        // ];
+
+        // // Determine task ID based on update type
+        // $taskId = $taskMap[$validatedData['update_type']] ?? null;
+
+        $notMappedUpdateTypes = [
+            'update_status',
+            'workshops_attended',
+            'change_study_plan',
+            'extension_candidature_period',
         ];
 
-        // Determine task ID based on update type
-        $taskId = $taskMap[$validatedData['update_type']] ?? null;
+        if (in_array($validatedData['update_type'], $notMappedUpdateTypes)) {
+            $taskId = null;
+        } else {
+            // Fetch the student's study plan
+            $studyPlan = StudyPlan::where('student_id', $studentId)->first();
+
+            if ($studyPlan) {
+                // Decode the 'semesters' JSON to get an array
+                $semesters = json_decode($studyPlan->semesters, true);
+
+                if (is_array($semesters)) {
+                    // Collect all task IDs from the semesters
+                    $taskIds = collect($semesters)
+                        ->pluck('tasks')       // Get arrays of task IDs from each semester
+                        ->flatten()            // Flatten into a single array
+                        ->unique()             // Remove duplicates
+                        ->filter(function ($value) {
+                            return !empty($value) && is_numeric($value);
+                        })
+                        ->map(function ($id) {
+                            return intval($id);
+                        })
+                        ->toArray();
+
+                    // Fetch tasks with these IDs
+                    $tasks = Task::whereIn('id', $taskIds)->get();
+
+                    // Now find the task matching the 'unique_identifier'
+                    $task = $tasks->firstWhere('unique_identifier', $validatedData['update_type']);
+
+                    if ($task) {
+                        $taskId = $task->id;
+                    } else {
+                        // Task not found in study plan
+                        return response()->json(['error' => 'Task not found in student\'s study plan'], 400);
+                    }
+                } else {
+                    // Semesters data is invalid
+                    return response()->json(['error' => 'Invalid study plan data'], 400);
+                }
+            } else {
+                // No study plan found
+                return response()->json(['error' => 'Student has no study plan'], 400);
+            }
+        }
 
         // Insert progress update into the progress_updates table with the new fields
         $progressUpdate = ProgressUpdate::create([
@@ -1133,31 +1486,57 @@ class StudentController extends Controller
         if ($validatedData['update_type'] === 'change_study_plan') {
             // Validate that the study plan has the correct structure
             if (!isset($validatedData['semesters']) || empty($validatedData['semesters'])) {
+                log::error('Semesters data is required for changing the study plan.');
                 return response()->json(['message' => 'Semesters data is required for changing the study plan.'], 400);
             }
 
             $updatedStudyPlan = json_decode($validatedData['semesters'], true);
+            log::info('Updated Study Plan:', [$updatedStudyPlan]);
 
             if (!is_array($updatedStudyPlan) || empty($updatedStudyPlan)) {
+                log::error('Invalid semesters structure');
                 return response()->json(['message' => 'Invalid semesters structure'], 400);
             }
 
             // Optional: Validate that each semester object contains 'semester' and 'tasks' (if needed)
-            foreach ($updatedStudyPlan as $semester) {
-                if (!isset($semester['semester']) || !isset($semester['tasks']) || !is_array($semester['tasks'])) {
-                    return response()->json(['message' => 'Invalid semester structure'], 400);
-                }
-            }
+            // foreach ($updatedStudyPlan as $semester) {
+            //     if (!isset($semester['semester']) || !isset($semester['tasks']) || !is_array($semester['tasks'])) {
+            //         return response()->json(['message' => 'Invalid semester structure'], 400);
+            //     }
+            // }
 
             // Find the student's study plan
             $studyPlan = StudyPlan::where('student_id', $studentId)->first();
+            log::info('Study Plan:', [$studyPlan]);
             if (!$studyPlan) {
+                log::error('Study plan not found');
                 return response()->json(['message' => 'Study plan not found'], 404);
             }
 
             $rollbackData['study_plan'] = $studyPlan->semesters;
             // Update the study plan
             $studyPlan->semesters = json_encode($updatedStudyPlan); // Convert array to JSON
+            log::info('Updated Study Plan:', [$studyPlan->semesters]);
+            // Assuming $studyPlan is your StudyPlan model instance
+            // Extract task IDs from $updatedStudyPlan (which is an array)
+            $newTaskIds = collect($updatedStudyPlan)
+                ->pluck('tasks')    // Get the lists of tasks arrays
+                ->flatten()         // Flatten into one list
+                ->filter()          // Remove nulls and empty values
+                ->filter(function ($value) {
+                    return !empty($value) && is_numeric($value) && intval($value) > 0;
+                })
+                ->map(function ($id) {
+                    return intval($id);
+                })
+                ->unique();
+            // Check if $newTaskIds is not empty
+            if ($newTaskIds->isEmpty()) {
+                Log::error('No valid task IDs found in the updated study plan.');
+                return response()->json(['message' => 'No valid task IDs found in the updated study plan.'], 400);
+            }
+            // Sync the tasks in the pivot table
+            $studyPlan->tasks()->sync($newTaskIds->all());
             $studyPlan->save();
         }
 
@@ -1202,10 +1581,12 @@ class StudentController extends Controller
         }
 
         // Update research topic if 'appointment_supervisor_form' type
-        if ($validatedData['update_type'] === 'appointment_supervisor_form' && isset($validatedData['research_topic'])) {
-            $rollbackData['research'] = $student->research;
-            $student->research = $validatedData['research_topic'];
-            $student->save();
+        if ($validatedData['update_type'] === 'appointment_supervisor_form' || $validatedData['update_type'] === 'submission_of_appointment_of_supervisor_form') {
+            if (isset($validatedData['research_topic'])) {
+                $rollbackData['research'] = $student->research;
+                $student->research = $validatedData['research_topic'];
+                $student->save();
+            }
         }
 
         // Update the workshops_attended column if a new workshop_name is provided
@@ -1264,28 +1645,60 @@ class StudentController extends Controller
         }
 
         // Parse current semester and academic year
-        $currentSem = $currentSemester['semester']; // 1 or 2
+        $currentSem = (int) $currentSemester['semester']; // 1 or 2
         $currentYearRange = $currentSemester['academic_year']; // E.g., "2024/2025"
         [$currentYearStart] = explode('/', $currentYearRange);
+        $currentYearStart = (int) $currentYearStart;
 
-        // Parse intake semester and academic year
-        [$intakeSem, $intakeYearRange] = explode(', ', $intake);
+        // Extract intake semester and academic year from the Intake model
+        $intakeSemNumber = (int) $intake->intake_semester; // 1 or 2
+        $intakeYearRange = $intake->intake_year; // e.g., '2023/2024'
         [$intakeYearStart] = explode('/', $intakeYearRange);
-        $intakeSemNumber = (int) filter_var($intakeSem, FILTER_SANITIZE_NUMBER_INT); // Extract number from "Sem 1" or "Sem 2"
+        $intakeYearStart = (int) $intakeYearStart;
 
         // Calculate the number of semesters completed
         $semesterCount = ($currentYearStart - $intakeYearStart) * 2;
 
-        if ($currentSem === 2) {
+        if ($currentSem == 2) {
             $semesterCount += 1; // Add one if we are in the second semester of the current year
         }
 
-        if ($intakeSemNumber === 2) {
+        if ($intakeSemNumber == 2) {
             $semesterCount -= 1; // Subtract one if the intake semester is the second semester
         }
 
-        return $semesterCount + 1; // Add 1 to convert from 0-based index
+        return $semesterCount + 1; // Add 1 to convert from 0-based index to human-readable semester number
     }
+
+    // private function calculateStudentSemester($intake, $currentSemester)
+    // {
+    //     if (!$currentSemester || !$intake) {
+    //         return null; // Missing data, return null
+    //     }
+
+    //     // Parse current semester and academic year
+    //     $currentSem = $currentSemester['semester']; // 1 or 2
+    //     $currentYearRange = $currentSemester['academic_year']; // E.g., "2024/2025"
+    //     [$currentYearStart] = explode('/', $currentYearRange);
+
+    //     // Parse intake semester and academic year
+    //     [$intakeSem, $intakeYearRange] = explode(', ', $intake);
+    //     [$intakeYearStart] = explode('/', $intakeYearRange);
+    //     $intakeSemNumber = (int) filter_var($intakeSem, FILTER_SANITIZE_NUMBER_INT); // Extract number from "Sem 1" or "Sem 2"
+
+    //     // Calculate the number of semesters completed
+    //     $semesterCount = ($currentYearStart - $intakeYearStart) * 2;
+
+    //     if ($currentSem === 2) {
+    //         $semesterCount += 1; // Add one if we are in the second semester of the current year
+    //     }
+
+    //     if ($intakeSemNumber === 2) {
+    //         $semesterCount -= 1; // Subtract one if the intake semester is the second semester
+    //     }
+
+    //     return $semesterCount + 1; // Add 1 to convert from 0-based index
+    // }
 
     public function approveUpdate($progressUpdateId)
     {
@@ -1324,8 +1737,12 @@ class StudentController extends Controller
         }
         $studentName = "{$student->first_name} {$student->last_name}";
 
-        // Calculate the student's current semester
-        $studentSemester = $this->calculateStudentSemester($student->intake, $currentSemesterData);
+        $intake = Intake::find($student->intake_id);
+        if (!$intake) {
+            // Handle the case where the intake is not found
+            return response()->json(['error' => 'Invalid intake ID'], 400);
+        }
+        $studentSemester = $this->calculateStudentSemester($intake, $currentSemesterData);
 
         // Process admin-specific updates
         $this->processAdminUpdate($progressUpdate->toArray(), $progressUpdate->student_id, $studentSemester, $progressUpdateId);
@@ -1381,8 +1798,12 @@ class StudentController extends Controller
             return response()->json(['message' => 'Could not determine the current semester.'], 400);
         }
 
-        // Calculate the student's current semester
-        $currentSemester = $this->calculateStudentSemester($student->intake, $currentSemesterData);
+        $intake = Intake::find($student->intake_id);
+        if (!$intake) {
+            // Handle the case where the intake is not found
+            return response()->json(['error' => 'Invalid intake ID'], 400);
+        }
+        $currentSemester = $this->calculateStudentSemester($intake, $currentSemesterData);
 
         $this->updateCurrentTask($progressUpdate->student_id);
         $this->calculateAndUpdateProgress($progressUpdate->student_id, $currentSemester);
@@ -1434,8 +1855,12 @@ class StudentController extends Controller
             return response()->json(['message' => 'Could not determine the current semester.'], 400);
         }
 
-        // Calculate the student's current semester
-        $currentSemester = $this->calculateStudentSemester($student->intake, $currentSemesterData);
+        $intake = Intake::find($student->intake_id);
+        if (!$intake) {
+            // Handle the case where the intake is not found
+            return response()->json(['error' => 'Invalid intake ID'], 400);
+        }
+        $currentSemester = $this->calculateStudentSemester($intake, $currentSemesterData);
 
         $this->updateCurrentTask($progressUpdate->student_id);
         $this->calculateAndUpdateProgress($progressUpdate->student_id, $currentSemester);
@@ -1489,5 +1914,4 @@ class StudentController extends Controller
 
         $student->save();
     }
-
 }

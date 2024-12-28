@@ -20,7 +20,7 @@ function StudentDetails() {
     const [studyPlan, setStudyPlan] = useState(null);
     const [files, setFiles] = useState([]);
     // const [studentProgress, seStudentProgress] = useState(null);
-    const { studentsData, currentSemester, fetchStudentsData, semesters } = useContext(StudentContext);
+    const { studentsData, currentSemester, fetchStudentsData, semesters, programs, intakesById } = useContext(StudentContext);
     //const [studentCurrentTask, setStudentCurrentTask] = useState('Unknown');
 
     let basePath = "";
@@ -127,6 +127,27 @@ function StudentDetails() {
     const progressColor = getProgressColor(student.track_status);
     const solidColor = getSolidColor(student.track_status);
 
+    const programIdToName = programs
+        ? programs.reduce((acc, program) => {
+            acc[String(program.id)] = program.name;
+            return acc;
+        }, {})
+        : {};
+
+    const intakeIdToName = intakesById
+        ? Object.keys(intakesById).reduce((acc, intakeId) => {
+            const intakeName = intakesById[intakeId];
+            acc[parseInt(intakeId)] = `Sem ${intakeName.intake_semester}, ${intakeName.intake_year}`;
+            return acc;
+        }, {})
+        : {};
+
+    const statusClass = student.status
+        ? student.status.toLowerCase().replace(/\s+/g, '-').trim()
+        : 'no-status';
+
+    const studentStatus = student.status ? student.status : '-';
+
     return (
         <div className={styles.studentDetails}>
             {user.role !== 'student' && (
@@ -140,9 +161,13 @@ function StudentDetails() {
             )}
             <div className={styles.studentHeader}>
                 <img
-                    src={student.profile_pic.includes('profile-pic.png')
-                        ? student.profile_pic
-                        : `/storage/${student.profile_pic}`}
+                    src={
+                        student.profile_pic
+                            ? (student.profile_pic.includes('profile-pic.png')
+                                ? student.profile_pic
+                                : `/storage/${student.profile_pic}`)
+                            : '/images/profile-pic.png'
+                    }
                     alt={`${student.first_name} ${student.last_name}`}
                     className={styles.profilePic}
                 />
@@ -151,19 +176,14 @@ function StudentDetails() {
                         <h1>
                             {student.first_name} {student.last_name}
                         </h1>
-                        <span className={styles[`status-${student.status
-                            .toLowerCase()
-                            // .replace(/terminated\s*\(i\)/g, 'terminated-i')
-                            // .replace(/terminated\s*\(f\)/g, 'terminated-f')
-                            .replace(/\s+/g, '-')
-                            .trim()}`]}>
-                            {student.status}
+                        <span className={`status ${statusClass}`}>
+                            {studentStatus}
                         </span>
                     </div>
                     <div className={styles.progressBarContainer}>
                         <p style={{ color: solidColor }}>{student.progress}% <span className={styles.trackStatus} style={{ color: solidColor }}>({student.track_status})</span></p>
                     </div>
-                    <div className={styles.progressBar} style={{ width: `calc(25% + ${student.first_name.length + student.last_name.length + student.status.length}em)` }}>
+                    <div className={styles.progressBar} style={{ width: `calc(25% + ${student.first_name.length + student.last_name.length + studentStatus.length}em)` }}>
                         <div className={styles.progressCompleted} style={{ width: `${student.progress}%`, background: progressColor }}></div>
                     </div>
                 </div>
@@ -221,7 +241,7 @@ function StudentDetails() {
                     <div className={`${styles.studentInfoBlock} ${styles.studentInfoBlockLeft}`}>
                         <div className={styles.infoItem}>
                             <div className={styles.infoItemTitle}>Intake</div>
-                            <div className={styles.infoItemValue}>{student.intake}</div>
+                            <div className={styles.infoItemValue}>{intakeIdToName[String(student.intake_id)] || "-"}</div>
                         </div>
                         <div className={styles.infoItem}>
                             <div className={styles.infoItemTitle}>Max. Period</div>
@@ -244,21 +264,23 @@ function StudentDetails() {
                     <div className={`${styles.studentInfoBlock} ${styles.studentInfoBlockCenter}`}>
                         <div className={styles.infoItem}>
                             <div className={styles.infoItemTitle}>Program</div>
-                            <div className={styles.infoItemValue}>{student.program}</div>
+                            <div className={styles.infoItemValue}>{programIdToName[String(student.program_id)] || "-"}</div>
                         </div>
                         <div className={styles.infoItem}>
                             <div className={styles.infoItemTitle}>Supervisor</div>
-                            {student.supervisor_name && (
-                                <div className={styles.infoItemValue}>Dr. {student.supervisor?.first_name} {student.supervisor?.last_name}</div>
-                            )}
+                            <div className={styles.infoItemValue}>
+                                {student.supervisor_name
+                                    ? `Dr. ${student.supervisor?.first_name} ${student.supervisor?.last_name}`
+                                    : '-'}
+                            </div>
                         </div>
                         <div className={styles.infoItem}>
                             <div className={styles.infoItemTitle}>Research Topic</div>
-                            <div className={styles.infoItemValue}><span className={styles.multilineText}>{student.research}</span></div>
+                            <div className={styles.infoItemValue}><span className={styles.multilineText}>{student.research || "-"}</span></div>
                         </div>
                         <div className={styles.infoItem}>
                             <div className={styles.infoItemTitle}>Current Task</div>
-                            <div className={styles.infoItemValue}>{student.task}</div>
+                            <div className={styles.infoItemValue}>{student.task || "-"}</div>
                         </div>
                     </div>
                     <div className={styles.verticalLine}></div>
@@ -272,7 +294,7 @@ function StudentDetails() {
                                             <li key={workshop}>{workshop}</li>
                                         ))
                                     ) : (
-                                        <li>None</li>
+                                        "-"
                                     )}
                                 </ul>
                             </div>
@@ -286,7 +308,7 @@ function StudentDetails() {
                 {studyPlan && Object.keys(studyPlan).length > 0 ? (
                     <ProgressFlowchart
                         studyPlan={studyPlan}
-                        intake={student.intake}
+                        intake={intakeIdToName[String(student.intake_id)]}
                         semesters={semesters}
                     />
                 ) : (
@@ -302,7 +324,7 @@ function StudentDetails() {
                 currentSemester={currentSemester}
             />
 
-            <UpdateProgressModal                
+            <UpdateProgressModal
                 studentId={realId}
                 isOpen={isUpdateModalOpen}
                 onClose={handleUpdateModalClose}
@@ -311,6 +333,7 @@ function StudentDetails() {
                     fetchStudyPlan(realId);
                 }}
                 user={user}
+                student={student}
             />
         </div>
     );

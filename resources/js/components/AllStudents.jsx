@@ -82,6 +82,10 @@ function AllStudents() {
     const [selectedSupervisorId, setSelectedSupervisorId] = useState(null);
     const [filteredStudentsData, setFilteredStudentsData] = useState({});
 
+    const students = studentsData && Object.keys(studentsData).length > 0
+        ? Object.values(studentsData).flat()
+        : [];
+
     const intakes = selectedProgramId ? intakesByProgram[selectedProgramId] || [] : [];
 
     const [student, setStudent] = useState({
@@ -146,7 +150,7 @@ function AllStudents() {
 
     useEffect(() => {
         if (!programs || programs.length === 0) {
-            fetchPrograms(); 
+            fetchPrograms();
         }
     }, [programs]);
 
@@ -199,7 +203,7 @@ function AllStudents() {
             acc[String(program.id)] = program.name;
             return acc;
         }, {})
-        : {};    
+        : {};
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -234,7 +238,7 @@ function AllStudents() {
 
     const handleTempFilterChange = (filterType, value) => {
         const newFilters = { ...tempFilters };
-    
+
         if (newFilters[filterType].includes(value)) {
             newFilters[filterType] = newFilters[filterType].filter(item => item !== value);
         } else {
@@ -325,6 +329,16 @@ function AllStudents() {
             return;
         }
 
+        const duplicate = students.find(
+            (eachStudent) =>
+                eachStudent.siswamail === student.siswamail && eachStudent.id !== student.id
+        );
+
+        if (duplicate) {
+            alert('A student with the same siswamail already exists!');
+            return;
+        }
+
         const newStudent = {
             ...student,
             program_id: parseInt(student.program_id),
@@ -339,8 +353,31 @@ function AllStudents() {
             setShowAddStudentPopup(false);
             fetchStudentsData();
         } catch (error) {
-            console.error('Error adding student:', error);
-            alert('Failed to add student');
+            if (error.response) {
+                // The request was made, and the server responded with a status code
+                if (error.response.status === 422) {
+                    // Handle validation errors
+                    const errorData = error.response.data; // Assuming the server sends validation errors in the response body
+                    console.log('Validation error:', errorData);
+
+                    if (errorData.messages && errorData.messages.matric_number) {
+                        alert('A student with the same matric number already exists!');
+                    } else {
+                        alert('Failed to add a new student due to validation errors.');
+                    }
+                } else {
+                    console.error(`HTTP error! status: ${error.response.status}`);
+                    alert('An error occurred while adding a new student.');
+                }
+            } else if (error.request) {
+                // The request was made, but no response was received
+                console.error('No response received:', error.request);
+                alert('No response from the server. Please check your network connection.');
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.error('Error', error.message);
+                alert('An error occurred while setting up the request.');
+            }
         }
     };
 
@@ -528,6 +565,7 @@ function AllStudents() {
 
                             <label>Status<span style={{ color: 'red' }}> *</span></label>
                             <select name="status" value={student.status} onChange={handleChange} required>
+                                <option value="">Select the status</option>
                                 <option value="Active">Active</option>
                                 <option value="Inactive">Inactive</option>
                                 <option value="GoT">GoT</option>
@@ -563,6 +601,9 @@ function AllStudents() {
                                             const task = tasks.find(t => t.name === student.task);
                                             const programName = programIdToName[String(student.program_id)] || 'Unknown Program';
                                             const taskCategory = task ? task.category : 'Unknown';
+                                            const statusClass = student.status
+                                                ? student.status.toLowerCase().replace(/\s+/g, '-').trim()
+                                                : 'no-status';
 
                                             return (
                                                 <Link to={`${basePath}/student/${student.id}`} key={idx} className="student-link">
@@ -574,13 +615,8 @@ function AllStudents() {
                                                                     <span className="supervisor">(Dr. {student.supervisor?.first_name})</span>
                                                                 )}
                                                             </h3>
-                                                            <span className={`status ${student.status
-                                                                .toLowerCase()
-                                                                // .replace(/terminated\s*\(i\)/g, 'ti')
-                                                                // .replace(/terminated\s*\(f\)/g, 'tf')
-                                                                .replace(/\s+/g, '-')
-                                                                .trim()}`}>
-                                                                {student.status}
+                                                            <span className={`status ${statusClass}`}>
+                                                                {student.status || '-'}
                                                             </span>
                                                         </div>
                                                         <p className="semester">Semester {student.currentSemester} - {programName}</p>
@@ -588,9 +624,13 @@ function AllStudents() {
                                                         <div className="task-profile">
                                                             <div className="task" style={{ backgroundColor: `${getTaskColor(student.taskCategory, 0.2)}`, color: `${getTaskColor(student.taskCategory, 1)}`, padding: '3px 8px', borderRadius: '5px' }}>{student.taskCategory || 'Unknown'}</div>
                                                             <img
-                                                                src={student.profile_pic.includes('profile-pic.png')
-                                                                    ? student.profile_pic
-                                                                    : `/storage/${student.profile_pic}`}
+                                                                src={
+                                                                    student.profile_pic
+                                                                        ? (student.profile_pic.includes('profile-pic.png')
+                                                                            ? student.profile_pic
+                                                                            : `/storage/${student.profile_pic}`)
+                                                                        : '/images/profile-pic.png'
+                                                                }
                                                                 alt="Profile"
                                                                 className="profile-picc"
                                                             />

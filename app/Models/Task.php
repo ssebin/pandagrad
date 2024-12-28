@@ -11,14 +11,8 @@ use DateTime;
 class Task extends Model
 {
     use HasFactory;
-    protected $fillable = ['name', 'category', 'unique_identifier', 'task_weight', 'intake_id', 'version_number', 'parent_task_id', 'updated_by', 'task_code', 'apply_to_option', 'selected_intake_ids',];
+    protected $fillable = ['name', 'category', 'task_weight', 'intake_id', 'version_number', 'parent_task_id', 'unique_identifier', 'updated_by', 'task_code', 'apply_to_option', 'selected_intake_ids',];
     public $timestamps = true;
-
-    public function setNameAttribute($value)
-    {
-        $this->attributes['name'] = $value;
-        $this->attributes['unique_identifier'] = Str::slug($value, '_');
-    }
 
     public function studyPlans()
     {
@@ -84,9 +78,9 @@ class Task extends Model
         $completionDate = $latestUpdate->completion_date
             ? new DateTime($latestUpdate->completion_date)
             : null;
-        Log::info('Latest Update: ' . json_encode($latestUpdate)); // Log as JSON for better debugging
-        Log::info('Completion Date: ' . ($completionDate ? $completionDate->format('Y-m-d H:i:s') : 'null'));
-        Log::info('Semester End Date: ' . $semesterEnd->format('Y-m-d H:i:s'));
+        //Log::info('Latest Update: ' . json_encode($latestUpdate)); // Log as JSON for better debugging
+        //Log::info('Completion Date: ' . ($completionDate ? $completionDate->format('Y-m-d H:i:s') : 'null'));
+        //Log::info('Semester End Date: ' . $semesterEnd->format('Y-m-d H:i:s'));
 
         // Special case: tasks with specific progress statuses
         if (in_array($progressStatus, ['Pending', 'In Progress'])) {

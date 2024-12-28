@@ -1,11 +1,14 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { retrieveAndDecrypt } from "./storage";
 import { useNavigate } from 'react-router-dom';
 import styles from "./StudyPlanRegistration.module.css";
 import Select, { components } from 'react-select';
+import { StudentContext } from './StudentContext';
 import { use } from "react";
+import { useUser } from './UserContext';
 
 const StudyPlanRegistration = () => {
+    const { user } = useUser();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         semesters_no: "",
@@ -19,55 +22,110 @@ const StudyPlanRegistration = () => {
     const [selectedTasksPerSemester, setSelectedTasksPerSemester] = useState({});
     const [tempSelectedTasksPerSemester, setTempSelectedTasksPerSemester] = useState({});
 
+    const { tasksByIntake, fetchTasks } = useContext(StudentContext);
+
+    const nationality = user.nationality;
+    const intakeId = user.intake_id;
+
     useEffect(() => {
         setSelectedTasksPerSemester({});
         setTempSelectedTasksPerSemester({});
 
-        const nationality = retrieveAndDecrypt('nationality');
+        if (!intakeId) {
+            console.error('User does not have an intake_id');
+            return;
+        }
 
-        fetch('http://127.0.0.1:8000/api/tasks', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${retrieveAndDecrypt('token')}`,
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Fetched tasks data:', data);
+        // Fetch tasks for the user's intake if not already fetched
+        if (!tasksByIntake[intakeId]) {
+            fetchTasks(intakeId);
+        }
+        console.log('Tasks by intake:', tasksByIntake);
+    }, [intakeId, tasksByIntake, fetchTasks]);
 
-                // Sort tasks by ID before grouping them by category
-                data.sort((a, b) => a.id - b.id);
+    useEffect(() => {
+        if (!intakeId) {
+            console.error('User does not have an intake_id');
+            return;
+        }
 
-                // Filter tasks based on nationality
-                const filteredTasks = data.filter(task => {
-                    // Exclude "Bahasa Melayu Course" (ID = 2) for Malaysians
-                    if (task.id === 2 && nationality === "Malaysian") {
-                        return false;
-                    }
-                    return true;
-                });
+        const tasks = tasksByIntake[intakeId];
 
-                // Group tasks by category
-                const categorizedTasks = filteredTasks.reduce((acc, task) => {
-                    if (!acc[task.category]) {
-                        acc[task.category] = [];
-                    }
-                    acc[task.category].push(task);
-                    return acc;
-                }, {});
-                // Ensure each category has an array
-                for (const category in categorizedTasks) {
-                    if (!Array.isArray(categorizedTasks[category])) {
-                        console.warn(`Expected array for category ${category}, got:`, categorizedTasks[category]);
-                        categorizedTasks[category] = []; // Fallback to empty array
-                    }
+        if (tasks) {
+            // Tasks are available, proceed to set tasksOptions
+
+            // Filter tasks based on nationality
+            const filteredTasks = tasks.filter(task => {
+                // Exclude "Bahasa Melayu Course" for Malaysians
+                if (task.unique_identifier === "bahasa_melayu_course" && nationality === "Malaysian") {
+                    return false;
                 }
-                setTasksOptions(categorizedTasks); // Set categorized tasks
-            })
-            .catch(error => {
-                console.error('Error fetching tasks:', error);
+                return true;
             });
-    }, []);
+
+            // Sort tasks by ID before grouping them by category
+            filteredTasks.sort((a, b) => a.id - b.id);
+
+            // Group tasks by category
+            const categorizedTasks = filteredTasks.reduce((acc, task) => {
+                if (!acc[task.category]) {
+                    acc[task.category] = [];
+                }
+                acc[task.category].push(task);
+                return acc;
+            }, {});
+
+            setTasksOptions(categorizedTasks);
+        }
+    }, [intakeId, tasksByIntake, nationality]);
+
+    // useEffect(() => {
+    //     setSelectedTasksPerSemester({});
+    //     setTempSelectedTasksPerSemester({});
+
+    //     fetch('http://127.0.0.1:8000/api/tasks', {
+    //         method: 'GET',
+    //         headers: {
+    //             'Authorization': `Bearer ${retrieveAndDecrypt('token')}`,
+    //         }
+    //     })
+    //         .then(response => response.json())
+    //         .then(data => {
+    //             console.log('Fetched tasks data:', data);
+
+    //             // Sort tasks by ID before grouping them by category
+    //             data.sort((a, b) => a.id - b.id);
+
+    //             // Filter tasks based on nationality
+    //             const filteredTasks = data.filter(task => {
+    //                 // Exclude "Bahasa Melayu Course" (ID = 2) for Malaysians
+    //                 if (task.id === 2 && nationality === "Malaysian") {
+    //                     return false;
+    //                 }
+    //                 return true;
+    //             });
+
+    //             // Group tasks by category
+    //             const categorizedTasks = filteredTasks.reduce((acc, task) => {
+    //                 if (!acc[task.category]) {
+    //                     acc[task.category] = [];
+    //                 }
+    //                 acc[task.category].push(task);
+    //                 return acc;
+    //             }, {});
+    //             // Ensure each category has an array
+    //             for (const category in categorizedTasks) {
+    //                 if (!Array.isArray(categorizedTasks[category])) {
+    //                     console.warn(`Expected array for category ${category}, got:`, categorizedTasks[category]);
+    //                     categorizedTasks[category] = []; // Fallback to empty array
+    //                 }
+    //             }
+    //             setTasksOptions(categorizedTasks); // Set categorized tasks
+    //         })
+    //         .catch(error => {
+    //             console.error('Error fetching tasks:', error);
+    //         });
+    // }, []);
 
     useEffect(() => {
         document.addEventListener("mousedown", handleOutsideClick);
@@ -124,6 +182,19 @@ const StudyPlanRegistration = () => {
             ...prevTempSelectedTasks,
             [semesterIndex]: selectedIds,
         }));
+
+        // Additionally, update formData.semesters
+        setFormData(prevFormData => {
+            const updatedSemesters = [...prevFormData.semesters];
+            updatedSemesters[semesterIndex] = {
+                ...updatedSemesters[semesterIndex],
+                tasks: selectedOptions || [], // Store the full task options if needed
+            };
+            return {
+                ...prevFormData,
+                semesters: updatedSemesters,
+            };
+        });
     };
 
     const CustomClearIndicator = (props) => {
@@ -200,7 +271,7 @@ const StudyPlanRegistration = () => {
 
         // Gather all selected task IDs across semesters
         const selectedTaskIDs = formData.semesters
-            .flatMap(semester => semester.tasks.map(task => task.id));
+            .flatMap(semester => semester.tasks.map(task => task.value));
 
         // Check if all tasks are selected
         const missingTaskIDs = allTaskIDs.filter(taskID => !selectedTaskIDs.includes(taskID));
@@ -224,12 +295,12 @@ const StudyPlanRegistration = () => {
 
         const updatedSemesters = formData.semesters.map(semester => ({
             semester: semester.semester,
-            tasks: semester.tasks.map(task => task.id) // Only save task IDs
+            tasks: semester.tasks.map(task => task.value), // Extract task IDs
         }));
 
         // Add semesters_no to the payload
         const payload = {
-            semesters_no: formData.semesters.length,
+            semesters_no: parseInt(formData.semesters_no),
             semesters: updatedSemesters,
         };
 
@@ -312,6 +383,7 @@ const StudyPlanRegistration = () => {
                                         options={groupedOptions}
                                         value={selectedTasksPerSemester[index] || []}
                                         onChange={(selectedOptions) => handleSelectChange(index, selectedOptions)}
+                                        menuPlacement="auto"
                                         styles={{
                                             control: (provided, state) => ({
                                                 ...provided,
@@ -319,8 +391,8 @@ const StudyPlanRegistration = () => {
                                                 marginBottom: '15px',
                                                 border: '1px solid #DDDDDD',
                                                 borderRadius: '10px',
-                                                fontSize: '0.8em',   
-                                                width: '100%',         
+                                                fontSize: '0.8em',
+                                                width: '100%',
                                                 boxShadow:
                                                     state.isFocused
                                                         ? '0 0 0 1px #192e59'
@@ -374,6 +446,7 @@ const StudyPlanRegistration = () => {
                                                 ...provided,
                                                 padding: '16px',
                                                 fontSize: '0.9em',
+                                                minHeight: 100,
                                             }),
                                         }}
                                         components={{ ClearIndicator: CustomClearIndicator }}

@@ -73,7 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/programs/intakes/{intake}', [IntakeController::class, 'destroy']); // Delete an intake
     Route::get('/programs/{program}/intakes-with-tasks', [IntakeController::class, 'getIntakesWithTasks']); // List intakes for a program with tasks
 
-    Route::get('/tasks/intake/{intake}', [TaskController::class, 'index']); // List tasks for an intake
+    Route::get('/tasks/intake/{intakeId}', [TaskController::class, 'index']); // List tasks for an intake
     Route::post('/tasks/intake/{intake}', [TaskController::class, 'store']); // Add a new task
     Route::put('/tasks/{task}', [TaskController::class, 'update']); // Edit a task
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']); // Delete a task

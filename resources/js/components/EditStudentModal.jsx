@@ -106,15 +106,46 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
             return;
         }
 
-        axios.put(`/api/students/${studentId}`, student)
+        const newStudent = {
+            ...student,
+            program_id: parseInt(student.program_id),
+            intake_id: parseInt(student.intake_id),
+            supervisor_id: student.supervisor_id !== 'null' ? parseInt(student.supervisor_id) : null,
+            // Ensure numbers are converted appropriately
+        };
+
+        axios.put(`/api/students/${studentId}`, newStudent)
             .then(response => {
                 alert('Student updated successfully!');
                 onUpdate(studentId);
                 onClose();
             })
-            .catch(error => {
-                console.error("There was an error updating the student data!", error);
-                alert("There was an error updating the student data. Please try again.");
+            .catch(async (error) => {
+                if (error.response) {
+                    // The request was made, and the server responded with a status code
+                    if (error.response.status === 422) {
+                        // Handle validation errors
+                        const errorData = error.response.data; // Assuming the server sends validation errors in the response body
+                        console.log('Validation error:', errorData);
+
+                        if (errorData.messages && errorData.messages.matric_number) {
+                            alert('A student with the same matric number already exists!');
+                        } else {
+                            alert('Update failed due to validation errors.');
+                        }
+                    } else {
+                        console.error(`HTTP error! status: ${error.response.status}`);
+                        alert('An error occurred during student update.');
+                    }
+                } else if (error.request) {
+                    // The request was made, but no response was received
+                    console.error('No response received:', error.request);
+                    alert('No response from the server. Please check your network connection.');
+                } else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error('Error', error.message);
+                    alert('An error occurred while setting up the request.');
+                }
             });
     };
 
@@ -184,54 +215,59 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                             <option value="">Loading programs...</option>
                         )}
                     </select>
-
-                    <label className={styles.label}>Intake<span style={{ color: 'red' }}> *</span></label>
-                    <select
-                        className={styles.select}
-                        name="intake_id"
-                        value={student.intake_id || ''}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Select the intake</option>
-                        {intakes &&
-                            intakes
-                                .sort((a, b) => a.id - b.id)
-                                .map(intake => (
-                                    <option key={intake.id} value={intake.id}>
-                                        Sem {intake.intake_semester}, {intake.intake_year}
-                                    </option>
-                                ))
-                        }
-                        <option value="null">N/A</option>
-                    </select>
-
-                    <label className={styles.label}>Supervisor<span style={{ color: 'red' }}> *</span></label>
-                    <select
-                        className={styles.select}
-                        name="supervisor_id"
-                        value={student.supervisor_id || "null"} // Use `student.supervisor_id` to match the `value` of the option
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="">Select the supervisor</option>
-                        {supervisors
-                            .filter(
-                                supervisor =>
-                                    supervisor.status !== 'Deactivated' && // Exclude deactivated supervisors
-                                    supervisor.program_id === student.program_id // Ensure programs match
-                            )
-                            .map(supervisor => (
-                                <option
-                                    key={supervisor.id}
-                                    value={supervisor.id} // Use `id` as the `value` for simplicity
-                                >
-                                    Dr. {supervisor.first_name} {supervisor.last_name}
-                                </option>
-                            ))}
-                        <option value="null">N/A</option>
-                    </select>
-
+                    {student.program_id && (
+                        <>
+                            <label className={styles.label}>Intake<span style={{ color: 'red' }}> *</span></label>
+                            <select
+                                className={styles.select}
+                                name="intake_id"
+                                value={student.intake_id || ''}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Select the intake</option>
+                                {intakes &&
+                                    intakes
+                                        .sort((a, b) => a.id - b.id)
+                                        .map(intake => (
+                                            <option key={intake.id} value={intake.id}>
+                                                Sem {intake.intake_semester}, {intake.intake_year}
+                                            </option>
+                                        ))
+                                }
+                                <option value="null">N/A</option>
+                            </select>
+                        </>
+                    )}
+                    {student.program_id && (
+                        <>
+                            <label className={styles.label}>Supervisor<span style={{ color: 'red' }}> *</span></label>
+                            <select
+                                className={styles.select}
+                                name="supervisor_id"
+                                value={student.supervisor_id || "null"} // Use `student.supervisor_id` to match the `value` of the option
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Select the supervisor</option>
+                                {supervisors
+                                    .filter(
+                                        supervisor =>
+                                            supervisor.status !== 'Deactivated' && // Exclude deactivated supervisors
+                                            supervisor.program_id === parseInt(student.program_id) // Ensure programs match
+                                    )
+                                    .map(supervisor => (
+                                        <option
+                                            key={supervisor.id}
+                                            value={supervisor.id} // Use `id` as the `value` for simplicity
+                                        >
+                                            Dr. {supervisor.first_name} {supervisor.last_name}
+                                        </option>
+                                    ))}
+                                <option value="null">N/A</option>
+                            </select>
+                        </>
+                    )}
                     <label className={styles.label}>Research Topic</label>
                     <input className={styles.input} type="text" name="research" value={student.research || ''} onChange={handleChange} />
 

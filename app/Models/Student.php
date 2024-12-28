@@ -39,6 +39,10 @@ class Student extends Authenticatable
         'last_active_at',
     ];
 
+    protected $attributes = [
+        'profile_pic' => '/images/profile-pic.png',
+    ];
+
     protected $appends = ['supervisor_name'];
 
     public function studyPlan()

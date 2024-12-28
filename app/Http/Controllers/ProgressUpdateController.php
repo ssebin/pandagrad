@@ -12,7 +12,6 @@ class ProgressUpdateController extends Controller
     public function index()
     {
         $user = Auth::user(); // Get the authenticated user
-        //log::info('user: ' . $user);
 
         $generalUpdateNames = [
             'update_status' => 'Update Student Status',
@@ -21,25 +20,26 @@ class ProgressUpdateController extends Controller
             'extension_candidature_period' => 'Extension of Candidature Period',
         ];
 
-        // Build the query
-        // $query = DB::table('progress_updates')
-        //     ->join('students', 'progress_updates.student_id', '=', 'students.id')
-        //     ->leftJoin('tasks', 'progress_updates.update_type', '=', 'tasks.unique_identifier')
-        //     ->select(
-        //         'progress_updates.*', // Select all fields from progress_updates
-        //         DB::raw("CONCAT(students.first_name, ' ', students.last_name) as student_name"), // Full student name
-        //         'tasks.name as update_name' // Task name
-        //     )
-        //     ->whereNotNull('tasks.name');
+        $latestTasksSubquery = DB::table('tasks')
+            ->select('unique_identifier', 'intake_id', DB::raw('MAX(version_number) as latest_version_number'))
+            ->groupBy('unique_identifier', 'intake_id');
 
         $query = DB::table('progress_updates')
-        ->join('students', 'progress_updates.student_id', '=', 'students.id')
-        ->leftJoin('tasks', 'progress_updates.update_type', '=', 'tasks.unique_identifier') // Left join for tasks
-        ->select(
-            'progress_updates.*', // Select all fields from progress_updates
-            DB::raw("CONCAT(students.first_name, ' ', students.last_name) as student_name"), // Full student name
-            'tasks.name as task_update_name' // Task name
-        );
+            ->join('students', 'progress_updates.student_id', '=', 'students.id')
+            ->leftJoinSub($latestTasksSubquery, 'latest_tasks', function ($join) {
+                $join->on('progress_updates.update_type', '=', 'latest_tasks.unique_identifier')
+                    ->on('students.intake_id', '=', 'latest_tasks.intake_id');
+            })
+            ->leftJoin('tasks', function ($join) {
+                $join->on('tasks.unique_identifier', '=', 'latest_tasks.unique_identifier')
+                    ->on('tasks.intake_id', '=', 'latest_tasks.intake_id')
+                    ->on('tasks.version_number', '=', 'latest_tasks.latest_version_number');
+            })
+            ->select(
+                'progress_updates.*',
+                DB::raw("CONCAT(students.first_name, ' ', students.last_name) as student_name"),
+                'tasks.name as task_update_name'
+            );
 
         // Filter data based on user role
         if ($user->role === 'admin') {
@@ -109,8 +109,6 @@ class ProgressUpdateController extends Controller
             ];
         });
 
-        //log::info($progressUpdates);
-
         return response()->json($progressUpdates);
     }
 
@@ -122,17 +120,4 @@ class ProgressUpdateController extends Controller
 
         return $status == 1 ? 'Approved' : 'Rejected';
     }
-
-    // public function markAsRead($id)
-    // {
-    //     $progressUpdate = ProgressUpdate::find($id);
-
-    //     if ($progressUpdate) {
-    //         $progressUpdate->read_at = now();
-    //         $progressUpdate->save();
-    //         return response()->json(['message' => 'Marked as read.']);
-    //     }
-
-    //     return response()->json(['message' => 'Request not found.'], 404);
-    // }
 }

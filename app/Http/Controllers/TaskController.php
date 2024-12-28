@@ -9,6 +9,7 @@ use App\Models\Intake;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class TaskController extends Controller
 {
@@ -18,16 +19,32 @@ class TaskController extends Controller
         return response()->json($tasks);
     }
 
-    public function index(Intake $intake)
+    public function index($intakeId)
     {
-        $latestTasks = Task::where('intake_id', $intake->id)
-            ->whereNotIn('id', function ($query) {
-                $query->select('parent_task_id')->from('tasks')->whereNotNull('parent_task_id');
-            })
-            ->get();
+        $sub = Task::where('intake_id', $intakeId)
+            ->select('task_code', DB::raw('MAX(version_number) as max_version'))
+            ->groupBy('task_code');
+
+        $latestTasks = Task::joinSub($sub, 'latest_versions', function ($join) {
+            $join->on('tasks.task_code', '=', 'latest_versions.task_code')
+                ->on('tasks.version_number', '=', 'latest_versions.max_version');
+        })
+            ->where('tasks.intake_id', $intakeId)
+            ->get(['tasks.*']);
 
         return response()->json($latestTasks);
     }
+
+    // public function index(Intake $intake)
+    // {
+    //     $latestTasks = Task::where('intake_id', $intake->id)
+    //         ->whereNotIn('id', function ($query) {
+    //             $query->select('parent_task_id')->from('tasks')->whereNotNull('parent_task_id');
+    //         })
+    //         ->get();
+
+    //     return response()->json($latestTasks);
+    // }
 
     public function store(Request $request, Intake $intake)
     {
@@ -45,6 +62,7 @@ class TaskController extends Controller
         // Create the first version
         $task = $intake->tasks()->create(array_merge($validated, [
             'version_number' => 1, // First version
+            'unique_identifier' => Str::slug($validated['name'], '_'),
             'parent_task_id' => null, // No parent for the first version
             'updated_by' => auth()->id(), // The admin making the change
             'intake_id' => $intake->id, // The intake the task belongs to
@@ -71,6 +89,7 @@ class TaskController extends Controller
 
         $newTask = Task::create(array_merge($validated, [
             'intake_id' => $task->intake_id, // Preserve the intake association
+            'unique_identifier' => $task->unique_identifier, // Preserve the unique_identifier
             'version_number' => $newVersionNumber,
             'parent_task_id' => $task->id, // Link to the previous version
             'updated_by' => auth()->id(), // Track the admin making the update
@@ -147,6 +166,7 @@ class TaskController extends Controller
                 Task::create(array_merge($taskData, [
                     'intake_id' => $intakeId,
                     'version_number' => $task->version_number,
+                    'unique_identifier' => $task->unique_identifier,
                     'parent_task_id' => $existingTask->id,
                     'updated_by' => auth()->id(),
                     'task_code' => $existingTask->task_code,
@@ -163,6 +183,7 @@ class TaskController extends Controller
                     'task_code' => $task->task_code,
                     'apply_to_option' => $applyToOption,
                     'selected_intake_ids' => json_encode($selectedIntakeIds),
+                    'unique_identifier' => $task->unique_identifier,
                 ]));
             }
         }
@@ -276,6 +297,7 @@ class TaskController extends Controller
                     'task_code' => $task->task_code,
                     'apply_to_option' => $task->apply_to_option,
                     'selected_intake_ids' => $task->selected_intake_ids,
+                    'unique_identifier' => $task->unique_identifier,
                 ]);
             } else {
                 // If no existing task in this intake, skip this intake

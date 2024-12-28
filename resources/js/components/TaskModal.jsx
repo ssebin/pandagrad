@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
 import styles from './addsemestermodal.module.css';
 import axios from 'axios';
 import { retrieveAndDecrypt } from "./storage";
 import Select, { components } from 'react-select';
+import { StudentContext } from './StudentContext';
 
 function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, programId, intakeId, isVersionView = false }) {
     const [name, setName] = useState('');
@@ -15,9 +16,10 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
     const [latestVersionNumber, setLatestVersionNumber] = useState(null);
     const token = retrieveAndDecrypt('token');
     const modalRef = useRef(null);
+    const { intakesByProgram, fetchIntakes } = useContext(StudentContext);
 
     useEffect(() => {
-        if (isOpen && task && intakes.length > 0) {
+        if (isOpen && task && intakes && intakes.length > 0) {
             setName(task.name || '');
             setCategory(task.category || '');
             setTaskWeight(task.task_weight || '');
@@ -39,20 +41,11 @@ function TaskModal({ isOpen, onClose, task, onTaskUpdated, onTaskDeleted, progra
         }
     }, [isOpen, task, intakes]);
 
-    const intakeOptions = intakes.map(intake => ({
-        value: intake.id,
-        label: `Semester ${intake.intake_semester} ${intake.intake_year}`,
-    }));
-
     useEffect(() => {
         if (isOpen) {
-            axios.get(`/api/programs/${programId}/intakes`, {
-                headers: { Authorization: `Bearer ${token}` },
-            }).then(response => {
-                setIntakes(response.data);
-            }).catch(error => {
-                console.error('Error fetching intakes:', error);
-            });
+            fetchIntakes(programId);
+            setIntakes(intakesByProgram[programId]);
+            console.log('Intakes:', intakesByProgram[programId]);
         }
     }, [isOpen, programId, token]);
 

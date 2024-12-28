@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { retrieveAndDecrypt } from "./storage.js";
 import Select, { components } from 'react-select';
 
-function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
+function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, student }) {
     const { id } = useParams();
     const [updateType, setUpdateType] = useState('');
     const [evidence, setEvidence] = useState(null);
@@ -17,17 +17,23 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
     const [numSemesters, setNumSemesters] = useState(0);
     const [dropdownVisible, setDropdownVisible] = useState({});
     const [tempSelectedTasks, setTempSelectedTasks] = useState([]);
-    const [progressStatus, setProgressStatus] = useState(""); // For proposal and candidature defence
+    const [progressStatus, setProgressStatus] = useState("");
     const dropdownRefs = useRef({});
     const [formData, setFormData] = useState({
         semesters_no: "",
         semesters: [],
     });
-    const { tasks, nationalities, supervisors, studentsData, currentSemester } = useContext(StudentContext);
+    const { supervisors, currentSemester, tasksByIntake, fetchTasks } = useContext(StudentContext);
     const fileInputRef = useRef(null);
     const dateInputRef = useRef(null);
     const [selectedTasksPerSemester, setSelectedTasksPerSemester] = useState({});
     const [tempSelectedTasksPerSemester, setTempSelectedTasksPerSemester] = useState({});
+
+    const nationality = student.nationality;
+    const intakeId = student.intake_id;
+
+    console.log("nationality: ", nationality);
+    console.log("intakeId: ", intakeId);
 
     useEffect(() => {
         if (isOpen) {
@@ -46,19 +52,51 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
             setDescription('');
             setExtraFields({});
             setDropdownVisible([]);
-            setSelectedTasksPerSemester({});
-            setTempSelectedTasksPerSemester({});
+            setProgressStatus("");
+        }
+    }, [isOpen, studentId]);
 
-            // Filter tasks and group them based on nationality
-            const studentNationality = nationalities[studentId] || 'Unknown'; // Default to 'Unknown'
+    useEffect(() => {
+        setSelectedTasksPerSemester({});
+        setTempSelectedTasksPerSemester({});
+
+        if (!intakeId) {
+            console.error('User does not have an intake_id');
+            return;
+        }
+
+        // Fetch tasks for the user's intake if not already fetched
+        if (!tasksByIntake[intakeId]) {
+            fetchTasks(intakeId);
+        }
+
+        console.log("tasksByIntake: ", tasksByIntake);
+    }, [intakeId, tasksByIntake, fetchTasks]);
+
+    useEffect(() => {
+        if (!intakeId) {
+            console.error('User does not have an intake_id');
+            return;
+        }
+
+        const tasks = tasksByIntake[intakeId];
+
+        if (tasks) {
+            // Tasks are available, proceed to set tasksOptions
 
             // Filter tasks based on nationality
             const filteredTasks = tasks.filter(task => {
-                return !(studentNationality === 'Malaysian' && task.name === 'Bahasa Melayu Course');
+                // Exclude "Bahasa Melayu Course" for Malaysians
+                if (task.unique_identifier === "bahasa_melayu_course" && nationality === "Malaysian") {
+                    return false;
+                }
+                return true;
             });
 
-            // Sort and group tasks by category
+            // Sort tasks by ID before grouping them by category
             filteredTasks.sort((a, b) => a.id - b.id);
+
+            // Group tasks by category
             const categorizedTasks = filteredTasks.reduce((acc, task) => {
                 if (!acc[task.category]) {
                     acc[task.category] = [];
@@ -67,11 +105,9 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                 return acc;
             }, {});
 
-            //console.log('Categorized tasks:', categorizedTasks);
-
-            setTasksOptions(categorizedTasks); // Set categorized tasks
+            setTasksOptions(categorizedTasks);
         }
-    }, [isOpen, tasks, nationalities, studentId]);
+    }, [intakeId, tasksByIntake, nationality]);
 
     const groupedOptions = Object.keys(tasksOptions).map((category) => ({
         label: category,
@@ -178,8 +214,10 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
             setSelectedTasks([]); // Clear selected tasks
             setTempSelectedTasks([]); // Clear temporary selected tasks
             setExtraFields({}); // Reset extra fields (status, grade, etc.)
+            setProgressStatus("");
         }
 
+        setProgressStatus("");
         setNumSemesters(0);
         setFormData(prev => ({
             ...prev,
@@ -276,12 +314,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
     //     }
     // };
 
-    const allStudents = Object.values(studentsData).flat();
-
-    const student = user.role === 'student'
-        ? allStudents.find(s => s.id === parseInt(user.id))
-        : allStudents.find(s => s.id === parseInt(id));
-
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
@@ -353,6 +385,19 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
             ...prevTempSelectedTasks,
             [semesterIndex]: selectedIds,
         }));
+
+        // Additionally, update formData.semesters
+        setFormData(prevFormData => {
+            const updatedSemesters = [...prevFormData.semesters];
+            updatedSemesters[semesterIndex] = {
+                ...updatedSemesters[semesterIndex],
+                tasks: selectedOptions || [], // Store the full task options if needed
+            };
+            return {
+                ...prevFormData,
+                semesters: updatedSemesters,
+            };
+        });
     };
 
     // const handleSelectChange = (selectedOptions) => {
@@ -472,6 +517,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                 }
                 break;
             case 'appointment_supervisor_form':
+            case 'submission_of_appointment_of_supervisor_form':
                 if (!extraFields.supervisor_id) {
                     alert("Please select the name of the supervisor.");
                     return;
@@ -514,12 +560,18 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                 break;
             }
             case 'committee_meeting':
+            case 'committee_of_examiners_meeting':
             case 'jkit_correction_approval':
+            case 'approval_of_correction_by_jkit':
             case 'senate_approval':
             case 'dissertation_chapters_1_2_3':
+            case 'chapters_1_2_and_3_of_dissertation':
             case 'dissertation_all_chapters':
+            case 'all_chapters_of_dissertation':
             case 'dissertation_submission_examination':
+            case 'dissertation_submission_for_examination':
             case 'dissertation_submission_correction':
+            case 'dissertation_submission_after_correction':
                 if (!extraFields.progress_status) {
                     alert("Please select a progress status.");
                     return;
@@ -563,7 +615,9 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                 const allTaskIDs = allTasks.map(task => task.id);
 
                 // Gather all selected task IDs across semesters
-                const selectedTaskIDs = formData.semesters.flatMap(semester => semester.tasks);
+                const selectedTaskIDs = formData.semesters
+                    .flatMap(semester => semester.tasks.map(task => task.value));
+                //const selectedTaskIDs = formData.semesters.flatMap(semester => semester.tasks);
 
                 // Check if all tasks are selected
                 const missingTaskIDs = allTaskIDs.filter(taskID => !selectedTaskIDs.includes(taskID));
@@ -587,7 +641,8 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                     }
                     return {
                         semester: semester.semester,
-                        tasks: semester.tasks,
+                        tasks: semester.tasks.map(task => task.value), // Extract task IDs
+                        //tasks: semester.tasks,
                     };
                 });
 
@@ -998,6 +1053,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                     </>
                 );
             case 'appointment_supervisor_form':
+            case 'submission_of_appointment_of_supervisor_form':
                 return (
                     <>
                         <label className={styles.label}>Name of Supervisor<span style={{ color: 'red' }}> *</span></label>
@@ -1010,7 +1066,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                                 .filter(
                                     supervisor =>
                                         supervisor.status !== 'Deactivated' && // Exclude deactivated supervisors
-                                        supervisor.program === student.program // Ensure programs match
+                                        supervisor.program_id === student.program_id // Ensure programs match
                                 )
                                 .map(supervisor => (
                                     <option key={supervisor.id} value={supervisor.id}>
@@ -1090,12 +1146,18 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                 );
             }
             case 'committee_meeting':
+            case 'committee_of_examiners_meeting':
             case 'jkit_correction_approval':
+            case 'approval_of_correction_by_jkit':
             case 'senate_approval':
             case 'dissertation_chapters_1_2_3':
+            case 'chapters_1_2_and_3_of_dissertation':
             case 'dissertation_all_chapters':
+            case 'all_chapters_of_dissertation':
             case 'dissertation_submission_examination':
+            case 'dissertation_submission_for_examination':
             case 'dissertation_submission_correction':
+            case 'dissertation_submission_after_correction':
                 return (
                     <>
                         <label className={styles.label}>Progress Status<span style={{ color: 'red' }}> *</span></label>
@@ -1143,49 +1205,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user }) {
                                 ))}
                             </optgroup>
                         ))}
-                        {/*                         
-                        <optgroup label="Courses">
-                            <option value="bahasa_melayu_course">Bahasa Melayu Course</option>
-                            <option value="english_language_course">English Language Course</option>
-                            <option value="core_courses">Core Courses</option>
-                            <option value="elective_courses">Elective Courses</option>
-                            <option value="research_methodology_course">Research Methodology Course</option>
-                        </optgroup>
-
-                        
-                        <optgroup label="Other Requirements">
-                            <option value="appointment_supervisor_form">Submission of Appointment of Supervisor Form</option>
-                            <option value="residential_requirement">Residential Requirement</option>
-                        </optgroup>
-
-                       
-                        <optgroup label="Proposal Defence">
-                            <option value="proposal_defence">Proposal Defence</option>
-                        </optgroup>
-
-                       
-                        <optgroup label="Dissertation">
-                            <option value="dissertation_chapters_1_2_3">Chapters 1, 2, and 3 of Dissertation</option>
-                            <option value="dissertation_all_chapters">All Chapters of Dissertation</option>
-                            <option value="dissertation_submission_examination">Dissertation Submission for Examination</option>
-                            <option value="dissertation_submission_correction">Dissertation Submission After Correction</option>
-                        </optgroup>
-
-                        
-                        <optgroup label="Candidature Defence">
-                            <option value="candidature_defence">Candidature Defence</option>
-                        </optgroup>
-
-                        
-                        <optgroup label="Progress Meetings">
-                            <option value="committee_meeting">Committee Meeting</option>
-                        </optgroup>
-
-                        
-                        <optgroup label="Approval">
-                            <option value="jkit_correction_approval">JKIT Correction Approval</option>
-                            <option value="senate_approval">Senate Approval</option>
-                        </optgroup> */}
                     </select>
 
                     {renderExtraFields()}

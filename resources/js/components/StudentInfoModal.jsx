@@ -6,12 +6,26 @@ import { StudentContext } from './StudentContext.jsx';
 
 function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentSemester }) {
     const navigate = useNavigate();
-    const { supervisors, semesters, studentsData } = useContext(StudentContext);
+    const { supervisors, studentsData, intakesByProgram, fetchIntakes, programs } = useContext(StudentContext);
     const [student, setStudent] = useState(selectedStudent || {});
+    const [selectedProgramId, setSelectedProgramId] = useState(null);
+    const [selectedIntakeId, setSelectedIntakeId] = useState(null);
+    const [selectedSupervisorId, setSelectedSupervisorId] = useState(null);
 
     const students = studentsData && Object.keys(studentsData).length > 0
         ? Object.values(studentsData).flat()
         : [];
+
+    const intakes = selectedProgramId ? intakesByProgram[selectedProgramId] || [] : [];
+
+    useEffect(() => {
+        if (selectedStudent) {
+            setStudent(selectedStudent);
+            setSelectedProgramId(selectedStudent.program_id);
+            setSelectedSupervisorId(selectedStudent.supervisor_id);
+            fetchIntakes(selectedStudent.program_id);
+        }
+    }, [selectedStudent]);
 
     useEffect(() => {
         if (!isOpen) {
@@ -25,8 +39,8 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
                 last_name: selectedStudent.last_name || '',
                 siswamail: selectedStudent.siswamail || '',
                 matric_number: selectedStudent.matric_number || '',
-                program: selectedStudent.program || '',
-                intake: selectedStudent.intake || '',
+                program_id: selectedStudent.program_id || '',
+                intake_id: selectedStudent.intake_id || '',
                 supervisor_id: selectedStudent.supervisor_id || null,
                 research: selectedStudent.research || '',
                 cgpa: selectedStudent.cgpa || '',
@@ -41,8 +55,8 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
                 last_name: '',
                 siswamail: '',
                 matric_number: '',
-                program: '',
-                intake: '',
+                program_id: '',
+                intake_id: '',
                 supervisor_id: null,
                 research: '',
                 cgpa: '',
@@ -52,13 +66,35 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
         }
     }, [isOpen, selectedStudent]);
 
-    const calculateStudentSemester = (intake) => {
-        const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
-        const [currentYearStart, currentYearEnd] = currentYearRange.split('/').map(Number);
+    // const calculateStudentSemester = (intake) => {
+    //     const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
+    //     const [currentYearStart, currentYearEnd] = currentYearRange.split('/').map(Number);
 
-        const [intakeSem, intakeYearRange] = intake.split(', ');
-        const [intakeYearStart, intakeYearEnd] = intakeYearRange.split('/').map(Number);
-        const intakeSemNumber = parseInt(intakeSem.split(' ')[1]);
+    //     const [intakeSem, intakeYearRange] = intake.split(', ');
+    //     const [intakeYearStart, intakeYearEnd] = intakeYearRange.split('/').map(Number);
+    //     const intakeSemNumber = parseInt(intakeSem.split(' ')[1]);
+
+    //     let semesterCount = (currentYearStart - intakeYearStart) * 2;
+
+    //     if (currentSem === 2) {
+    //         semesterCount += 1;
+    //     }
+
+    //     if (intakeSemNumber === 2) {
+    //         semesterCount -= 1;
+    //     }
+
+    //     return semesterCount + 1;
+    // };
+
+    const calculateStudentSemester = (intake) => {
+        if (!intake) return null;
+
+        const { semester: currentSem, academic_year: currentYearRange } = currentSemester;
+        const { intake_semester: intakeSem, intake_year: intakeYearRange } = intake;
+
+        const [currentYearStart] = currentYearRange.split('/').map(Number);
+        const [intakeYearStart] = intakeYearRange.split('/').map(Number);
 
         let semesterCount = (currentYearStart - intakeYearStart) * 2;
 
@@ -66,26 +102,58 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
             semesterCount += 1;
         }
 
-        if (intakeSemNumber === 2) {
+        if (intakeSem === 2) {
             semesterCount -= 1;
         }
 
         return semesterCount + 1;
     };
 
+    // const handleChange = (e) => {
+    //     const { name, value } = e.target;
+
+    //     setStudent((prevStudent) => {
+    //         // Create a copy of the current student state
+    //         const updatedStudent = { ...prevStudent, [name]: value };
+
+    //         // Handle special cases
+    //         if (name === 'intake') {
+    //             // Update the semester based on the intake value
+    //             updatedStudent.semester = calculateStudentSemester(value);
+    //         } else if (name === 'supervisor_id') {
+    //             // Update both supervisor_id and supervisor (first name only)
+    //             const selectedSupervisor = supervisors.find(supervisor => supervisor.id === parseInt(value));
+    //             updatedStudent.supervisor_id = selectedSupervisor ? selectedSupervisor.id : null;
+    //             updatedStudent.supervisor = selectedSupervisor ? selectedSupervisor.first_name : null;
+    //         }
+
+    //         return updatedStudent;
+    //     });
+    // };
+
     const handleChange = (e) => {
         const { name, value } = e.target;
 
         setStudent((prevStudent) => {
-            // Create a copy of the current student state
             const updatedStudent = { ...prevStudent, [name]: value };
 
-            // Handle special cases
-            if (name === 'intake') {
-                // Update the semester based on the intake value
-                updatedStudent.semester = calculateStudentSemester(value);
+            if (name === 'program_id') {
+                const programId = value;
+                setSelectedProgramId(programId);
+                setSelectedSupervisorId(null);
+                fetchIntakes(programId);
+
+                // Reset supervisor and intake-related fields
+                updatedStudent.supervisor_id = null;
+                updatedStudent.supervisor = null;
+                updatedStudent.intake_id = null;
+                updatedStudent.semester = null;
+            } else if (name === 'intake_id') {
+                const intakeId = parseInt(value);
+                const selectedIntake = intakes.find(intake => intake.id === intakeId);
+                updatedStudent.intake_id = selectedIntake ? selectedIntake.id : null;
+                updatedStudent.semester = calculateStudentSemester(selectedIntake);
             } else if (name === 'supervisor_id') {
-                // Update both supervisor_id and supervisor (first name only)
                 const selectedSupervisor = supervisors.find(supervisor => supervisor.id === parseInt(value));
                 updatedStudent.supervisor_id = selectedSupervisor ? selectedSupervisor.id : null;
                 updatedStudent.supervisor = selectedSupervisor ? selectedSupervisor.first_name : null;
@@ -94,6 +162,33 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
             return updatedStudent;
         });
     };
+
+    // const handleChange = (e) => {
+    //     const { name, value } = e.target;
+
+    //     setStudent((prevStudent) => {
+    //         const updatedStudent = { ...prevStudent, [name]: value };
+
+    //         if (name === 'program_id') {
+    //             setSelectedProgramId(value);
+    //             // Reset dependent fields
+    //             updatedStudent.intake_id = '';
+    //             updatedStudent.supervisor_id = '';
+    //             setSelectedIntakeId(null);
+    //             setSelectedSupervisorId(null);
+    //             fetchIntakes(value);
+    //         } else if (name === 'intake_id') {
+    //             setSelectedIntakeId(value);
+    //             // Calculate the semester based on intake
+    //             const selectedIntake = intakes.find(intake => intake.id === parseInt(value));
+    //             updatedStudent.semester = calculateStudentSemester(selectedIntake);
+    //         } else if (name === 'supervisor_id') {
+    //             setSelectedSupervisorId(value);
+    //         }
+
+    //         return updatedStudent;
+    //     });
+    // };
 
     const handleSave = () => {
         if (!window.confirm("Are you sure you want to save the changes?")) {
@@ -110,7 +205,15 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
             return;
         }
 
-        axios.put(`/api/students/${student.id}`, student)
+        const newStudent = {
+            ...student,
+            program_id: parseInt(student.program_id),
+            intake_id: parseInt(student.intake_id),
+            supervisor_id: student.supervisor_id !== 'null' ? parseInt(student.supervisor_id) : null,
+            // Ensure numbers are converted appropriately
+        };
+
+        axios.put(`/api/students/${student.id}`, newStudent)
             .then(response => {
                 onUpdate();
                 onClose();
@@ -166,61 +269,76 @@ function StudentInfoModal({ selectedStudent, isOpen, onClose, onUpdate, currentS
                     <input className={styles.input} type="text" name="matric_number" value={student.matric_number || ''} onChange={handleChange} required />
 
                     <label className={styles.label}>Program</label>
-                    <select className={styles.select} name="program" value={student.program || ''} onChange={(e) => {
-                        handleChange(e); // Update the student's program
-                    }} required>
+                    <select
+                        className={styles.select}
+                        name="program_id"
+                        value={student.program_id || ''}
+                        onChange={handleChange}
+                        required
+                    >
                         <option value="">Select the program</option>
-                        <option value="MSE (ST)">MSE (ST)</option>
-                        <option value="MCS (AC)">MCS (AC)</option>
+                        {programs && programs.length > 0 ? (
+                            programs.map((program) => (
+                                <option key={program.id} value={program.id}>
+                                    {program.name}
+                                </option>
+                            ))
+                        ) : (
+                            <option value="">Loading programs...</option>
+                        )}
                     </select>
-
-                    <label className={styles.label}>Intake</label>
-                    <select
-                        className={styles.select}
-                        name="intake"
-                        value={student?.intake || ''}
-                        onChange={handleChange}
-                        required
-                    >
-                        <option value="null">N/A</option>
-                        {semesters &&
-                            Array.from(
-                                new Set(
-                                    semesters.map(
-                                        semester => `Sem ${semester.semester}, ${semester.academic_year}`
+                    {student.program_id && (
+                        <>
+                            <label className={styles.label}>Intake</label>
+                            <select
+                                className={styles.select}
+                                name="intake_id"
+                                value={student.intake_id || ''}
+                                onChange={handleChange}
+                                required
+                            >
+                                <option value="">Select the intake</option>
+                                {intakes &&
+                                    intakes
+                                        .sort((a, b) => a.id - b.id)
+                                        .map(intake => (
+                                            <option key={intake.id} value={intake.id}>
+                                                Sem {intake.intake_semester}, {intake.intake_year}
+                                            </option>
+                                        ))
+                                }
+                                <option value="null">N/A</option>
+                            </select>
+                        </>
+                    )}
+                    {student.program_id && (
+                        <>
+                            <label className={styles.label}>Supervisor</label>
+                            <select
+                                className={styles.select}
+                                name="supervisor_id"
+                                value={student.supervisor_id || "null"} // Use `student.supervisor_id` to match the `value` of the option
+                                onChange={handleChange}
+                                required
+                            >
+                                {supervisors
+                                    .filter(
+                                        supervisor =>
+                                            supervisor.status !== 'Deactivated' && // Exclude deactivated supervisors
+                                            supervisor.program_id === parseInt(student.program_id) // Dynamically filter by the selected program
                                     )
-                                )
-                            ).map(intake => (
-                                <option key={intake} value={intake}>
-                                    {intake}
-                                </option>
-                            ))}                        
-                    </select>
-
-                    <label className={styles.label}>Supervisor</label>
-                    <select
-                        className={styles.select}
-                        name="supervisor_id"
-                        value={student.supervisor_id || "null"} // Use `student.supervisor_id` to match the `value` of the option
-                        onChange={handleChange}
-                        required
-                    >
-                        {supervisors
-                            .filter(
-                                supervisor =>
-                                    supervisor.status !== 'Deactivated' && // Exclude deactivated supervisors
-                                    supervisor.program === student.program // Dynamically filter by the selected program
-                            )
-                            .map(supervisor => (
-                                <option
-                                    key={supervisor.id}
-                                    value={supervisor.id} // Use `id` as the `value` for simplicity
-                                >
-                                    Dr. {supervisor.first_name} {supervisor.last_name}
-                                </option>
-                            ))}
-                        <option value="null">N/A</option>
-                    </select>
+                                    .map(supervisor => (
+                                        <option
+                                            key={supervisor.id}
+                                            value={supervisor.id} // Use `id` as the `value` for simplicity
+                                        >
+                                            Dr. {supervisor.first_name} {supervisor.last_name}
+                                        </option>
+                                    ))}
+                                <option value="null">N/A</option>
+                            </select>
+                        </>
+                    )}
 
                     <label className={styles.label}>Research Topic</label>
                     <input className={styles.input} type="text" name="research" value={student.research || ''} onChange={handleChange} />

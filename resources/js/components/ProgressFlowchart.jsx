@@ -319,7 +319,7 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                                                         </p>
                                                                     </div>
                                                                 )}
-                                                                {update.update_type === 'appointment_supervisor_form' && (
+                                                                {update.update_type === 'appointment_supervisor_form' || update.update_type === 'submission_of_appointment_of_supervisor_form' && (
                                                                     <div className={styles.supervisorDetails}>
                                                                         {update.supervisor_name && (
                                                                             <div>
@@ -552,7 +552,7 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                                                         </p>
                                                                     </div>
                                                                 )}
-                                                                {update.update_type === 'appointment_supervisor_form' && (
+                                                                {update.update_type === 'appointment_supervisor_form' || update.update_type === 'submission_of_appointment_of_supervisor_form' && (
                                                                     <div className={styles.supervisorDetails}>
                                                                         {update.supervisor_name && (
                                                                             <div>

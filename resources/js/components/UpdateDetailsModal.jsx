@@ -4,6 +4,7 @@ import axios from "axios";
 import { useNotifications } from "./NotificationContext";
 import { StudentContext } from './StudentContext';
 import { retrieveAndDecrypt } from "./storage";
+import Select, { components } from 'react-select';
 
 const UpdateDetailsModal = ({ update, onClose, userRole }) => {
     const [status, setStatus] = useState(update.status || "Pending");
@@ -195,6 +196,14 @@ const UpdateDetailsModal = ({ update, onClose, userRole }) => {
         }
     };
 
+    const groupedOptions = Object.keys(tasksOptions).map((category) => ({
+        label: category,
+        options: tasksOptions[category].map((task) => ({
+            value: task.id,
+            label: task.name,
+        })),
+    }));
+
     return (
         <div className={styles.modalOverlay}>
             <div className={styles.modalContent} ref={modalRef}>
@@ -230,31 +239,102 @@ const UpdateDetailsModal = ({ update, onClose, userRole }) => {
                         <>
                             {/* Display the number of semesters */}
                             <label>Number of Semesters</label>
-                            <input
-                                type="text"
-                                value={JSON.parse(update.updated_study_plan).length}
-                                readOnly
-                            />
+                            <input type="text" value={JSON.parse(update.updated_study_plan).length} readOnly />
 
                             {JSON.parse(update.updated_study_plan).map((semester, index) => {
                                 const sortedTasks = semester.tasks.sort((a, b) => a - b); // Sort task IDs
 
-                                // Get task names for the current semester with bullet points
-                                const taskNames = sortedTasks
-                                    .map((taskId) => {
-                                        const task = Object.values(tasksOptions).flat().find((t) => t.id === taskId);
-                                        return task ? `• ${task.name}` : `• Task ID: ${taskId}`;
-                                    })
-                                    .filter(Boolean) // Remove any null or undefined values
-                                    .join('\n'); // Join tasks with a newline to display in textarea
+                                // Build an array of selected task options for the semester
+                                const selectedTasks = sortedTasks.map((taskId) => {
+                                    // Ensure taskId is of the same type as t.id
+                                    const normalizedTaskId = String(taskId); // Convert to string if needed
+
+                                    const taskOption = Object.values(tasksOptions)
+                                        .flat()
+                                        .find((t) => String(t.id) === normalizedTaskId); // Compare as strings
+
+                                    // If taskOption is found, construct the option object
+                                    return taskOption
+                                        ? { value: taskOption.id, label: taskOption.name }
+                                        : { value: normalizedTaskId, label: `Task ID: ${normalizedTaskId}` };
+                                });
 
                                 return (
                                     <div key={index}>
                                         <label>Semester {semester.semester}</label>
-                                        <textarea
-                                            className="semester-textarea"
-                                            value={taskNames || '• No tasks selected'} // Show tasks or fallback
-                                            readOnly
+                                        <Select
+                                            isMulti
+                                            options={groupedOptions}
+                                            value={selectedTasks}
+                                            isDisabled={true} // Makes the select read-only
+                                            components={{ IndicatorSeparator: () => null }}
+                                            styles={{
+                                                control: (provided, state) => ({
+                                                    ...provided,
+                                                    backgroundColor: '#f9f9f9',
+                                                    marginTop: '10px',
+                                                    marginBottom: '15px',
+                                                  
+                                                    paddingLeft: '3px',
+                                                    border: '1px solid #E2E8F0',
+                                                    borderRadius: '10px',
+                                                    fontSize: '0.8em',
+                                                    width: '100%',
+                                                    boxShadow:
+                                                        state.isFocused
+                                                            ? '0 0 0 1px #192e59'
+                                                            : '0 4px 4px rgba(0, 0, 0, 0.1)',
+                                                    '&:hover': {
+                                                        borderColor: '#E2E8F0',
+                                                    },
+                                                }),
+                                                input: (provided) => ({
+                                                    ...provided,
+                                                    margin: '0px',
+                                                    fontSize: '1em',
+                                                }),
+                                                valueContainer: (provided) => ({
+                                                    ...provided,
+                                                    padding: '10px 10px',
+                                                }),
+                                                multiValue: (provided) => ({
+                                                    ...provided,
+                                                    backgroundColor: '#f0f0f0',
+                                                }),
+                                                multiValueLabel: (provided) => ({
+                                                    ...provided,
+                                                    color: '#333',
+                                                    fontSize: '1em',
+                                                }),
+                                                multiValueRemove: (provided) => ({
+                                                    ...provided,
+                                                    color: '#666',
+                                                    ':hover': {
+                                                        backgroundColor: '#e91e255b',
+                                                        color: '#333',
+                                                    },
+                                                }),
+                                                option: (provided, state) => ({
+                                                    ...provided,
+                                                    backgroundColor: state.isSelected
+                                                        ? '#3182ce'
+                                                        : state.isFocused
+                                                            ? '#ebf8ff'
+                                                            : 'white',
+                                                    color: state.isSelected ? 'white' : 'black',
+                                                    padding: '10px',
+                                                }),
+                                                menu: (provided) => ({
+                                                    ...provided,
+                                                    borderRadius: '10px',
+                                                    marginTop: '5px',
+                                                }),
+                                                menuList: (provided) => ({
+                                                    ...provided,
+                                                    padding: '14px',
+                                                    fontSize: '0.8em',
+                                                }),
+                                            }}
                                         />
                                     </div>
                                 );

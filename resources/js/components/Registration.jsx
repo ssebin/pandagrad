@@ -11,17 +11,47 @@ const Registration = () => {
         first_name: "",
         last_name: "",
         matric_number: "",
-        intake: "",
-        program: "",
+        intake_id: "",
+        program_id: "",
         nationality: "",
-        profile_pic: null,
+        profile_pic: "",
     });
-    const { semesters } = useContext(StudentContext);
+    const { studentsData, intakesByProgram, fetchIntakes, programs } = useContext(StudentContext);
     const { setUser } = useUser();
+    const [selectedProgramId, setSelectedProgramId] = useState(null);
+    const [selectedIntakeId, setSelectedIntakeId] = useState(null);
+
+    const students = studentsData && Object.keys(studentsData).length > 0
+        ? Object.values(studentsData).flat()
+        : [];
+
+    const intakes = selectedProgramId ? intakesByProgram[selectedProgramId] || [] : [];
+
+    // const handleInputChange = (e) => {
+    //     const { name, value } = e.target;
+    //     setFormData({ ...formData, [name]: value });
+    // };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+
+        setFormData((prevStudent) => {
+            const updatedStudent = { ...prevStudent, [name]: value };
+
+            if (name === 'program_id') {
+                setSelectedProgramId(value);
+                // Reset dependent fields
+                updatedStudent.intake_id = '';
+                setSelectedIntakeId(null);
+                fetchIntakes(value);
+            } else if (name === 'intake_id') {
+                setSelectedIntakeId(value);
+                // Calculate the semester based on intake
+                const selectedIntake = intakes.find(intake => intake.id === parseInt(value));
+            }
+
+            return updatedStudent;
+        });
     };
 
     const handleFileChange = (e) => {
@@ -30,6 +60,12 @@ const Registration = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Basic validation
+        if (!formData.first_name || !formData.last_name || !formData.matric_number || !formData.program_id || !formData.intake_id || !formData.nationality) {
+            alert('Please fill in all required fields.');
+            return;
+        }
 
         try {
             // Log the current form data state
@@ -64,23 +100,28 @@ const Registration = () => {
                 body: formDataObj
             });
 
-            // Check for a successful response
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            if (response.status === 422) {
+                // Handle validation errors
+                const errorData = await response.json();
+                console.log('Validation error:', errorData);
+
+                if (errorData.messages && errorData.messages.matric_number) {
+                    alert('A student with the same matric number already exists!');
+                } else {
+                    alert('Registration failed due to validation errors.');
+                }
+            } else if (!response.ok) {
+                console.error(`HTTP error! status: ${response.status}`);
+                alert('An error occurred during registration.');
             }
 
             // Parse the JSON response
-            const data = await response.json();
-            console.log('Registration successful:', data);
+            const updatedUser = await response.json();
+            console.log('Registration successful:', updatedUser);
 
-            // Update user context or localStorage with the new data
-            const updatedUser = {
-                ...user,
-                profile_pic: data.profile_pic, // Update the profile picture
-            };
-            setUser(updatedUser);
-
-            encryptAndStore('user', JSON.stringify(updatedUser)); // Update localStorage            
+            // Update user context and localStorage with the new data
+            setUser(updatedUser); // Update the user context
+            encryptAndStore('user', JSON.stringify(updatedUser)); // Update localStorae            
 
             // Redirect to study plan registration
             navigate('/student/register-study-plan');
@@ -98,7 +139,7 @@ const Registration = () => {
                 <div className={styles.content}>
                     <img src="/images/logo.png" alt="Logo" className={styles.logo} />
                     <p className={styles.logoText}>PandaGrad</p>
-                    <p className={styles.description}>Monitor your progress and stay on track with FSKTM's monitoring system.</p>
+                    <p className={styles.description}>Monitor your progress and stay on track with PandaGrad by FSKTM.</p>
                 </div>
             </div>
 
@@ -141,43 +182,43 @@ const Registration = () => {
                             />
                         </div>
                         <div className={styles.formGroup}>
-                            <label className={styles.label}>Intake<span className={styles.required}> *</span></label>
-                            <select
-                                id="intake"
-                                name="intake"
-                                value={formData.intake}
-                                onChange={handleInputChange}
-                                required
-                            >
-                                <option value="" disabled>Select Intake</option>
-                                {semesters &&
-                                    Array.from(
-                                        new Set(
-                                            semesters.map(
-                                                semester => `Sem ${semester.semester}, ${semester.academic_year}`
-                                            )
-                                        )
-                                    ).map(intake => (
-                                        <option key={intake} value={intake}>
-                                            {intake}
-                                        </option>
-                                    ))}
-                            </select>
-                        </div>
-                        <div className={styles.formGroup}>
                             <label className={styles.label} htmlFor="program">Program<span className={styles.required}> *</span></label>
                             <select
-                                id="program"
-                                name="program"
-                                value={formData.program}
+                                id="program_id"
+                                name="program_id"
+                                value={formData.program_id}
                                 onChange={handleInputChange}
                                 required
                             >
-                                <option value="" disabled>Select Program</option>
-                                <option value="MSE (ST)">MSE (ST)</option>
-                                <option value="MCS (AC)">MCS (AC)</option>
+                                <option value="">Select the program</option>
+                                {programs.map((program) => (
+                                    <option key={program.id} value={program.id}>
+                                        {program.name}
+                                    </option>
+                                ))}
                             </select>
                         </div>
+                        {formData.program_id && (
+                            <>
+                                <div className={styles.formGroup}>
+                                    <label className={styles.label}>Intake<span className={styles.required}> *</span></label>
+                                    <select
+                                        id="intake_id"
+                                        name="intake_id"
+                                        value={formData.intake_id}
+                                        onChange={handleInputChange}
+                                        required
+                                    >
+                                        <option value="">Select the intake</option>
+                                        {intakes.map((intake) => (
+                                            <option key={intake.id} value={intake.id}>
+                                                Semester {intake.intake_semester}, {intake.intake_year}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </>
+                        )}
                         <div className={styles.formGroup}>
                             <label className={styles.label} htmlFor="nationality">Nationality<span className={styles.required}> *</span></label>
                             <select

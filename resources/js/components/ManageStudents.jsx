@@ -85,7 +85,7 @@ function ManageStudents() {
     const filterStudents = (students) => {
         return students.filter((student) => {
             const programName = programIdToName[String(student.program_id)] || 'Unknown Program';
-            const intakeName = intakeIdToName[String(student.program_id)] || 'Unknown Program';
+            const intakeName = intakeIdToName[String(student.intake_id)] || 'Unknown Intake';
             return (
                 (student.first_name && student.first_name.toLowerCase().includes(searchKeyword)) ||
                 (student.last_name && student.last_name.toLowerCase().includes(searchKeyword)) ||

@@ -21,7 +21,8 @@
     border-radius: 50px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     padding: 20px 50px;
-    width: 320px;
+    padding-right: 70px;
+    width: 340px;
     height: fit-content;
     display: flex;
     flex-direction: column;
