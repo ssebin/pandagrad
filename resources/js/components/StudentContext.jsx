@@ -1,6 +1,7 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import { retrieveAndDecrypt } from "./storage";
 import axios from 'axios';
+import { useUser } from './UserContext';
 
 export const StudentContext = createContext();
 
@@ -16,14 +17,13 @@ export const StudentProvider = ({ children }) => {
     const [intakesByProgram, setIntakesByProgram] = useState({});
     const [tasksByIntake, setTasksByIntake] = useState({});
     const [intakesById, setIntakesById] = useState({});
+    const { token } = useUser();
+
+    const headers = { Authorization: `Bearer ${token}` };
 
     const fetchStudentsData = async () => {
         try {
             setIsLoading(true);
-
-            // Add Authorization Header
-            const token = retrieveAndDecrypt('token');
-            const headers = { Authorization: `Bearer ${token}` };
 
             // Fetch semester info
             const semesterResponse = await axios.get('/api/semesters', { headers });
@@ -150,9 +150,6 @@ export const StudentProvider = ({ children }) => {
     };
 
     const fetchPrograms = async () => {
-        const token = retrieveAndDecrypt('token');
-        const headers = { Authorization: `Bearer ${token}` };
-
         try {
             const response = await axios.get('/api/programs', { headers });
             setPrograms(response.data);
@@ -163,9 +160,6 @@ export const StudentProvider = ({ children }) => {
     };
 
     const fetchIntakes = async (programId) => {
-        const token = retrieveAndDecrypt('token');
-        const headers = { Authorization: `Bearer ${token}` };
-
         try {
             const response = await axios.get(`/api/programs/${programId}/intakes`, { headers });
             setIntakesByProgram((prevIntakes) => ({
@@ -179,9 +173,6 @@ export const StudentProvider = ({ children }) => {
     };
 
     const fetchTasks = async (intakeId) => {
-        const token = retrieveAndDecrypt('token');
-        const headers = { Authorization: `Bearer ${token}` };
-
         try {
             const response = await axios.get(`/api/tasks/intake/${intakeId}`, { headers });
             setTasksByIntake((prevTasks) => ({
@@ -195,8 +186,6 @@ export const StudentProvider = ({ children }) => {
     };
 
     const fetchSupervisors = async () => {
-        const token = retrieveAndDecrypt('token');
-        const headers = { Authorization: `Bearer ${token}` };
         try {
             const response = await axios.get('/api/lecturers?role=supervisor', { headers });
             setSupervisors(response.data);
@@ -206,9 +195,6 @@ export const StudentProvider = ({ children }) => {
     };
 
     const fetchAllTasks = async () => {
-        const token = retrieveAndDecrypt('token');
-        const headers = { Authorization: `Bearer ${token}` };
-
         try {
             const taskResponse = await axios.get('/api/tasks', { headers });
             setTasks(taskResponse.data);
@@ -218,9 +204,6 @@ export const StudentProvider = ({ children }) => {
     };
 
     const fetchSemesters = async () => {
-        const token = retrieveAndDecrypt('token');
-        const headers = { Authorization: `Bearer ${token}` };
-
         try {
             const response = await axios.get('/api/semesters', { headers });
             setSemesters(response.data); // Save semesters to state
@@ -267,7 +250,6 @@ export const StudentProvider = ({ children }) => {
 
     // Fetch data on component mount
     useEffect(() => {
-        const token = retrieveAndDecrypt('token');
         if (!token) {
             console.warn('Token is missing. StudentContext not initialized.');
             return;
@@ -277,17 +259,6 @@ export const StudentProvider = ({ children }) => {
         fetchSemesters();
         fetchPrograms();
         fetchAllTasks();
-    }, []);
-
-    const token = retrieveAndDecrypt('token');
-
-    useEffect(() => {
-        if (!token) {
-            console.warn('Token is missing. Cannot fetch semesters.');
-            return;
-        }
-
-        fetchSemesters();
     }, [token]);
 
     return (

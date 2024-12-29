@@ -56,19 +56,19 @@ function ManageStudents() {
     }, [programs]);
 
     const programIdToName = programs
-    ? programs.reduce((acc, program) => {
-        acc[String(program.id)] = program.name;
-        return acc;
-    }, {})
-    : {};  
+        ? programs.reduce((acc, program) => {
+            acc[String(program.id)] = program.name;
+            return acc;
+        }, {})
+        : {};
 
     const intakeIdToName = intakesById
-    ? Object.keys(intakesById).reduce((acc, intakeId) => {
-        const intake = intakesById[intakeId];
-        acc[parseInt(intakeId)] = `Sem ${intake.intake_semester}, ${intake.intake_year}`;
-        return acc;
-    }, {})
-    : {};
+        ? Object.keys(intakesById).reduce((acc, intakeId) => {
+            const intake = intakesById[intakeId];
+            acc[parseInt(intakeId)] = `Sem ${intake.intake_semester}, ${intake.intake_year}`;
+            return acc;
+        }, {})
+        : {};
 
 
     const handleRowClick = (student) => {
@@ -199,28 +199,43 @@ function ManageStudents() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {paginatedStudents.map((student, index) => (
-                                    <tr key={student.id} onClick={() => handleRowClick(student)} style={{ cursor: 'pointer' }}>
-                                        <td>{students.length - ((currentPage - 1) * itemsPerPage + index)}</td>
-                                        <td>{student.first_name || '-'}</td>
-                                        <td>{student.last_name || '-'}</td>
-                                        <td>{student.siswamail || '-'}</td>
-                                        <td>{programIdToName[String(student.program_id)] || '-'}</td>
-                                        <td>{intakeIdToName[String(student.intake_id)] || '-'}</td>
-                                        <td>{student.supervisor_name || '-'}</td>
-                                        <td>
-                                            <span className={`status-${(student.status).toLowerCase()}`}>
-                                                {student.status === 'PL'
-                                                    ? 'Personal Leave' :
-                                                    student.status === 'TI'
-                                                        ? 'Terminated (I)'
-                                                        : student.status === 'TF'
-                                                            ? 'Terminated (F)'
-                                                            : student.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {paginatedStudents.map((student, index) => {
+                                    const studentUrl = `/admin/student/${student.id}`;
+                                    const hasFullName = student.first_name && student.last_name;
+                                    return (
+                                        <tr key={student.id} onClick={() => handleRowClick(student)} style={{ cursor: 'pointer' }}>
+                                            <td>{students.length - ((currentPage - 1) * itemsPerPage + index)}</td>
+                                            <td>
+                                                {hasFullName ? (
+                                                    <Link
+                                                        to={studentUrl}
+                                                        onClick={(event) => event.stopPropagation()}
+                                                    >
+                                                        {student.first_name}
+                                                    </Link>
+                                                ) : (
+                                                    student.first_name || '-'
+                                                )}
+                                            </td>
+                                            <td>{student.last_name || '-'}</td>
+                                            <td>{student.siswamail || '-'}</td>
+                                            <td>{programIdToName[String(student.program_id)] || '-'}</td>
+                                            <td>{intakeIdToName[String(student.intake_id)] || '-'}</td>
+                                            <td>{student.supervisor_name || '-'}</td>
+                                            <td>
+                                                <span className={`status-${(student.status).toLowerCase()}`}>
+                                                    {student.status === 'PL'
+                                                        ? 'Personal Leave' :
+                                                        student.status === 'TI'
+                                                            ? 'Terminated (I)'
+                                                            : student.status === 'TF'
+                                                                ? 'Terminated (F)'
+                                                                : student.status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
                             </tbody>
                         </table>
                     ) : (

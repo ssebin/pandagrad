@@ -34,7 +34,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
             setStudent(initialStudent);
             setSelectedProgramId(initialStudent.program_id);
             setSelectedSupervisorId(initialStudent.supervisor_id);
-            fetchIntakes(initialStudent.program_id);
+            //fetchIntakes(initialStudent.program_id);
         }
     }, [initialStudent]);
 

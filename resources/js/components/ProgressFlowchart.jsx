@@ -416,7 +416,7 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                     const status = determineStatus(taskData, lastSemesterEndDates);
                                     //console.log(`Task "${taskData.name}" status:`, status);
 
-                                    console.log("Task Data:", taskData);
+                                    // console.log("Task Data:", taskData);
                                     // console.log("Semester End Date:", semesterEndDate);
                                     //console.log("Status:", status);
 

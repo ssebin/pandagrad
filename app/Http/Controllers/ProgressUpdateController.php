@@ -37,6 +37,7 @@ class ProgressUpdateController extends Controller
             })
             ->select(
                 'progress_updates.*',
+                'students.id as student_id', // Include student_id
                 DB::raw("CONCAT(students.first_name, ' ', students.last_name) as student_name"),
                 'tasks.name as task_update_name'
             );
@@ -62,6 +63,7 @@ class ProgressUpdateController extends Controller
 
             return [
                 'id' => $update->id,
+                'student_id' => $update->student_id,
                 'date' => date('d M Y', strtotime($update->updated_at)), // Format the date
                 'student_name' => $update->student_name,
                 'update_name' => $updateName,

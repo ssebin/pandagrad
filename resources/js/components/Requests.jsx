@@ -4,6 +4,7 @@ import { useUser } from './UserContext';
 import "./Requests.css";
 import UpdateDetailsModal from "./UpdateDetailsModal.jsx";
 import { useNotifications } from "./NotificationContext";
+import { Link } from 'react-router-dom';
 
 const Requests = () => {
     const { user } = useUser();
@@ -18,6 +19,7 @@ const Requests = () => {
     const { notifications = [], fetchRequests, requests } = useNotifications();
 
     const userRole = user.role;
+    console.log("User Role in Requests.jsx:", userRole);
 
     useEffect(() => {
         const loadRequests = async () => {
@@ -221,8 +223,20 @@ const Requests = () => {
 
                                 const isRead = relatedNotification?.read_at !== null;
 
-                                //console.log("Related Notification:", relatedNotification);
-                                //console.log("Is Read:", isRead);
+                                // Determine if 'student_name' should be hyperlinked and set the URL accordingly
+                                let shouldHyperlink = false;
+                                let studentUrl = '';
+
+                                if (userRole === 'admin') {
+                                    shouldHyperlink = true;
+                                    studentUrl = `/admin/student/${request.student_id}`;
+                                } else if (userRole === 'lecturer_both') {
+                                    shouldHyperlink = true;
+                                    studentUrl = `/lecturer/both/student/${request.student_id}`;
+                                } else if (userRole === 'lecturer_supervisor') {
+                                    shouldHyperlink = true;
+                                    studentUrl = `/lecturer/supervisor/student/${request.student_id}`;
+                                }
                                 return (
                                     <tr
                                         key={index}
@@ -233,7 +247,17 @@ const Requests = () => {
                                     >
                                         <td>{requests.length - ((currentPage - 1) * itemsPerPage + index)}</td>
                                         <td>{formatDate(request.date)}</td>
-                                        <td>{request.student_name}</td>
+                                        <td>
+                                            {shouldHyperlink ? (
+                                                <Link to={studentUrl}
+                                                    onClick={(event) => event.stopPropagation()}
+                                                >
+                                                    {request.student_name}
+                                                </Link>
+                                            ) : (
+                                                request.student_name
+                                            )}
+                                        </td>
                                         <td>{request.update_name}</td>
                                         <td>
                                             {request.evidence ? (

@@ -173,7 +173,6 @@ export const NotificationProvider = ({ children }) => {
     };
 
     const fetchNotifications = async () => {
-        const token = retrieveAndDecrypt("token");
         if (!token) {
             console.warn('Token is missing. NotificationContext not initialized.');
             return;
@@ -194,7 +193,6 @@ export const NotificationProvider = ({ children }) => {
     };
 
     const fetchUnreadCount = async () => {
-        const token = retrieveAndDecrypt("token");
         try {
             const response = await axios.get('/api/notifications/unread-count', {
                 headers: {
@@ -208,7 +206,6 @@ export const NotificationProvider = ({ children }) => {
     };
 
     const fetchRequests = async () => {
-        const token = retrieveAndDecrypt('token');
         if (!token) {
             console.warn('Token is missing. NotificationContext not initialized.');
             return;
@@ -330,10 +327,8 @@ export const NotificationProvider = ({ children }) => {
     //     fetchUnreadNotifications(addPopupNotification);
     // }, []); 
 
-    useEffect(() => {
-        const storedToken = retrieveAndDecrypt('token');
-        console.log('StudentContext initialized. Token retrieved:', storedToken);
-    
+
+    useEffect(() => {    
         if (!token) {
             console.warn('Token is missing. NotificationContext not initialized.');
             return;
@@ -400,7 +395,6 @@ export const NotificationProvider = ({ children }) => {
             // Fetch initial data for the logged-in user
             await Promise.all([
                 fetchNotifications(),
-                fetchUnreadCount(),
                 fetchRequests(),
             ]);
         };
