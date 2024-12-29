@@ -1,6 +1,203 @@
-.page-container {
+.analytics-page-container {
     padding: 20px;
     display: flex;
     flex-direction: column;
     height: 100vh;
+    width: 100%; /* Change to full width */
+    box-sizing: border-box;
+}
+
+.dropdowns {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.statistics {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    text-align: left;
+    padding: 20px;
+    width: 200px;
+    height: 70px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.stat-value {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-card h3 {
+    margin: 0;
+    font-size: 24px;
+    color: #333;
+}
+
+.stat-card p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.charts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    gap: 10px;
+}
+
+.chart {
+    width: 45%;
+    min-width: 300px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container {
+    position: relative;
+    height: 300px; /* Adjust the height as needed */
+    overflow: hidden;
+}
+
+.tabs {
+    margin-top: 30px;
+    margin-bottom: 20px;
+    gap: 20px;
+    display: flex;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+}
+
+.tabs-item.active {
+    border-radius: 10px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    padding: 12px 12px;
+    font-weight: bold;
+}
+
+.tabs .nav-item {
+    flex: 0 0 auto; /* Prevent items from shrinking */
+}
+
+.nav-pills .nav-link {
+    background-color: white;
+    color: #849aa9;
+    border-radius: 10px;
+    margin-right: 5px;
+    text-decoration: none;
+}
+
+.nav-pills .nav-link.active {
+    color: rgb(0, 0, 0);
+}
+
+.dropdowns {
+    margin-top: 14px;
+    display: flex;
+    align-items: center;
+    gap: 2px; /* Space between dropdowns */
+    margin-left: 40px; /* Space between tabs and dropdowns */
+}
+
+.dropdowns > * {
+    flex: 0 0 auto; /* Prevent dropdowns from stretching */
+}
+
+.custom-dropdown {
+    position: relative;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.dropdown-toggle {
+    margin-left: 5px;
+    cursor: pointer;
+    padding: 10px 16px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    border: transparent;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    margin-top: 5px;
+    min-width: 90%;
+    z-index: 1000;
+    list-style-type: none;
+    margin-left: -10px;
+}
+
+.dropdown-item {
+    padding: 10px 15px;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+}
+
+.dropdown-item:hover {
+    background-color: #f1f1f1;
+}
+
+.dropdown-toggle .svg-inline--fa {
+    margin-left: 8px;
+}
+
+.left-icon {
+    margin-right: 8px;
+}
+
+.dropdowns {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 20px;
+}
+
+.analytics-h3 {
+    margin-left: 10px;
+}
+
+/* Analytics.css or your main CSS file */
+.tabs-dropdowns-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Add space between tabs and dropdowns */
+    margin-bottom: 20px;
+}
+
+.tabs-container {
+    overflow-x: auto; /* Enable horizontal scrolling */
+    flex-grow: 1; /* Allow tabs to take available space */
 }
