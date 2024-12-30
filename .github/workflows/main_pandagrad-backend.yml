@@ -7,6 +7,14 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'app/**'
+      - 'bootstrap/**'
+      - 'config/**'
+      - 'routes/**'
+      - '.env'
+      - 'composer.json'
+      - 'composer.lock'
   workflow_dispatch:
 
 jobs:
