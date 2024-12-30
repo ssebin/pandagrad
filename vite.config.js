@@ -24,6 +24,6 @@ export default defineConfig({
         historyApiFallback: true,
     },
     build: {
-        outDir: 'build',
+        outDir: 'resources/js/build',
     },
 });
