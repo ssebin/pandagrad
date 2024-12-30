@@ -14,8 +14,9 @@ class Authenticate extends Middleware
      */
     protected function redirectTo($request)
     {
-        if (! $request->expectsJson()) {
-            return route('login');
+        // Check if the request is for a web route
+        if (!$request->expectsJson() && $request->is('web/*')) {
+            return route('auth.google');
         }
     }
 }

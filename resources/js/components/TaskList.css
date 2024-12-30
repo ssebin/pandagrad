@@ -1,0 +1,43 @@
+.task-settings-container {
+    padding: 20px;
+    padding-right: 30px;
+}
+
+.task-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.9em;
+}
+
+.task-table th, .task-table td {
+    border-bottom: 1px solid #E2E8F0; 
+    padding: 20px 10px;
+    text-align: center;
+}
+
+.task-table th {
+    background-color: transparent;
+    color: black;
+    font-weight: bold;
+}
+
+.task-table th:nth-child(4), .task-table td:nth-child(4) {
+    width: 120px; 
+}
+
+.task-table th:nth-child(5), .task-table td:nth-child(5) {
+    width: 120px; 
+}
+
+.task-table th:nth-child(6), .task-table td:nth-child(6) {
+    width: 120px; 
+}
+
+.task-table tbody tr {
+    cursor: pointer;
+}
+
+.task-table tbody tr:hover {
+    background-color: #f5f5f5;
+}

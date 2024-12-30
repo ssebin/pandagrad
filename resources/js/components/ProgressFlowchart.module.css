@@ -1,0 +1,279 @@
+.flowchartWrapper {
+    display: flex;
+    flex-direction: column; /* Stacks semesters and legend vertically */
+    align-items: flex-end;
+}
+
+.flowchartContainer {
+    display: flex;
+    gap: 60px;
+    padding: 0px;
+    width: 100%;
+    overflow-x: auto;
+    margin: 0 auto;
+    padding-bottom: 30px;
+    padding-top: 20px;
+    padding-right: 20px;
+}
+
+.semesterCard {
+    background-color: #D9D9D920;
+    border-radius: 50px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    padding: 20px 50px;
+    padding-right: 70px;
+    width: 340px;
+    height: fit-content;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* Left align for the items */
+    position: relative;
+    word-wrap: break-word; /* Allow text wrapping */
+    overflow-wrap: break-word;
+}
+
+.semesterTitle {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #192E59;
+    margin-bottom: 30px;
+}
+
+.taskItem {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    align-items: flex-start;
+    margin-bottom: 20px; /* Add spacing between tasks */
+    position: relative;
+    padding-left: 40px; /* Adjust to align with dots */
+    color: #0f3d9a;
+    width: 100%; /* Ensure it doesn't limit content width */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #0f3d9a;
+    margin-right: 10px;
+    position: absolute;
+    left: 0;
+    top: 20px;
+}
+
+/* Define classes for different states */
+.completed .dot { background-color: #4CAF50; }
+.pending .dot { background-color: #FFC107; }
+.delayed .dot { background-color: #CE6F00; }
+
+/* Connecting line */
+.line {
+    position: absolute;
+    left: 54.5px; /* Adjust to center with dots */
+    top: 112px;
+    width: 3px;
+    background-color: #0043CE80;
+    height: calc(100% - 180px);
+    z-index: -1; /* Send behind dots */
+}
+
+.updateContainer {
+    margin-top: 10px; /* Add space between updates */
+    line-height: 1.5; /* Improve line height for readability */
+    width: 100%; /* Allow full container width */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* General Task Details */
+.taskDetails {
+    background-color: #f9f9f9;
+    padding: 10px;
+    margin-bottom: 5px;
+    font-size: 12px; /* Consistent font size */
+    line-height: 1.5; /* Improve readability */
+    color: #333; /* Consistent text color */
+}
+
+/* Specific Details */
+.status,
+.description,
+.admin,
+.progressStatus,
+.finalGrade,
+.cgpa,
+.courseGrade,
+.supervisorDetails,
+.residentialRequirement,
+.defenceDetails {
+    background-color: #f9f9f9; /* Consistent background */
+    margin-bottom: 5px; /* Spacing between sections */
+    font-size: 12px; /* Unified font size */
+    color: #333; /* Text color */
+}
+
+.description {
+    font-style: italic;
+}
+
+.courseGrade {
+    display: flex;
+    /* Align text and grades */
+    font-weight: normal; /* Emphasize the course details */
+}
+
+.finalGrade, .cgpa {
+    font-weight: bold; /* Differentiate grade from course name */
+}
+
+.description {
+    white-space: pre-line;
+}
+
+.link,
+.evidence {
+    word-wrap: break-all;
+    overflow-wrap: break-all;
+    overflow: hidden;
+    color: '#0043CE';
+    text-decoration: 'underline';
+    margin-bottom: 0px;
+    font-size: 12px; 
+    white-space: normal;
+}
+
+/* Evidence and Links */
+/* .evidence,
+.link {
+    margin-top: 5px;
+    color: #0043CE; /* Link color 
+    text-decoration: underline; /* Underline for links 
+    font-size: 10px; /* Match other details 
+} */
+
+/* Date styling 
+.date {
+    font-size: 0.8em; /* Smaller font for the date 
+    color: #555;
+    margin-top: 5px;
+}*/
+
+.semesterDate {
+    font-size: 0.7em; /* Smaller font size for the date */
+}
+
+.taskGroup {    
+    background-color: #f9f9f9;
+    /* padding: 4px 10px; */
+    /*border-left: 3px solid #0043CE80; /* Green line for residential requirement */
+    margin-bottom: 5px;
+    word-wrap: break-word; /* Ensures long words or URLs wrap to the next line */
+    overflow-wrap: break-word; /* Alternative for broader browser support */
+    word-break: break-all;
+    overflow: hidden; 
+    max-width: 100%;
+    box-sizing: border-box;
+    padding-right: 20px;
+}
+
+.taskGroup p {
+    margin: 5px 0;
+    font-size: 12px;
+}
+
+.taskGroup a {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%; /* Ensures the link respects the container's width */
+    display: inline-block; /* Ensures wrapping works properly */
+    text-overflow: ellipsis; /* Optional: if you want to truncate long links */
+    white-space: normal;
+}
+
+.date {
+    font-size: 12px; /* Unified font size */
+    font-weight: bold;
+}
+
+.admin, .recordDate {
+    font-size: 12px;
+    margin-top: 0px;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+.onTrackCompleted {
+    color: darkgreen;
+}
+
+.delayedCompleted {
+    color: #a22c0f;
+}
+
+.onTrackPending {
+    color: #0f3d9a;
+}
+
+.delayedPending {
+    color: #fe9800;
+}
+
+/* Legend styling */
+.legend {
+    margin-bottom: 20px; 
+    margin-top: 20px;
+    align-self: flex-start;
+    background-color: #D9D9D920;
+    border-radius: 50px;
+    padding: 20px 40px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    width: auto;
+    text-align: center; 
+    margin-right: 20px;
+}
+
+.legendTitle {
+    font-size: 1em;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.legendItem {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Center-align items */
+    margin-bottom: 10px;
+    line-height: 20px; /* Add spacing between dot and text */
+    font-size: 0.8em;
+}
+
+.legendDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 20px;
+    background-color: #0043CE;
+}
+
+.legendDot.completed {
+    background-color: darkgreen; /* Completed color */
+}
+
+.legendDot.completedDelayed {
+    background-color: #a22c0f; /* Completed color */
+}
+
+.legendDot.pending {
+    background-color: #0f3d9a; /* Pending color */
+}
+
+.legendDot.delayed {
+    background-color: #dc3545; /* Delayed color */
+}
+
+.legendDot.pendingDelayed {
+    background-color: #feae00; /* Pending Delayed color */
+}

@@ -1,0 +1,73 @@
+.unauthorized-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh; 
+    background: rgba(25, 46, 89, 0.7);
+    color: white;
+    text-align: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.unauthorized-content {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 500px;
+    box-shadow: 5px 0 10px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    z-index: 2;
+}
+
+.unauthorized-icon {
+    font-size: 4rem;
+    color: #FF0000;
+    margin-bottom: 20px;
+}
+
+.unauthorized-title {
+    font-size: 2rem;
+    color: black; 
+    margin-bottom: 20px;
+}
+
+.unauthorized-message {
+    font-size: 1.2rem;
+    color: #555;
+    margin-bottom: 30px;
+}
+
+.unauthorized-home-button {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #192E59; 
+    color: white;
+    text-decoration: none;
+    border-radius: 10px;
+}
+
+.unauthorized-home-button:hover {
+    background-color: rgb(1, 1, 75);
+    text-decoration: none;
+}
+
+.backgroundImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(25, 46, 89, 0.7);
+    z-index: 1;
+}

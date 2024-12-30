@@ -1,12 +1,68 @@
 .side-nav {
     width: 230px;
     height: 100vh;
-    background-color: #192E59;
-    box-shadow: 5px 0 5px -5px rgba(0, 0, 0, 0.2);
+    /* background-color: #192E59; */
+    background: linear-gradient(90deg, #192e59, #0a193b);
+    /* box-shadow: 5px 0 5px -5px rgba(0, 0, 0, 0.2); */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     position: relative;
+    background-clip: padding-box;
+    box-shadow: 5px 0 10px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.5);
+    position: relative;
+    border-radius: 0px 30px 30px 0px;
+}
+
+.side-nav.collapsed {
+    width: 80px;
+}
+
+.side-nav.collapsed .menu-item {
+    justify-content: center;
+    padding: 10px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    overflow: visible;
+}
+
+.side-nav.collapsed .menu-item .menu-icon {
+    margin-right: 0;
+}
+
+.side-nav .collapse-button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 20px;
+    margin: 10px;
+    cursor: pointer;
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    left: unset;
+}
+
+.side-nav.collapsed .collapse-button {
+    right: 40%; /* Center horizontally when collapsed */
+    transform: translateX(50%);
+}
+
+.side-nav .icon-container {
+    position: relative; /* Ensures .notification-dot is positioned relative to this container */
+    display: inline-block;
+}
+
+.notification-dot {
+    position: absolute;
+    top: -8px;
+    right: -14px;
+    width: 8px;
+    height: 8px; 
+    background-color: red; 
+    border-radius: 50%;
+    z-index: 9999; 
+    pointer-events: none;
 }
 
 .side-nav .top-section {
@@ -27,16 +83,16 @@
     width: 28px;
     position: absolute;
     top: 16px;
-    left: 28px;
+    left: 26px;
 }
 
 .side-nav .logo-text {
     font-weight: 200;
     font-size: 1.1em;
-    color: #FFFFFF;
+    color: #ffffff;
     position: absolute;
     top: 22px;
-    left: 74px;
+    left: 72px;
 }
 
 .side-nav .divider {
@@ -74,9 +130,8 @@
 .side-nav .bottom-section {
     text-align: center;
     margin-top: auto;
-    position: absolute; 
-    bottom: 120px;
-    left: -230px;
+    position: absolute;
+    bottom: 40px;
     width: 100%;
 }
 
@@ -98,7 +153,17 @@
 
 @media (max-width: 768px) {
     .side-nav .bottom-section {
-        position: static; 
-        padding-bottom: 20px; 
+        position: static;
+        padding-bottom: 20px;
     }
+}
+
+.notification-badge {
+    background-color: red;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 3px 6px;
+    border-radius: 30%;
+    margin-left: 10px;
 }

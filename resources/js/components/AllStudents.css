@@ -1,8 +1,18 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    font-family: 'Roboto', sans-serif;
+}
+
 .all-students {
-    padding: 20px;
+    padding-top: 20px;
+    padding-right: 20px;
+    padding-left: 20px;
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    overflow: auto;
 }
 
 .header {
@@ -11,8 +21,7 @@
     align-items: center;
     margin-bottom: 20px;
     position: sticky;
-    top: 0;
-    background: white;
+    background: none;
     z-index: 10;
 }
 
@@ -39,7 +48,7 @@
     padding-left: 10px;
     border: 1px solid #f0e2e5;
     background-color: #fff;
-    font-size: 0.9rem;
+    font-size: 0.9rem;    
 }
 
 .search-bar input {
@@ -49,10 +58,15 @@
     box-shadow: none;
     font-size: 0.9rem;
     flex-grow: 1;
+    margin-top: 0;
 }
 
 .search-bar .search {
     margin-left: 10px;
+}
+
+.search-bar :hover {
+    cursor: text;
 }
 
 .filter-button,
@@ -64,10 +78,11 @@
     cursor: pointer;
     display: flex;
     align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .filter-button {
-    background-color: #192E59;
+    background: linear-gradient(180deg, #192E59, #0A193B);
     color: white;
 }
 
@@ -76,7 +91,7 @@
 }
 
 .add-student-button {
-    background-color: #192E59;
+    background: linear-gradient(180deg, #192E59, #0A193B);
     color: white;
     min-width: fit-content;
 }
@@ -91,7 +106,6 @@
     overflow-y: auto;
     flex-grow: 1;
     white-space: nowrap; 
-    margin-bottom: 110px;
 }
 
 .student-columns {
@@ -138,6 +152,12 @@
     overflow: hidden;
 }
 
+.student-card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Larger shadow for depth */
+    transform: translateY(-2px); /* Slight lift effect */
+    background: linear-gradient(120deg, #f5f5f5, #ffffff); /* Subtle gradient on hover */
+}
+
 .card-header {
     display: flex;
     justify-content: space-between;
@@ -162,6 +182,36 @@
 
 .card-header .status.inactive {
     background-color: #FFBF08;
+    color: white;
+}
+
+.card-header .status.got {
+    background-color: #43a1ff;
+    color: white;
+}
+
+.card-header .status.non-got {
+    background-color: #6A1B9A; 
+    color: white;
+}
+
+.card-header .status.pl {
+    background-color: #fe4cd7; 
+    color: white;
+}
+
+.card-header .status.withdrawn {
+    background-color: #ff6637; 
+    color: white;
+}
+
+.card-header .status.ti {
+    background-color: #424242;     
+    color: white;
+}
+
+.card-header .status.tf {
+    background-color: #D32F2F; 
     color: white;
 }
 
@@ -204,10 +254,11 @@
     align-items: center;
 }
 
-.profile-pic {
+.profile-picc {
     width: 24px;
     height: 24px;
     border-radius: 50%;
+    object-fit: cover;
 }
 
 .progress {
@@ -230,6 +281,7 @@
     flex-grow: 1;
     position: relative;
     overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar .progress-completed {
@@ -238,6 +290,8 @@
     position: absolute;
     left: 0;
     top: 0;
+    transition: width 0.4s ease-in-out;
+    background-size: 200% 100%;
 }
 
 .filter-popup {
@@ -247,7 +301,7 @@
     background: white;
     border: 1px solid #E2E8F0;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     padding: 20px;
     z-index: 1000;
     box-sizing: border-box;
@@ -270,11 +324,12 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    margin-bottom: 10px;
+    margin-bottom: 3px;
     font-size: 0.8em;
     padding: 0;
     text-align: left;
     font-weight: 300;
+    cursor: pointer;
 }
 
 .filter-category input[type="checkbox"] {
@@ -299,13 +354,14 @@
     color: #192E59;
     cursor: pointer;
     text-align: end;
+    padding: 0;
 }
 
 .add-student-popup {
-    position: fixed;
-    top: 50%;
+    position: absolute;
+    top: 50px; /* Adjust to where the popup starts */
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateX(-50%); /* Center horizontally */
     width: 350px;
     background: white;
     border: 1px solid #E2E8F0;
@@ -314,6 +370,8 @@
     padding: 20px;
     z-index: 1000;
     margin-bottom: 10px;
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .add-student-popup form {
@@ -324,7 +382,7 @@
 
 .add-student-popup label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 0px;
     font-size: 0.7em;
     color: #666;
     margin-left: 10px;
@@ -335,7 +393,7 @@
     align-items: center;
     width: calc(100% - 20px);
     padding: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
     border: 1px solid #E2E8F0;
     border-radius: 10px;
     font-size: 0.8em;
@@ -353,7 +411,7 @@
 }
 
 .add-student-popup .add-button {
-    background-color: #192E59;
+    background: linear-gradient(180deg, #192E59, #0A193B);
     color: white;
     padding-left: 50px;
     padding-right: 50px;

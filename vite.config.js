@@ -10,4 +10,20 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        host: '127.0.0.1',
+        port: 5173,
+        hmr: {
+            host: '127.0.0.1',
+            port: 5173,
+        },
+        proxy: {
+            '/auth': 'http://127.0.0.1:8000',
+            '/api': 'http://127.0.0.1:8000',
+        },
+        historyApiFallback: true,
+    },
+    build: {
+        outDir: 'build',
+    },
 });

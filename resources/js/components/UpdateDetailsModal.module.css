@@ -1,0 +1,152 @@
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modalContent {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    width: 350px;
+    max-height: 80%;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-size: 0.9em;
+}
+
+.modalContent form {
+    display: flex;
+    flex-direction: column;
+}
+
+.modalContent label {
+    margin-bottom: 0px;
+    font-size: 0.8em;
+    color: #666;
+}
+
+/* input,
+textarea,
+select {
+    width: 100%;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+textarea {
+    resize: none;
+} */
+
+.modalContent input,
+.modalContent select,
+.modalContent textarea,
+.modalContent a {
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    font-size: 0.9em;
+    background-color: white;
+    font-family: 'Roboto', sans-serif;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    white-space: pre-line;
+    word-wrap: break-word; /* Ensures long words or URLs wrap to the next line */
+    overflow-wrap: break-word; /* Alternative for broader browser support */
+}
+
+.modalContent textarea {
+    height: auto; /* Adjust height to fit content */
+    min-height: 100px; /* Set a minimum height */
+    max-height: 300px; /* Optional, limit maximum height */
+    resize: none; /* Disable resizing for consistent UI */
+    margin-top: 10px;
+    width: 93%;
+}
+
+.modalContent input[type="date"] {
+    font-family: 'Roboto', sans-serif;
+}
+
+
+.modalContent input[readonly],
+.modalContent textarea[readonly],
+.modalContent a {
+     /* Grey out text for readonly inputs */
+    background-color: #f9f9f9;
+}
+
+.evidenceLink {
+    word-wrap: break-word; /* Ensures long words or URLs wrap to the next line */
+    overflow-wrap: break-word; /* Alternative for broader browser support */
+    word-break: break-all;
+    overflow: hidden; 
+}
+
+.buttons {
+    padding: 10px 0px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.cancelButton,
+.addButton {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.cancelButton {
+    background-color: transparent;
+    color: #192E59;
+    border: none;
+    cursor: pointer;
+}
+
+.unreadButton {
+    background-color: darkgreen;
+    color: white;
+    padding: 10px 40px;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.saveButton {
+    background: linear-gradient(180deg, #192E59, #0A193B);
+    color: white;
+    padding: 10px 40px;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.addButton {
+    background: linear-gradient(180deg, #192E59, #0A193B);
+    color: white;
+    padding: 10px 50px;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}

@@ -16,3 +16,31 @@
 .breadcrumbSeparator {
     margin: 0 10px; 
 }
+
+.add-program-button {
+    background: #192E59;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    float: right;
+    margin-left: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    align-items: end;
+}
+
+.add-program-button:hover {
+    background-color: #0F1E42;
+}
+
+.program-page-container {
+    padding: 20px;
+    padding-top: 0px;
+    padding-left: 0px;
+    margin-top: -20px;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    max-width: 600px; 
+}

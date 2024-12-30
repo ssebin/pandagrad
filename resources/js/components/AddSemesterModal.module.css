@@ -26,24 +26,60 @@
 }
 
 .modalContent label {
-    margin-bottom: 5px;
-    font-size: 0.9em;
+    margin-bottom: 0px;
+    font-size: 0.8em;
     color: #666;
 }
 
 .modalContent input,
-.modalContent select {
+.modalContent select,
+.modalContent textarea {
     padding: 10px;
-    margin-bottom: 10px;
-    border: 1px solid #E2E8F0;
+    margin-bottom: 15px;
+    border: 1px solid #e2e8f0;
     border-radius: 10px;
     font-size: 0.9em;
     background-color: white;
-    font-family: 'Roboto', sans-serif;
+    font-family: "Roboto", sans-serif;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    white-space: pre-line;
+    word-wrap: break-word; /* Ensures long words or URLs wrap to the next line */
+    overflow-wrap: break-word; /* Alternative for broader browser support */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+.modalContent textarea {
+    height: auto;
+    min-height: 140px;
+    max-height: 300px;
+    resize: none;
+    margin-top: 10px;
+    width: 93%;
 }
 
 .modalContent input[type="date"] {
-    font-family: 'Roboto', sans-serif;
+    font-family: "Roboto", sans-serif;
+}
+
+.modalContent input[readonly],
+.modalContent textarea[readonly],
+.modalContent a {
+    /* Grey out text for readonly inputs */
+    background-color: #f9f9f9;
+}
+
+.disabledSelect {
+    background-color: #f9f9f9 !important;
+    color: black;     
+    cursor: default;    
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);                  
+}
+
+.disabledSelect option {
+    color: black;
 }
 
 .buttons {
@@ -66,13 +102,13 @@
 
 .cancelButton {
     background-color: transparent;
-    color: #192E59;
+    color: #192e59;
     border: none;
     cursor: pointer;
 }
 
 .deleteButton {
-    background-color: #E91E25;
+    background-color: #e91e25;
     color: white;
     padding: 10px 40px;
     cursor: pointer;
@@ -82,7 +118,7 @@
 }
 
 .saveButton {
-    background-color: #192E59;
+    background: linear-gradient(180deg, #192e59, #0a193b);
     color: white;
     padding: 10px 50px;
     cursor: pointer;
@@ -92,11 +128,53 @@
 }
 
 .addButton {
-    background-color: #192E59;
+    background: linear-gradient(180deg, #192e59, #0a193b);
     color: white;
     padding: 10px 50px;
     cursor: pointer;
     border: none;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.uploadButton {
+    background: linear-gradient(180deg, #192e59, #0a193b);
+    color: white;
+    padding: 10px 40px;
+    cursor: pointer;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+    position: relative;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #ccc;
+    margin: 0 10px;
+}
+
+.dividerText {
+    font-size: 0.9em;
+    color: #666;
+    white-space: nowrap;
+}
+
+.successList,
+.errorList {
+    line-height: 20px;
+}
+
+.h3heading {
+    text-align: center;
 }
