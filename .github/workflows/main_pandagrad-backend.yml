@@ -30,10 +30,9 @@ jobs:
       - name: Run composer install if composer.json exists
         if: steps.check_files.outputs.files_exists == 'true'
         run: composer validate --no-check-publish && composer install --prefer-dist --no-progress
-        
+
       - name: Zip artifact for deployment
-        run: |
-          zip -r release.zip . -x "resources/js/*" "node_modules/*" "*.git/*"
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
