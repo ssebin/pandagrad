@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import styles from './addsemestermodal.module.css';
+import styles from './AddSemesterModal.module.css';
 import axios from 'axios';
 import { retrieveAndDecrypt } from "./storage";
 import Select, { components } from 'react-select';

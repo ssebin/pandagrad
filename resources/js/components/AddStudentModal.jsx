@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import styles from './addsemestermodal.module.css';
+import styles from './AddSemesterModal.module.css';
 import axios from './axiosConfig.js';
 import { use } from 'react';
 
