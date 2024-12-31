@@ -7,8 +7,7 @@ import { chartsData } from './Charts';
 
 import { faUniversity, faFileExport } from '@fortawesome/free-solid-svg-icons';
 
-function Dropdowns() {
-    const [selectedProgram, setSelectedProgram] = useState('MSE (ST)');
+function Dropdowns({ selectedProgram, onProgramChange }) {
     const [selectedExport, setSelectedExport] = useState('Export');
 
     const programItems = ['MSE (ST)', 'MCS (AC)'];
@@ -23,7 +22,7 @@ function Dropdowns() {
                     label={selectedProgram}
                     items={programItems}
                     icon={faUniversity}
-                    onSelect={(item) => setSelectedProgram(item)}
+                    onSelect={(item) => onProgramChange(item)}
                 />
             )}
             <CustomDropdown

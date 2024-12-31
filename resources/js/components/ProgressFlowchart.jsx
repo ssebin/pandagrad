@@ -431,17 +431,18 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                                     {(() => {
                                                         // Check the task name and update type
                                                         if (
-                                                            ["Core Courses", "Elective Courses", "Research Methodology Course"].includes(
-                                                                taskData.name
-                                                            )
+                                                            ["Core Courses", "Elective Courses", "Research Methodology Course"].includes(taskData.name)
                                                         ) {
                                                             const updateTypeToCredits = {
-                                                                "core_courses": 3, // 1 course = 3 credits
-                                                                "elective_courses": 3,
-                                                                "research_methodology_course": 3,
+                                                                core_courses: { creditsPerCourse: 3, totalCredits: 12 },
+                                                                elective_courses: { creditsPerCourse: 3, totalCredits: 6 },
+                                                                research_methodology_course: { creditsPerCourse: 3, totalCredits: 3 },
                                                             };
 
-                                                            // Calculate credits for courses
+                                                            // Get the appropriate type key
+                                                            const typeKey = taskData.name.toLowerCase().replace(/ /g, "_");
+
+                                                            // Check if there are progress updates to calculate credits
                                                             if (taskData.progress_updates && taskData.progress_updates.length > 0) {
                                                                 const uniqueCourses = new Set();
 
@@ -454,18 +455,22 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                                                     if (update.course_name_5) uniqueCourses.add(update.course_name_5);
                                                                 });
 
+                                                                // Calculate the number of courses
                                                                 const courseCount =
                                                                     taskData.name === "Research Methodology Course"
                                                                         ? 1 // Fixed 1 course
                                                                         : uniqueCourses.size;
 
-                                                                const credits = courseCount * updateTypeToCredits[taskData.name.toLowerCase().replace(/ /g, "_")];
+                                                                // Calculate total credits
+                                                                const credits =
+                                                                    courseCount * updateTypeToCredits[typeKey].creditsPerCourse;
 
-                                                                return `${taskData.name} - ${credits} credits`;
+                                                                // Display in the format `${credits} / ${totalCredits} credits`
+                                                                return `${taskData.name} - ${credits} / ${updateTypeToCredits[typeKey].totalCredits} credits`;
                                                             }
 
-                                                            // No updates, just show the task name
-                                                            return taskData.name;
+                                                            // If no progress updates, show `0 / ${totalCredits} credits`
+                                                            return `${taskData.name} - 0 / ${updateTypeToCredits[typeKey].totalCredits} credits`;
                                                         }
 
                                                         // Default for non-course-related tasks
@@ -627,7 +632,7 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                                                     </div>
                                                                 </div>
                                                                 <div className={styles.admin}>
-                                                                    Date of Update: <i>{update.completion_date ? new Date(update.completion_date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</i>
+                                                                    Date of Change: <i>{update.completion_date ? new Date(update.completion_date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</i>
                                                                 </div>
                                                                 <div className={styles.admin}>
                                                                     Updated by {update.admin_name || "Admin"} on <i>{update.updated_at ? new Date(update.updated_at).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</i>

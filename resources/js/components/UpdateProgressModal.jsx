@@ -497,6 +497,15 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
                     alert("Please provide the CGPA.");
                     return;
                 }
+                const cgpa = parseFloat(extraFields.cgpa);
+                if (isNaN(cgpa) || cgpa < 0 || cgpa > 4.0) {
+                    alert("Please provide a valid CGPA between 0.0 and 4.0.");
+                    return;
+                }
+                if (!/^\d(\.\d{1,2})?$/.test(extraFields.cgpa)) {
+                    alert("Please provide a valid CGPA with at most 2 decimal places.");
+                    return;
+                }
                 if (!extraFields.num_courses) {
                     alert("Please select a number of courses.");
                     return;

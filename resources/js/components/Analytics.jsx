@@ -7,6 +7,7 @@ import Charts from './Charts';
 
 function Analytics() {
     const [selectedSemester, setSelectedSemester] = useState('sem1');
+    const [selectedProgram, setSelectedProgram] = useState('MSE (ST)');
 
     return (
         <div className="analytics-page-container">
@@ -16,11 +17,20 @@ function Analytics() {
                     selectedSemester={selectedSemester}
                     onSemesterChange={(semester) => setSelectedSemester(semester)}
                 />
-                <Dropdowns />
+                <Dropdowns
+                    selectedProgram={selectedProgram}
+                    onProgramChange={(program) => setSelectedProgram(program)}
+                />
             </div>
             <div id="pdf-content">
-                <Statistics selectedSemester={selectedSemester} />
-                <Charts selectedSemester={selectedSemester} />
+                <Statistics
+                    selectedSemester={selectedSemester}
+                    selectedProgram={selectedProgram}
+                />
+                <Charts
+                    selectedSemester={selectedSemester}
+                    selectedProgram={selectedProgram}
+                />
             </div>
         </div>
     );

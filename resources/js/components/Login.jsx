@@ -75,6 +75,7 @@ function Login() {
                         if (user.has_study_plan) {
                             navigate('/student/my-progress');
                         } else {
+                            alert('As this is your first time logging in, you will be redirected to the Registration page to set up your profile and study plan.');
                             navigate('/student/register');
                         }
 

@@ -839,6 +839,7 @@ class StudentController extends Controller
                 // Get the latest update for this task
                 $latestUpdate = $task->progressUpdates->sortByDesc('updated_at')->first();
                 $taskStatus = $task->determineStatus($semesterEndDate);
+                Log::info('Task Name:', [$task->name]);
                 Log::info('Task Status:', [$taskStatus]);
 
                 // Check for delayed pending tasks
@@ -1863,6 +1864,7 @@ class StudentController extends Controller
 
         if ($rollbackData) {
             $this->rollbackChanges($rollbackData, $progressUpdate->student_id);
+            StudyPlan::where('student_id', $progressUpdate->student_id)->first()->refresh();
         }
 
         // Get the admin's name
@@ -1892,6 +1894,8 @@ class StudentController extends Controller
             return response()->json(['error' => 'Invalid intake ID'], 400);
         }
         $currentSemester = $this->calculateStudentSemester($intake, $currentSemesterData);
+
+        $progressUpdate = ProgressUpdate::find($progressUpdateId);
 
         $this->updateCurrentTask($progressUpdate->student_id);
         $this->calculateAndUpdateProgress($progressUpdate->student_id, $currentSemester);

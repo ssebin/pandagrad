@@ -293,6 +293,13 @@ const StudyPlanRegistration = () => {
             return;
         }
 
+        // Check if the student selected more than 5 semesters
+        if (formData.semesters_no > 5) {
+            alert(
+                "You have selected more than 5 semesters. Please note that you may be charged extra fees if you don't graduate on time or if you need to repeat your dissertation."
+            );
+        }
+
         const updatedSemesters = formData.semesters.map(semester => ({
             semester: semester.semester,
             tasks: semester.tasks.map(task => task.value), // Extract task IDs
