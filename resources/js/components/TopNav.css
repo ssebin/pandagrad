@@ -28,7 +28,7 @@
     margin-right: 16px;
 }
 
-.dropdown-menu {
+.top-dropdown-menu {
     position: absolute;
     top: 50px; /* Adjust to place it below the profile picture */
     right: 30px;
@@ -40,12 +40,12 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.dropdown-item {
+.top-dropdown-item {
     display: block;
     padding: 5px 10px;
     cursor: pointer;
 }
 
-.dropdown-item:hover {
+.top-dropdown-item:hover {
     background-color: #f0f0f0;
 }

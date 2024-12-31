@@ -1739,9 +1739,9 @@ class StudentController extends Controller
             return response()->json(['message' => 'Invalid request.'], 400);
         }
 
-        if ($progressUpdate->approved == 1) {
-            return response()->json(['message' => 'This update has already been approved.'], 400);
-        }
+        // if ($progressUpdate->approved == 1) {
+        //     return response()->json(['message' => 'This update has already been approved.'], 400);
+        // }
 
         $admin = auth()->user();
         log::info('Admin:', [$admin]);
@@ -1800,9 +1800,9 @@ class StudentController extends Controller
             return response()->json(['message' => 'Invalid request.'], 400);
         }
 
-        if ($progressUpdate->approved == 0) {
-            return response()->json(['message' => 'This update has already been rejected.'], 400);
-        }
+        // if ($progressUpdate->approved == 0) {
+        //     return response()->json(['message' => 'This update has already been rejected.'], 400);
+        // }
 
         $rollbackData = json_decode($progressUpdate->rollback_data, true);
 
@@ -1855,9 +1855,9 @@ class StudentController extends Controller
             return response()->json(['message' => 'Invalid request.'], 400);
         }
 
-        if ($progressUpdate->approved == null) {
-            return response()->json(['message' => 'This update has already been marked as pending.'], 400);
-        }
+        // if ($progressUpdate->approved == null) {
+        //     return response()->json(['message' => 'This update has already been marked as pending.'], 400);
+        // }
 
         $rollbackData = json_decode($progressUpdate->rollback_data, true);
 

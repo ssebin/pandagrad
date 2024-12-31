@@ -76,8 +76,8 @@ function TopNav({ userName, profilePic, updateProfilePicture }) {
                 />
                 <span className="user-name">{userName}</span>
                 {dropdownOpen && (
-                    <div className="dropdown-menu" ref={dropdownRef}>
-                        <label htmlFor="file-upload" className="dropdown-item">
+                    <div className="top-dropdown-menu" ref={dropdownRef}>
+                        <label htmlFor="file-upload" className="top-dropdown-item">
                             Change Profile Picture
                         </label>
                         <input

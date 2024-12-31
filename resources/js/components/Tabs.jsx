@@ -1,10 +1,16 @@
 import React from 'react';
 import { Nav } from 'react-bootstrap';
 
-function Tabs() {
+function Tabs({ selectedSemester, onSemesterChange }) {
     return (
         <div className="tabs-container">
-            <Nav variant="pills" defaultActiveKey="sem1" className="tabs">
+            <Nav
+                variant="pills"
+                activeKey={selectedSemester}
+                onSelect={onSemesterChange}
+                defaultActiveKey="sem1"
+                className="tabs"
+            >
                 <Nav.Item>
                     <Nav.Link eventKey="sem1" className='tabs-item'>Sem 1, 2021/2022</Nav.Link>
                 </Nav.Item>
