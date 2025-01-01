@@ -8,13 +8,11 @@ export default defineConfig({
         laravel({
             input: ["resources/js/index.jsx", "resources/css/app.css"],
             refresh: true,
+            buildDirectory: "build",
         }),
     ],
     build: {
-        outDir: "public/build", // Output directory for Laravel
+        outDir: "build", // Output directory for Laravel
         emptyOutDir: true, // Clears the output directory before building
-        rollupOptions: {
-            input: "resources/js/index.jsx",
-        },
     },
 });
