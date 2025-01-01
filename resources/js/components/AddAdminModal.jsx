@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import styles from './addsemestermodal.module.css';
+import styles from './AddSemesterModal.module.css';
 
 function AddAdminModal({ isOpen, onClose, onSubmit, initialData, onDelete }) {
     const [adminName, setAdminName] = useState('');

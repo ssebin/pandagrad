@@ -1737,6 +1737,7 @@ class StudentController extends Controller
         $progressUpdate = ProgressUpdate::find($progressUpdateId);
 
         if (!$progressUpdate) {
+            log::error('Invalid request.');
             return response()->json(['message' => 'Invalid request.'], 400);
         }
 
@@ -1759,6 +1760,7 @@ class StudentController extends Controller
         $currentSemester = $currentSemesterData['semester'] ?? null;
 
         if (!$currentSemester) {
+            log::error('Could not determine the current semester.');
             return response()->json(['message' => 'Could not determine the current semester.'], 400);
         }
 
@@ -1771,6 +1773,7 @@ class StudentController extends Controller
 
         $intake = Intake::find($student->intake_id);
         if (!$intake) {
+            log::error('Invalid intake ID');
             // Handle the case where the intake is not found
             return response()->json(['error' => 'Invalid intake ID'], 400);
         }
@@ -1885,12 +1888,14 @@ class StudentController extends Controller
         $currentSemester = $currentSemesterData['semester'] ?? null;
 
         if (!$currentSemester) {
+            log::error('Could not determine the current semester.');
             return response()->json(['message' => 'Could not determine the current semester.'], 400);
         }
 
         $intake = Intake::find($student->intake_id);
         if (!$intake) {
             // Handle the case where the intake is not found
+            log::error('Invalid intake ID');
             return response()->json(['error' => 'Invalid intake ID'], 400);
         }
         $currentSemester = $this->calculateStudentSemester($intake, $currentSemesterData);

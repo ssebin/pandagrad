@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './addsemestermodal.module.css';
+import styles from './AddSemesterModal.module.css';
 
 function BatchSummaryModal({ isOpen, summary, onClose }) {
     if (!isOpen || !summary) return null;

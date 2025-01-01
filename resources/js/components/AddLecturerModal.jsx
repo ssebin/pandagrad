@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { StudentContext } from './StudentContext';
-import styles from './addsemestermodal.module.css';
+import styles from './AddSemesterModal.module.css';
 
 function AddLecturerModal({ isOpen, onClose, onSubmit, initialData, onDelete }) {
     const [firstName, setFirstName] = useState('');
