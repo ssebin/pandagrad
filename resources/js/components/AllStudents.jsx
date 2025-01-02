@@ -80,7 +80,6 @@ function AllStudents() {
     const [selectedProgramId, setSelectedProgramId] = useState(null);
     const [selectedIntakeId, setSelectedIntakeId] = useState(null);
     const [selectedSupervisorId, setSelectedSupervisorId] = useState(null);
-    const [filteredStudentsData, setFilteredStudentsData] = useState({});
     const [viewMode, setViewMode] = useState(() => {
         // Initialize from localStorage if available, default to 'coordinator'
         return localStorage.getItem('viewMode') || 'coordinator';
@@ -134,8 +133,13 @@ function AllStudents() {
             if (
                 filterPopupRef.current &&
                 !filterPopupRef.current.contains(event.target)
-            ) {
+            ) {                
                 setShowFilterPopup(false);
+            }
+
+            if (showAddStudentPopup && event.target.className === 'modal-overlay') {
+                setShowAddStudentPopup(false);
+                resetFormAndClosePopup();
             }
         };
 
@@ -143,7 +147,7 @@ function AllStudents() {
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, []);
+    }, [filterPopupRef]);
 
     useEffect(() => {
         // Generate colors only when tasks are available
@@ -165,18 +169,6 @@ function AllStudents() {
             fetchPrograms();
         }
     }, [programs]);
-
-    // useEffect(() => {
-    //     const newFilteredData = {};
-    //     for (const intakeKey in mappedStudentsData) {
-    //         const students = mappedStudentsData[intakeKey];
-    //         const filtered = filterStudents(students);
-    //         if (filtered.length > 0) {
-    //             newFilteredData[intakeKey] = filtered;
-    //         }
-    //     }
-    //     setFilteredStudentsData(newFilteredData);
-    // }, [mappedStudentsData, filters, searchKeyword]);
 
     const generateTaskColors = (tasks) => {
         const baseColors = [
@@ -216,6 +208,20 @@ function AllStudents() {
             return acc;
         }, {})
         : {};
+
+    const resetFormAndClosePopup = () => {
+        setStudent({
+            first_name: '',
+            last_name: '',
+            siswamail: '',
+            matric_number: '',
+            program_id: '',
+            intake_id: '',
+            supervisor_id: '',
+            status: '',
+        });
+        setShowAddStudentPopup(false);
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -262,20 +268,6 @@ function AllStudents() {
     const handleApplyFilters = () => {
         setFilters(tempFilters);
         setShowFilterPopup(false);
-    };
-
-    const handleProgramChange = (e) => {
-        const programId = e.target.value;
-        setSelectedProgramId(programId); // Update the selected program ID
-        setSelectedIntakeId(null); // Reset the selected intake ID
-        setSelectedSupervisorId(null); // Reset the selected supervisor ID
-        fetchIntakes(programId); // Fetch intakes for the selected program
-    };
-
-    const handleIntakeChange = (e) => {
-        const intakeId = e.target.value;
-        setSelectedIntakeId(intakeId);
-        fetchTasks(intakeId); // Fetch tasks for the selected intake
     };
 
     const mappedStudentsData = studentsData
@@ -403,6 +395,12 @@ function AllStudents() {
             return <div className="modal-overlay" onClick={() => setShowAddStudentPopup(false)}></div>;
         }
         return null;
+    };
+
+    const statusMapping = {
+        TF: 'Terminated',
+        TI: 'Terminated',
+        PL: 'Leave',
     };
 
     // Extract unique categories
@@ -594,12 +592,13 @@ function AllStudents() {
                                 <option value="Non-GoT">Non-GoT</option>
                                 <option value="PL">Personal Leave</option>
                                 <option value="Withdrawn">Withdrawn</option>
-                                <option value="TI">Terminated (I)</option>
-                                <option value="TF">Terminated (F)</option>
+                                <option value="TI">Terminated (Inactive)</option>
+                                <option value="TF">Terminated (Failed)</option>
+                                <option value="Deactivated">Deactivated</option>
                             </select>
 
                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-                                <button type="button" className="cancel-button" onClick={() => setShowAddStudentPopup(false)}>Cancel</button>
+                                <button type="button" className="cancel-button" onClick={resetFormAndClosePopup}>Cancel</button>
                                 <button type="submit" className="add-button">Add</button>
                             </div>
                         </form>
@@ -638,7 +637,7 @@ function AllStudents() {
                                                                 )}
                                                             </h3>
                                                             <span className={`status ${statusClass}`}>
-                                                                {student.status || '-'}
+                                                                {statusMapping[student.status] || student.status || '-'}
                                                             </span>
                                                         </div>
                                                         <p className="semester">Semester {student.currentSemester} - {programName}</p>

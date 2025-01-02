@@ -359,17 +359,16 @@ html, body {
 
 .add-student-popup {
     position: absolute;
-    top: 50px; /* Adjust to where the popup starts */
+    top: 50%; /* Adjust to where the popup starts */
     left: 50%;
-    transform: translateX(-50%); /* Center horizontally */
+    transform: translate(-50%, -50%); /* Center both horizontally and vertically */
     width: 350px;
     background: white;
     border: 1px solid #E2E8F0;
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
     padding: 20px;
     z-index: 1000;
-    margin-bottom: 10px;
     max-height: 90vh;
     overflow-y: auto;
 }

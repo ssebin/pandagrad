@@ -170,6 +170,8 @@
 }
 
 .progressBar {
+    width: 80%;
+    max-width: 400px;
     background-color: #ccc;
     border-radius: 10px;
     overflow: hidden;

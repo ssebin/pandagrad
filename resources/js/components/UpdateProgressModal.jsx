@@ -668,8 +668,9 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
                             <option value="Non-GoT">Non-GoT</option>
                             <option value="PL">Personal Leave</option>
                             <option value="Withdrawn">Withdrawn</option>
-                            <option value="TI">Terminated (I)</option>
-                            <option value="TF">Terminated (F)</option>
+                            <option value="TI">Terminated (Inactive)</option>
+                            <option value="TF">Terminated (Failed)</option>
+                            <option value="Deactivated">Deactivated</option>
                         </select>
                     </>
                 );
