@@ -153,7 +153,7 @@ function StudentDetails() {
             {user.role !== 'student' && (
                 <>
                     <div className={styles.breadcrumbs}>
-                        <Link to={`${basePath}/all-students`}>My Students</Link>
+                        <Link to={`${basePath}/all-students`}>All Students</Link>
                         <span className={styles.breadcrumbSeparator}>&gt;</span>
                         <span>{student.first_name} {student.last_name}</span>
                     </div>

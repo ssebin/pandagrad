@@ -5,11 +5,16 @@
     padding: 20px;
     max-width: 1500px;
     margin: auto;
-    overflow: visible;
+    overflow: hidden;
 }
 
 .flowchartContainer {
-    height: 100%; /* Ensures the entire container is scrollable */
+    display: block; /* Ensure it's treated as a block-level element */
+    width: 100%; /* Match the parent's width */
+    height: 100%; /* Adjust height based on content */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    white-space: nowrap; /* Prevent content wrapping */
+    box-sizing: border-box; /* Include padding in the width */
 }
 
 .breadcrumbs {

@@ -1,5 +1,5 @@
 .flowchartWrapper {
-    display: flex;
+    display: inline-flex;
     flex-direction: column; /* Stacks semesters and legend vertically */
     align-items: flex-end;
 }
