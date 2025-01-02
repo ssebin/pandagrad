@@ -1,7 +1,15 @@
 #!/bin/bash
+# Modify Nginx configuration to set the root to the 'public' directory
+sed -i 's|root /home/site/wwwroot;|root /home/site/wwwroot/public;|g' /etc/nginx/sites-available/default
 
-# Start PHP-FPM
-php-fpm -D
+# Reload Nginx configuration
+service nginx reload
 
-# Start Nginx with custom configuration
-nginx -c /home/site/wwwroot/nginx.conf
+# Start PHP-FPM (if not already running)
+service php-fpm start || true
+
+# Change ownership and permissions if necessary
+chown -R www-data:www-data /home/site/wwwroot
+
+# Start supervisord to manage Nginx and PHP-FPM
+/usr/bin/supervisord -c /etc/supervisord.conf
