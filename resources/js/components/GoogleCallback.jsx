@@ -21,7 +21,7 @@ function GoogleCallback() {
             encryptAndStore('role', role);  
 
             // Fetch user data from the backend using the token
-            fetch('http://127.0.0.1:8000/api/me', {
+            fetch(`${import.meta.env.VITE_BASE_URL}/api/me`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {

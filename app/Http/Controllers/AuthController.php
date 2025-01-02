@@ -74,7 +74,7 @@ class AuthController extends Controller
             $admin = Admin::where('UMEmail', $email)->first();
             if ($admin) {
                 if ($admin->Status === 'Deactivated') {
-                    return redirect()->to('http://127.0.0.1:8000/unauthorized')->with('error', 'Your account is deactivated.');
+                    return redirect()->to(url('/unauthorized'))->with('error', 'Your account is deactivated.');
                 }
                 $lastSeenAt = $admin->last_active_at ?? $admin->last_login_at  ?? $admin->created_at ?? '2000-01-01 00:00:00';
                 $unreadNotifications = Notification::where('recipient_id', 'shared')
@@ -84,14 +84,11 @@ class AuthController extends Controller
                 $admin->update(['last_login_at' => now()]);
                 $role = 'admin';
                 $token = $admin->createToken('admin-token')->plainTextToken;
-                // return response()->json([
-                //     'token' => $token,
-                //     'role' => $role,
-                //     'user' => $admin,
-                //     'unread_notifications' => $unreadNotifications,
-                // ]);
-                // Pass the role along with the token
-                return redirect()->to('http://127.0.0.1:8000/process-login?token=' . $token . '&role=' . $role . '&unread_notifications=' . urlencode(json_encode($unreadNotifications)));
+
+                // Build the URL with query parameters
+                $url = url('/process-login') . '?token=' . $token . '&role=' . $role . '&unread_notifications=' . urlencode(json_encode($unreadNotifications));
+
+                return redirect()->to($url);
             }
 
             // Check if user is Lecturer
@@ -99,7 +96,7 @@ class AuthController extends Controller
             $lecturer = Lecturer::where('um_email', $email)->first();  // Assuming 'email' is the column in the lecturer table
             if ($lecturer) {
                 if ($lecturer->status === 'Deactivated') {
-                    return redirect()->to('http://127.0.0.1:8000/unauthorized')->with('error', 'Your account is deactivated.');
+                    return redirect()->to(url('/unauthorized'))->with('error', 'Your account is deactivated.');
                 }
                 $lastSeenAt = $lecturer->last_active_at ?? $lecturer->last_login_at ?? $lecturer->created_at ?? '2000-01-01 00:00:00';
                 $unreadNotifications = Notification::where('recipient_id', $lecturer->id)
@@ -125,7 +122,11 @@ class AuthController extends Controller
                 //     'user' => $lecturer,
                 //     'unread_notifications' => $unreadNotifications,
                 // ]);
-                return redirect()->to('http://127.0.0.1:8000/process-login?token=' . $token . '&role=' . $lecturerRole . '&unread_notifications=' . urlencode(json_encode($unreadNotifications)));
+
+                // Build the URL with query parameters
+                $url = url('/process-login') . '?token=' . $token . '&role=' . $lecturerRole . '&unread_notifications=' . urlencode(json_encode($unreadNotifications));
+
+                return redirect()->to($url);
             }
             //}
 
@@ -134,7 +135,7 @@ class AuthController extends Controller
             $student = Student::where('siswamail', $email)->first();
             if ($student) {
                 if ($student->status === 'Deactivated') {
-                    return redirect()->to('http://127.0.0.1:8000/unauthorized')->with('error', 'Your account is deactivated.');
+                    return redirect()->to(url('/unauthorized'))->with('error', 'Your account is deactivated.');
                 }
                 $lastSeenAt = $student->last_active_at ?? $student->last_login_at  ?? $student->created_at ?? '2000-01-01 00:00:00';
                 $unreadNotifications = Notification::where('recipient_id', $student->id)
@@ -144,26 +145,22 @@ class AuthController extends Controller
                 $student->update(['last_login_at' => now()]);
                 $role = 'student';
                 $token = $student->createToken('student-token')->plainTextToken;
-                // return response()->json([
-                //     'token' => $token,
-                //     'role' => $role,
-                //     'user' => $student,
-                //     'unread_notifications' => $unreadNotifications,
-                // ]);
-                // Pass the role along with the token
-                return redirect()->to('http://127.0.0.1:8000/process-login?token=' . $token . '&role=' . $role . '&unread_notifications=' . urlencode(json_encode($unreadNotifications)));
+
+                // Build the URL with query parameters
+                $url = url('/process-login') . '?token=' . $token . '&role=' . $role . '&unread_notifications=' . urlencode(json_encode($unreadNotifications));
+                return redirect()->to($url);
             } //else {
             //     return response()->json(['error' => 'Student not found'], 403);
             // }
             // }
 
             // In Google Callback Handler
-            return redirect()->to('http://127.0.0.1:8000/unauthorized');
+            return redirect()->to(url('/unauthorized'));
         } catch (Exception $e) {
             Log::error('Google authentication failed', [
                 'error' => $e->getMessage(),
             ]);
-            return redirect()->to('http://127.0.0.1:8000/internal-server-error');
+            return redirect()->to(url('/internal-server-error'));
         }
     }
 

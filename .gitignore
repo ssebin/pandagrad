@@ -4,9 +4,11 @@
 /public/storage
 /storage/*.key
 /vendor
+/build
 .env
 .env.backup
 .env.production
+.env.development
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
