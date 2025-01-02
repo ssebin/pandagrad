@@ -38,10 +38,15 @@ const fetchUnreadNotifications = async (addPopupNotification) => {
         console.log('Unread Notifications:', unreadNotifications);
 
         if (Array.isArray(unreadNotifications)) {
+            const newDisplayedIds = new Set(displayedNotifications);
+
             unreadNotifications.forEach((notification) => {
+                console.log('Fetched Notification ID:', notification.id);
+
                 // Check if the notification ID has already been displayed
                 if (!displayedNotifications.has(notification.id)) {
-                    displayedNotifications.add(notification.id); // Mark as displayed
+                    // Mark as displayed
+                    newDisplayedIds.add(notification.id);
 
                     addPopupNotification({
                         id: notification.id || uuidv4(), // Ensure unique ID
@@ -53,7 +58,7 @@ const fetchUnreadNotifications = async (addPopupNotification) => {
             });
 
             // Persist updated IDs in localStorage
-            saveDisplayedNotifications(displayedNotifications);
+            saveDisplayedNotifications(newDisplayedIds);
         } else {
             console.log('No unread notifications received.');
         }
@@ -219,11 +224,16 @@ export const NotificationProvider = ({ children }) => {
             channel.listen('RequestNotification', async (data) => {
                 console.log('Notification received via Echo:', data);
 
-                const { message, type } = data.data || {};
+                const { id: notificationId, message, type } = data.data || {};
+                console.log('Real-time Notification ID:', notificationId);
                 const notificationMessage = message || 'Notification received';
                 const notificationType = type || 'info';
 
-                addPopupNotification({ message: notificationMessage, type: notificationType });
+                addPopupNotification({ id: notificationId || uuidv4(), message: notificationMessage, type: notificationType });
+
+                const displayedNotifications = getDisplayedNotifications(); // Retrieve existing displayed IDs
+                displayedNotifications.add(notificationId); // Add the new notification ID
+                saveDisplayedNotifications(displayedNotifications); // Persist updated IDs
 
                 // Fetch updated data
                 await Promise.all([fetchNotifications(), fetchRequests()]);

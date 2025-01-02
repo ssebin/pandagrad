@@ -1001,10 +1001,10 @@ class StudentController extends Controller
                 'read_at' => $isCreatedByUser ? now() : null,
             ];
 
-            Notification::create($notificationData);
+            $notification = Notification::create($notificationData);
 
             $eventData = [
-                'id' => $progressUpdate->id,
+                'id' => $notification->id,
                 'status' => $progressUpdate->status ?? 'Pending',
                 'reason' => $progressUpdate->reason ?? '',
                 'progress_update_id' => $progressUpdate->id,
