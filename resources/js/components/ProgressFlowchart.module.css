@@ -233,6 +233,10 @@
     width: auto;
     text-align: center; 
     margin-right: 20px;
+    display: flex;
+    flex-direction: column; /* Stack title and items vertically */
+    align-items: center; /* Center items horizontally */
+    justify-content: center; /* Center items vertically */
 }
 
 .legendTitle {
@@ -241,10 +245,18 @@
     font-weight: bold;
 }
 
+.legendItems {
+    display: grid;
+    grid-template-columns: repeat(2, auto); 
+    gap: 0px 40px; /* Space between legend items */
+    justify-items: start;
+    align-items: center; /* Center items vertically */
+    text-align: left; /* Align text to the left */
+}
+
 .legendItem {
     display: flex;
     align-items: center;
-    justify-content: flex-start; /* Center-align items */
     margin-bottom: 10px;
     line-height: 20px; /* Add spacing between dot and text */
     font-size: 0.8em;

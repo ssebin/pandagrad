@@ -81,6 +81,18 @@ function AllStudents() {
     const [selectedIntakeId, setSelectedIntakeId] = useState(null);
     const [selectedSupervisorId, setSelectedSupervisorId] = useState(null);
     const [filteredStudentsData, setFilteredStudentsData] = useState({});
+    const [viewMode, setViewMode] = useState(() => {
+        // Initialize from localStorage if available, default to 'coordinator'
+        return localStorage.getItem('viewMode') || 'coordinator';
+    });
+
+    const toggleViewMode = () => {
+        setViewMode((prevMode) => {
+            const newMode = prevMode === 'coordinator' ? 'supervisor' : 'coordinator';
+            localStorage.setItem('viewMode', newMode); // Save new mode to localStorage
+            return newMode;
+        });
+    };
 
     const students = studentsData && Object.keys(studentsData).length > 0
         ? Object.values(studentsData).flat()
@@ -275,15 +287,20 @@ function AllStudents() {
             // Filter out deactivated students for this intake
             const activeStudents = studentsData[intakeKey].filter(student => student.status !== 'Deactivated');
 
+            const filteredStudents =
+                viewMode === 'supervisor'
+                    ? activeStudents.filter((student) => student.supervisor_id === user.id)
+                    : activeStudents;
+
             // Skip this intake if there are no active students
-            if (activeStudents.length === 0) {
+            if (filteredStudents.length === 0) {
                 return mappedData;
             }
 
             // Map the active students to include taskCategory
-            const mappedStudents = activeStudents.map((student) => {
+            const mappedStudents = filteredStudents.map((student) => {
                 const task = tasks.find((t) => t.name === student.task);
-                const supervisor = supervisors.find(s => s.id === student.supervisor_id);
+                const supervisor = supervisors.find((s) => s.id === student.supervisor_id);
 
                 return {
                     ...student,
@@ -427,6 +444,11 @@ function AllStudents() {
                         {user.role == "admin" && (
                             <button className="add-student-button" onClick={() => setShowAddStudentPopup(true)}>
                                 <FaPlus className="add" /> Add a Student
+                            </button>
+                        )}
+                        {user.role === "lecturer_both" && (
+                            <button className="add-student-button" onClick={toggleViewMode}>
+                                {viewMode === 'coordinator' ? 'View as Supervisor' : 'View as Coordinator'}
                             </button>
                         )}
                     </div>

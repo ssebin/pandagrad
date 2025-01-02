@@ -160,6 +160,27 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
 
     return (
         <div className={styles.flowchartWrapper}>
+            <div className={styles.legend}>
+                <h4 className={styles.legendTitle}>LEGEND</h4>
+                <div className={styles.legendItems}>
+                    <div className={styles.legendItem}>
+                        <div className={`${styles.legendDot} ${styles.pending}`}></div>
+                        <span>Pending Task (On Track)</span>
+                    </div>
+                    <div className={styles.legendItem}>
+                        <div className={`${styles.legendDot} ${styles.completed}`}></div>
+                        <span>Completed Task (On Track)</span>
+                    </div>
+                    <div className={styles.legendItem}>
+                        <div className={`${styles.legendDot} ${styles.pendingDelayed}`}></div>
+                        <span>Pending Task (Delayed)</span>
+                    </div>
+                    <div className={styles.legendItem}>
+                        <div className={`${styles.legendDot} ${styles.completedDelayed}`}></div>
+                        <span>Completed Task (Delayed)</span>
+                    </div>
+                </div>
+            </div>
             <div className={styles.flowchartContainer}>
                 {studyPlan.map((semesterData, index) => (
                     <div className={styles.semesterCard} key={index}>
@@ -655,26 +676,6 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                         )}
                     </div>
                 ))}
-            </div>
-            <div className={styles.legend}>
-                <h4 className={styles.legendTitle}>LEGEND</h4>
-                <div className={styles.legendItem}>
-                    <div className={`${styles.legendDot} ${styles.pending}`}></div>
-                    <span>Pending Task (On Track)</span>
-                </div>
-
-                <div className={styles.legendItem}>
-                    <div className={`${styles.legendDot} ${styles.pendingDelayed}`}></div>
-                    <span>Pending Task (Delayed)</span>
-                </div>
-                <div className={styles.legendItem}>
-                    <div className={`${styles.legendDot} ${styles.completed}`}></div>
-                    <span>Completed Task (On Track)</span>
-                </div>
-                <div className={styles.legendItem}>
-                    <div className={`${styles.legendDot} ${styles.completedDelayed}`}></div>
-                    <span>Completed Task (Delayed)</span>
-                </div>
             </div>
         </div>
     );
