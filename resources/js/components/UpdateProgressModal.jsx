@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { retrieveAndDecrypt } from "./storage.js";
 import Select, { components } from 'react-select';
 
-function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, student }) {
+function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, student, studyPlan }) {
     const { id } = useParams();
     const [updateType, setUpdateType] = useState('');
     const [evidence, setEvidence] = useState(null);
@@ -200,45 +200,81 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         setDropdownVisible([]);
 
         // Reset the form fields and number of semesters if the update type is 'change_study_plan'
-        if (updateType === 'change_study_plan') {
-            setNumSemesters(0); // Reset the number of semesters
-            setFormData(prev => ({
+        if (studyPlan && updateType === 'change_study_plan') {
+            const numSemesters = studyPlan.length;
+            setNumSemesters(numSemesters);
+
+            const allTasks = Object.values(tasksOptions).flat(); // Flatten tasksOptions
+            const initialSemesters = studyPlan.map((semester) => {
+                const semesterTasks = semester.tasks ? Object.keys(semester.tasks).map((taskKey) => {
+                    const taskDetail = semester.tasks[taskKey];
+                    const matchingTask = allTasks.find((task) => task.name === taskDetail.name);
+                    return matchingTask ? matchingTask.id : null; // Map to task IDs
+                }).filter((id) => id !== null) : []; // Filter out null IDs
+
+                return { semester: semester.semester, tasks: semesterTasks };
+            });
+
+            setFormData((prev) => ({
                 ...prev,
-                semesters_no: '',
-                semesters: [] // Clear the semester fields
+                semesters: initialSemesters,
             }));
-            setSelectedTasks([]); // Clear selected tasks
-            setTempSelectedTasks([]); // Clear temporary selected tasks
+
+            const initialSelectedTasks = studyPlan.map((semester) => {
+                if (semester.tasks && typeof semester.tasks === 'object') {
+                    return Object.keys(semester.tasks).map((taskKey) => {
+                        const taskDetail = semester.tasks[taskKey];
+                        const matchingTask = allTasks.find((task) => task.name === taskDetail.name);
+                        return matchingTask
+                            ? { value: matchingTask.id, label: matchingTask.name }
+                            : null;
+                    }).filter((task) => task !== null);
+                }
+                return [];
+            });
+
+            setSelectedTasksPerSemester(initialSelectedTasks);
+            setTempSelectedTasks(
+                initialSelectedTasks.map((tasks) => tasks.map((task) => task.value))
+            );
+
             setExtraFields({}); // Reset extra fields (status, grade, etc.)
             setProgressStatus("");
+            setEvidence(null);
+            setLink('');
+            setDescription('');
+            setFormData((prev) => ({
+                ...prev,
+                semesters: studyPlan.map((semester, index) => ({
+                    semester: index + 1,
+                    tasks: Object.keys(semester.tasks || {}).map((taskId) => parseInt(taskId, 10)),
+                })),
+            }));
+        } else {
+            // Clear all fields if updateType is not 'change_study_plan'
+            setProgressStatus("");
+            setNumSemesters(0);
+            setFormData((prev) => ({
+                ...prev,
+                semesters_no: '',
+                semesters: [], // Clear the semester fields
+            }));
+            setExtraFields({});
+            setTempSelectedTasks([]);
+            setEvidence(null);
+            setLink('');
+            setDescription('');
+            setSelectedTasksPerSemester({});
+            setTempSelectedTasksPerSemester({});
+
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+            if (dateInputRef.current) {
+                dateInputRef.current.value = '';
+            }
         }
-
-        setProgressStatus("");
-        setNumSemesters(0);
-        setFormData(prev => ({
-            ...prev,
-            semesters_no: '',
-            semesters: [] // Clear the semester fields
-        }));
-        setExtraFields({});
-
-        // Reset other form-related states
-        setSelectedTasks([]);
-        setTempSelectedTasks([]);
-
-        setEvidence(null);
-        setLink('');
-        setDescription('');
-        setSelectedTasksPerSemester({});
-        setTempSelectedTasksPerSemester({});
-
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-        if (dateInputRef.current) {
-            dateInputRef.current.value = '';
-        }
-    }, [updateType]);
+    }, [updateType, studyPlan]); // Include studyPlan and updateType as dependencies
 
     // useEffect(() => {
     //     const allTasks = Object.values(tasksOptions).flat();
@@ -360,18 +396,16 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         }));
     };
 
-
-    const [selectedTasks, setSelectedTasks] = useState([]); // Track selected tasks
-
     const handleSelectChange = (semesterIndex, selectedOptions) => {
         const sortedOptions = selectedOptions
             ? [...selectedOptions].sort((a, b) => a.value - b.value)
             : [];
 
-        setSelectedTasksPerSemester((prevSelectedTasks) => ({
-            ...prevSelectedTasks,
-            [semesterIndex]: sortedOptions || [],
-        }));
+        setSelectedTasksPerSemester((prevSelectedTasks) => {
+            const updatedTasks = { ...prevSelectedTasks };
+            updatedTasks[semesterIndex] = sortedOptions || [];
+            return updatedTasks;
+        });
 
         // Update tempSelectedTasksPerSemester if needed
         const selectedIds = sortedOptions.map((option) => option.value);
@@ -382,18 +416,18 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
             [semesterIndex]: selectedIds,
         }));
 
-        // Additionally, update formData.semesters
-        setFormData(prevFormData => {
-            const updatedSemesters = [...prevFormData.semesters];
-            updatedSemesters[semesterIndex] = {
-                ...updatedSemesters[semesterIndex],
-                tasks: selectedOptions || [], // Store the full task options if needed
-            };
-            return {
-                ...prevFormData,
-                semesters: updatedSemesters,
-            };
-        });
+        setFormData((prevFormData) => ({
+            ...prevFormData,
+            semesters: prevFormData.semesters.map((semester, idx) => {
+                if (idx === semesterIndex) {
+                    return {
+                        ...semester,
+                        tasks: sortedOptions.map((task) => task.value), // Use task IDs
+                    };
+                }
+                return semester; // Preserve other semesters
+            }),
+        }));
     };
 
     // const handleSelectChange = (selectedOptions) => {
@@ -753,7 +787,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         setExtraFields({});
 
         // Reset other form-related states
-        setSelectedTasks([]);
         setTempSelectedTasks([]);
 
         // Call the onClose function passed as a prop to close the modal
@@ -819,6 +852,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
                         <select
                             className={styles.input}
                             name="semesters_no"
+                            value={numSemesters}
                             onChange={(e) => {
                                 handleExtraFieldChange('num_semesters', e.target.value);
                                 handleInputChange(e);
