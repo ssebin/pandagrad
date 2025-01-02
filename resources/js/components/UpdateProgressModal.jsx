@@ -113,30 +113,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         })),
     }));
 
-    // Close dropdown when clicked outside
-    // useEffect(() => {
-    //     const handleClickOutside = (event) => {
-    //         // Loop through dropdown refs and check if the clicked element is outside any dropdown
-    //         dropdownRefs.current.forEach((dropdown, index) => {
-    //             if (dropdown && !dropdown.contains(event.target)) {
-    //                 setDropdownVisible((prev) => {
-    //                     const updatedVisibility = [...prev];
-    //                     updatedVisibility[index] = false; // Close the dropdown for this index
-    //                     return updatedVisibility;
-    //                 });
-    //             }
-    //         });
-    //     };
-
-    //     // Add event listener on mount
-    //     document.addEventListener('click', handleClickOutside);
-
-    //     // Clean up the event listener on unmount
-    //     return () => {
-    //         document.removeEventListener('click', handleClickOutside);
-    //     };
-    // }, []);
-
     const handleClickOutside = (e) => {
         Object.keys(dropdownRefs.current).forEach((index) => {
             if (
@@ -276,20 +252,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         }
     }, [updateType, studyPlan]); // Include studyPlan and updateType as dependencies
 
-    // useEffect(() => {
-    //     const allTasks = Object.values(tasksOptions).flat();
-    //     const selectedTasksFormatted = tempSelectedTasks.map((taskId) => {
-    //         const task = allTasks.find((t) => t.id === taskId);
-    //         if (task) {
-    //             return { value: task.id, label: task.name };
-    //         } else {
-    //             console.warn(`Task with id ${taskId} ${task} not found in allTasks`);
-    //             return null;
-    //         }
-    //     });
-    //     setSelectedTasks(selectedTasksFormatted);
-    // }, [tempSelectedTasks, tasksOptions]);
-
     useEffect(() => {
         const allTasks = Object.values(tasksOptions).flat();
         const updatedSelectedTasks = {};
@@ -312,40 +274,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         setSelectedTasksPerSemester(updatedSelectedTasks);
     }, [tempSelectedTasksPerSemester, tasksOptions]);
 
-    // const fetchSupervisors = async () => {
-    //     try {
-    //         const response = await axios.get('/api/lecturers?role=supervisor');
-    //         setSupervisors(response.data);
-    //     } catch (error) {
-    //         console.error('Error fetching supervisors:', error);
-    //     }
-    // };
-
-    // const fetchStudyPlan = async () => {
-    //     try {
-    //         const response = await axios.get(`/api/students/${studentId}/study-plan`);
-    //         console.log('Study plan data:', response.data);
-    //         if (Array.isArray(response.data)) {
-    //             setStudyPlan(response.data);
-
-    //             // Map fetched study plan to formData.semesters
-    //             const mappedSemesters = response.data.map((semester) => ({
-    //                 semester: semester.semester,
-    //                 tasks: semester.tasks || [], // Default to empty array if no tasks
-    //             }));
-    //             console.log('Mapped semesters:', mappedSemesters);
-    //             setFormData((prev) => ({
-    //                 ...prev,
-    //                 semesters: mappedSemesters,
-    //             }));
-    //         } else {
-    //             console.error('Study plan data is undefined');
-    //         }
-    //     } catch (error) {
-    //         console.error('Error fetching study plan:', error);
-    //     }
-    // };
-
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
@@ -358,64 +286,18 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         }
     };
 
-    // const handleDropdownToggle = (index) => {
-    //     if (!formData.semesters[index]) {
-    //         console.error(`Semester data is not defined for index: ${index}`);
-    //         return; // Prevent further execution if the data is missing
-    //     }
-
-    //     // Load tasks into tempSelectedTasks when opening the dropdown
-    //     setTempSelectedTasks(formData.semesters[index].tasks || []);
-
-    //     // Toggle dropdown visibility
-    //     setDropdownVisible((prev) => {
-    //         // Create a copy of the visibility state, but ensure it's as long as the semesters
-    //         const updatedVisibility = new Array(formData.semesters.length).fill(false);
-
-    //         // Toggle visibility for the selected index
-    //         updatedVisibility[index] = !prev[index];
-    //         return updatedVisibility;
-    //     });
-    // };
-
-    const handleDropdownToggle = (index) => {
-        if (!formData.semesters[index]) {
-            console.error(`Semester data is not defined for index: ${index}`);
-            return; // Prevent further execution if the data is missing
-        }
-
-        if (!dropdownVisible[index]) {
-            // Load tasks into tempSelectedTasks when opening the dropdown
-            setTempSelectedTasks(formData.semesters[index].tasks || []);
-        }
-
-        // Toggle dropdown visibility
-        setDropdownVisible(prevState => ({
-            ...prevState,
-            [index]: !prevState[index],
-        }));
-    };
-
     const handleSelectChange = (semesterIndex, selectedOptions) => {
         const sortedOptions = selectedOptions
             ? [...selectedOptions].sort((a, b) => a.value - b.value)
             : [];
-
-        setSelectedTasksPerSemester((prevSelectedTasks) => {
-            const updatedTasks = { ...prevSelectedTasks };
-            updatedTasks[semesterIndex] = sortedOptions || [];
-            return updatedTasks;
-        });
-
-        // Update tempSelectedTasksPerSemester if needed
-        const selectedIds = sortedOptions.map((option) => option.value);
-
-        // Update tempSelectedTasksPerSemester if needed
-        setTempSelectedTasksPerSemester((prevTempSelectedTasks) => ({
-            ...prevTempSelectedTasks,
-            [semesterIndex]: selectedIds,
+    
+        // Update selectedTasksPerSemester
+        setSelectedTasksPerSemester((prevSelectedTasks) => ({
+            ...prevSelectedTasks,
+            [semesterIndex]: sortedOptions || [],
         }));
-
+    
+        // Update formData.semesters
         setFormData((prevFormData) => ({
             ...prevFormData,
             semesters: prevFormData.semesters.map((semester, idx) => {
@@ -430,24 +312,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         }));
     };
 
-    // const handleSelectChange = (selectedOptions) => {
-    //     setSelectedTasks(selectedOptions || []);
-    //     // If you need to update tempSelectedTasks (array of IDs)
-    //     const selectedIds = selectedOptions ? selectedOptions.map((option) => option.value) : [];
-    //     setTempSelectedTasks(selectedIds);
-    //   };
-
-    const handleTaskChange = (task) => {
-        //console.log('Task selected/deselected:', task);
-        setTempSelectedTasks((prevTasks) => {
-            if (prevTasks.includes(task.id)) {
-                return prevTasks.filter((id) => id !== task.id);
-            } else {
-                return [...prevTasks, task.id];
-            }
-        });
-    };
-
     // Function to handle number of semesters change
     const handleNumSemestersChange = (e) => {
         const num = parseInt(e.target.value);
@@ -459,41 +323,15 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
             tasks: [],
         }));
 
+        // Reset selected tasks per semester
+        const updatedSelectedTasks = Array.from({ length: num }, () => []);
+
         setFormData((prevFormData) => ({
             ...prevFormData,
             semesters: updatedSemesters,
         }));
 
-        //console.log('Number of Semesters Updated:', num, updatedSemesters);
-    };
-
-    const handleApplyButton = (index) => {
-        // Sort selected tasks by ID before saving to semester
-        const sortedTasks = [...tempSelectedTasks].sort((a, b) => a - b);
-
-        // Save the sorted tasks to the current semester
-        setFormData(prevFormData => {
-            const updatedSemesters = prevFormData.semesters.map((semester, i) => {
-                if (i === index) {
-                    return { ...semester, tasks: sortedTasks };
-                }
-                return semester;
-            });
-            const newFormData = { ...prevFormData, semesters: updatedSemesters };
-            //console.log('FormData after applying tasks:', newFormData);
-            return { ...prevFormData, semesters: updatedSemesters };
-        });
-
-        // Clear tempSelectedTasks after applying changes
-        setTempSelectedTasks([]);
-
-        // Close the dropdown
-        setDropdownVisible(prevState => ({
-            ...prevState,
-            [index]: false,
-        }));
-
-        console.log('Updated tasks for semester:', index + 1, sortedTasks);
+        setSelectedTasksPerSemester(updatedSelectedTasks);
     };
 
     const handleSave = async (currentEvidence) => {

@@ -334,6 +334,7 @@ function StudentDetails() {
                 }}
                 user={user}
                 student={student}
+                studyPlan={studyPlan}
             />
         </div>
     );
