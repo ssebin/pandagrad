@@ -1251,12 +1251,18 @@ class StudentController extends Controller
         if ($validatedData['update_type'] === 'change_study_plan') {
             // Validate that the study plan has the correct structure
             if (!isset($validatedData['semesters']) || empty($validatedData['semesters'])) {
-                log::error('Semesters data is required for changing the study plan.');
-                return response()->json(['message' => 'Semesters data is required for changing the study plan.'], 400);
+                $progressUpdate = ProgressUpdate::find($progressUpdateId);
+                if ($progressUpdate && !empty($progressUpdate->updated_study_plan)) {
+                    // Decode the JSON semesters data
+                    $validatedData['semesters'] = json_decode($progressUpdate->updated_study_plan, true);
+                    $updatedStudyPlan = $validatedData['semesters'];
+                } else {
+                    Log::error('Semesters data is required for changing the study plan.');
+                    return response()->json(['message' => 'Semesters data is required for changing the study plan.'], 400);
+                }
+            } else {
+                $updatedStudyPlan = json_decode($validatedData['semesters'], true);                
             }
-
-            $updatedStudyPlan = json_decode($validatedData['semesters'], true);
-            log::info('Updated Study Plan:', [$updatedStudyPlan]);
 
             if (!is_array($updatedStudyPlan) || empty($updatedStudyPlan)) {
                 log::error('Invalid semesters structure');
@@ -1512,13 +1518,14 @@ class StudentController extends Controller
             return response()->json(['error' => 'Invalid intake ID'], 400);
         }
         $studentSemester = $this->calculateStudentSemester($intake, $currentSemesterData);
+        Log::info('Student Semester:', [$studentSemester]);
 
         // Process admin-specific updates
         $this->processAdminUpdate($progressUpdate->toArray(), $progressUpdate->student_id, $studentSemester, $progressUpdateId);
 
         $this->broadcastRequestUpdate(
             $progressUpdate,
-            "{$adminName} approved {$studentName}'s update request."
+            "{$adminName} approved {$studentName}'s update."
         );
         return response()->json(['message' => 'Request approved and progress updated.']);
     }
@@ -1579,7 +1586,7 @@ class StudentController extends Controller
 
         $this->broadcastRequestUpdate(
             $progressUpdate,
-            "{$adminName} rejected {$studentName}'s update request."
+            "{$adminName} rejected {$studentName}'s update."
         );
 
         return response()->json(['message' => 'Request rejected.']);
@@ -1641,7 +1648,7 @@ class StudentController extends Controller
 
         $this->broadcastRequestUpdate(
             $progressUpdate,
-            "{$adminName} marked {$studentName}'s update request as pending."
+            "{$adminName} marked {$studentName}'s update as pending."
         );
 
         return response()->json(['message' => 'Request pending.']);
@@ -1681,27 +1688,27 @@ class StudentController extends Controller
             }
         }
 
-        if (isset($rollbackData['max_sem'])) {
+        if (array_key_exists('max_sem', $rollbackData)) {
             $student->max_sem = $rollbackData['max_sem'];
         }
 
-        if (isset($rollbackData['supervisor_id'])) {
+        if (array_key_exists('supervisor_id', $rollbackData)) {
             $student->supervisor_id = $rollbackData['supervisor_id'];
         }
 
-        if (isset($rollbackData['status'])) {
+        if (array_key_exists('status', $rollbackData)) {
             $student->status = $rollbackData['status'];
         }
 
-        if (isset($rollbackData['cgpa'])) {
-            $student->cgpa = $rollbackData['cgpa'];
+        if (array_key_exists('cgpa', $rollbackData)) {
+            $student->cgpa = $rollbackData['cgpa']; // Assigning null directly works fine
         }
 
-        if (isset($rollbackData['research'])) {
+        if (array_key_exists('research', $rollbackData)) {
             $student->research = $rollbackData['research'];
         }
 
-        if (isset($rollbackData['workshops_attended'])) {
+        if (array_key_exists('workshops_attended', $rollbackData)) {
             $student->workshops_attended = implode(', ', $rollbackData['workshops_attended']);
         }
 
