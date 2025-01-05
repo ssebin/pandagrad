@@ -18,6 +18,7 @@ function Analytics() {
                     onSemesterChange={(semester) => setSelectedSemester(semester)}
                 />
                 <Dropdowns
+                    selectedSemester={selectedSemester}
                     selectedProgram={selectedProgram}
                     onProgramChange={(program) => setSelectedProgram(program)}
                 />

@@ -7,7 +7,7 @@ import { chartsData } from './Charts';
 
 import { faUniversity, faFileExport } from '@fortawesome/free-solid-svg-icons';
 
-function Dropdowns({ selectedProgram, onProgramChange }) {
+function Dropdowns({ selectedProgram, onProgramChange, selectedSemester }) {
     const [selectedExport, setSelectedExport] = useState('Export');
 
     const programItems = ['MSE (ST)', 'MCS (AC)'];
@@ -32,9 +32,9 @@ function Dropdowns({ selectedProgram, onProgramChange }) {
                 updateLabel={false}
                 onSelect={(item) => {
                     if (item === 'PDF') {
-                        exportToPDF();
+                        exportToPDF(selectedProgram, selectedSemester);
                     } else if (item === 'Excel') {
-                        exportToExcel(statisticsData, chartsData);
+                        exportToExcel(statisticsData, chartsData, selectedProgram, selectedSemester);
                     }
                 }}
             />

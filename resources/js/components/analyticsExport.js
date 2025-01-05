@@ -2,7 +2,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { saveAs } from "file-saver";
 
-export function exportToPDF() {
+export function exportToPDF(selectedProgram, selectedSemester) {
     const input = document.getElementById("pdf-content");
 
     // Ensure the element exists
@@ -25,19 +25,26 @@ export function exportToPDF() {
             const pageHeight = pdf.internal.pageSize.getHeight();
 
             // Define margins in mm
-            const marginLeft = 10; // Adjust as needed
-            const marginRight = 10; // Adjust as needed
-            const marginTop = 10; // Adjust as needed
-            const marginBottom = 10; // Adjust as needed
+            const marginLeft = 10;
+            const marginTop = 10;
+            const marginRight = 10;
+            const marginBottom = 10;
 
-            // Calculate available width and height for the image
+            // Add header for Program and Semester
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(14);
+            pdf.text(`Program: ${selectedProgram}`, marginLeft, marginTop);
+            pdf.setFontSize(14);
+            pdf.text(`Intake: ${selectedSemester}`, marginLeft, marginTop + 8);
+
+            // Adjust position for content
+            const headerHeight = 12; // Space for header
             const imgWidth = pageWidth - marginLeft - marginRight;
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-            let position = marginTop;
+            let position = marginTop + headerHeight;
 
             // Check if the content exceeds one page
-            if (imgHeight + marginTop + marginBottom > pageHeight) {
+            if (imgHeight + position + marginBottom > pageHeight) {
                 // Handle multi-page content
                 let remainingHeight = imgHeight;
                 let pageCount = 0;
@@ -45,38 +52,50 @@ export function exportToPDF() {
                 while (remainingHeight > 0) {
                     const currentHeight = Math.min(
                         remainingHeight,
-                        pageHeight - marginTop - marginBottom
+                        pageHeight - position - marginBottom
                     );
-                    const canvasFragment = document.createElement("canvas");
-                    canvasFragment.width = canvas.width;
-                    canvasFragment.height =
+
+                    const fragmentCanvas = document.createElement("canvas");
+                    fragmentCanvas.width = canvas.width;
+                    fragmentCanvas.height =
                         (currentHeight * canvas.width) / imgWidth;
 
-                    const ctx = canvasFragment.getContext("2d");
+                    const ctx = fragmentCanvas.getContext("2d");
                     ctx.drawImage(
                         canvas,
                         0,
                         (imgHeight - remainingHeight) *
                             (canvas.width / imgWidth),
                         canvas.width,
-                        canvasFragment.height,
+                        fragmentCanvas.height,
                         0,
                         0,
                         canvas.width,
-                        canvasFragment.height
+                        fragmentCanvas.height
                     );
 
                     const fragmentImgData =
-                        canvasFragment.toDataURL("image/png");
+                        fragmentCanvas.toDataURL("image/png");
                     if (pageCount > 0) {
                         pdf.addPage();
+                        pdf.text(
+                            `Program: ${selectedProgram}`,
+                            marginLeft,
+                            marginTop
+                        );
+                        pdf.text(
+                            `Intake: ${selectedSemester}`,
+                            marginLeft,
+                            marginTop + 8
+                        );
+                        position = marginTop + headerHeight;
                     }
 
                     pdf.addImage(
                         fragmentImgData,
                         "PNG",
                         marginLeft,
-                        marginTop,
+                        position,
                         imgWidth,
                         currentHeight
                     );
@@ -85,7 +104,7 @@ export function exportToPDF() {
                     pageCount++;
                 }
             } else {
-                // Add image with margins
+                // Single-page content
                 pdf.addImage(
                     imgData,
                     "PNG",
@@ -97,7 +116,7 @@ export function exportToPDF() {
             }
 
             // Save the PDF
-            pdf.save("analytics.pdf");
+            pdf.save(`${selectedProgram}_${selectedSemester}_analytics.pdf`);
         })
         .catch((err) => {
             console.error("Error generating PDF:", err);
@@ -107,12 +126,43 @@ export function exportToPDF() {
 
 import ExcelJS from "exceljs";
 
-// Function to export data to Excel with styling
-export async function exportToExcel(statisticsData, chartsData) {
+export async function exportToExcel(
+    statisticsData,
+    chartsData,
+    selectedProgram,
+    selectedSemester
+) {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Analytics");
 
     let rowIndex = 1;
+
+    // Add Program and Semester Header
+    worksheet.mergeCells(`A${rowIndex}:B${rowIndex}`);
+    let titleHeaderRow = worksheet.getRow(rowIndex);
+    titleHeaderRow.getCell(1).value = `Program: ${selectedProgram}`;
+    titleHeaderRow.getCell(1).font = { bold: true, size: 16 };
+    titleHeaderRow.getCell(1).alignment = {
+        horizontal: "center",
+        vertical: "middle",
+    };
+    rowIndex++;
+
+    worksheet.mergeCells(`A${rowIndex}:B${rowIndex}`);
+    let subHeaderRow = worksheet.getRow(rowIndex);
+    subHeaderRow.getCell(1).value = `Intake: ${selectedSemester}`;
+    subHeaderRow.getCell(1).font = { bold: true, size: 14 };
+    subHeaderRow.getCell(1).alignment = {
+        horizontal: "center",
+        vertical: "middle",
+    };
+    rowIndex += 2; // Add extra space after headers
+
+    // Get data for the selected program and semester
+    const programStatistics =
+        statisticsData[selectedProgram]?.[selectedSemester] || [];
+    const semesterCharts =
+        chartsData[selectedProgram]?.[selectedSemester] || {};
 
     // Add 'Statistics' Section
     worksheet.mergeCells(`A${rowIndex}:B${rowIndex}`);
@@ -145,7 +195,7 @@ export async function exportToExcel(statisticsData, chartsData) {
     rowIndex++;
 
     // Add Statistics Data
-    statisticsData.forEach((stat) => {
+    programStatistics.forEach((stat) => {
         let row = worksheet.getRow(rowIndex);
         row.getCell(1).value = stat.label;
         row.getCell(2).value = stat.value;
@@ -156,13 +206,11 @@ export async function exportToExcel(statisticsData, chartsData) {
     rowIndex++;
 
     // Add Charts Data
-    for (const key in chartsData) {
-        const chartData = chartsData[key];
-
+    for (const [key, chartData] of Object.entries(semesterCharts)) {
         // Add Chart Title
         worksheet.mergeCells(`A${rowIndex}:B${rowIndex}`);
         let chartTitleRow = worksheet.getRow(rowIndex);
-        chartTitleRow.getCell(1).value = chartData.datasets[0].label;
+        chartTitleRow.getCell(1).value = chartData.datasets[0]?.label || key;
         chartTitleRow.getCell(1).alignment = {
             horizontal: "center",
             vertical: "middle",
@@ -218,5 +266,5 @@ export async function exportToExcel(statisticsData, chartsData) {
     const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    saveAs(blob, "analytics.xlsx");
+    saveAs(blob, `${selectedProgram}_${selectedSemester}_analytics.xlsx`);
 }
