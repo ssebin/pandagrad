@@ -14,7 +14,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import { lab } from 'd3';
+import { count, lab } from 'd3';
 
 // Register the components with Chart.js
 ChartJS.register(
@@ -66,6 +66,7 @@ export const chartsData = {
             {
                 label: 'Passed Proposal Defence',
                 data: [40, 85, 100],
+                counts: [20, 42, 50],
             },
         ],
     },
@@ -75,6 +76,7 @@ export const chartsData = {
             {
                 label: 'Passed Candidature Defence',
                 data: [32, 57, 85, 94, 100],
+                counts: [15, 29, 42, 47, 50],
             },
         ],
     },
@@ -84,6 +86,7 @@ export const chartsData = {
             {
                 label: 'Passed Dissertation',
                 data: [14, 34, 70, 76, 95, 100],
+                counts: [7, 17, 35, 38, 47, 50],
             },
         ],
     },
@@ -98,7 +101,8 @@ function Charts({ selectedSemester, selectedProgram }) {
                     datasets: [
                         {
                             label: 'Passed Proposal Defence',
-                            data: [20, 50, 70],
+                            data: [20, 50, 100],
+                            counts: [10, 25, 50],
                             backgroundColor: 'rgba(75,192,192,0.4)',
                             borderColor: 'rgba(75,192,192,1)',
                             fill: true,
@@ -111,6 +115,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Candidature Defence',
                             data: [10, 30, 72, 92, 100],
+                            counts: [5, 15, 36, 46, 50],
                             backgroundColor: 'rgba(153,102,255,0.4)',
                             borderColor: 'rgba(153,102,255,1)',
                             fill: true,
@@ -123,6 +128,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Dissertation',
                             data: [5, 15, 25, 40, 80, 100],
+                            counts: [2, 7, 12, 20, 40, 50],
                             backgroundColor: 'rgba(255,159,64,0.4)',
                             borderColor: 'rgba(255,159,64,1)',
                             fill: true,
@@ -172,7 +178,8 @@ function Charts({ selectedSemester, selectedProgram }) {
                     datasets: [
                         {
                             label: 'Passed Proposal Defence',
-                            data: [40, 65, 85],
+                            data: [40, 65, 100],
+                            counts: [20, 32, 50],
                             backgroundColor: 'rgba(75,192,192,0.4)',
                             borderColor: 'rgba(75,192,192,1)',
                             fill: true,
@@ -185,6 +192,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Candidature Defence',
                             data: [20, 45, 70, 85, 100],
+                            counts: [10, 22, 35, 42, 50],
                             backgroundColor: 'rgba(153,102,255,0.4)',
                             borderColor: 'rgba(153,102,255,1)',
                             fill: true,
@@ -197,6 +205,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Dissertation',
                             data: [10, 25, 50, 70, 90, 100],
+                            counts: [5, 12, 25, 35, 45, 50],
                             backgroundColor: 'rgba(255,159,64,0.4)',
                             borderColor: 'rgba(255,159,64,1)',
                             fill: true,
@@ -247,6 +256,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Proposal Defence',
                             data: [55, 75, 100],
+                            counts: [30, 45, 50],
                             backgroundColor: 'rgba(75,192,192,0.4)',
                             borderColor: 'rgba(75,192,192,1)',
                             fill: true,
@@ -259,6 +269,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Candidature Defence',
                             data: [35, 45, 80, 90, 100],
+                            count: [20, 30, 50, 55, 60],
                             backgroundColor: 'rgba(153,102,255,0.4)',
                             borderColor: 'rgba(153,102,255,1)',
                             fill: true,
@@ -271,6 +282,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Dissertation',
                             data: [20, 40, 60, 80, 100],
+                            count: [10, 20, 30, 40, 50],
                             backgroundColor: 'rgba(255,159,64,0.4)',
                             borderColor: 'rgba(255,159,64,1)',
                             fill: true,
@@ -322,6 +334,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Proposal Defence',
                             data: [20, 50, 100],
+                            counts: [10, 25, 50],
                             backgroundColor: 'rgba(75,192,192,0.4)',
                             borderColor: 'rgba(75,192,192,1)',
                             fill: true,
@@ -334,6 +347,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Candidature Defence',
                             data: [10, 30, 70, 90, 100],
+                            counts: [5, 15, 35, 45, 50],
                             backgroundColor: 'rgba(153,102,255,0.4)',
                             borderColor: 'rgba(153,102,255,1)',
                             fill: true,
@@ -346,6 +360,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Dissertation',
                             data: [5, 15, 40, 70, 90, 100],
+                            counts: [2, 7, 20, 35, 45, 50],
                             backgroundColor: 'rgba(255,159,64,0.4)',
                             borderColor: 'rgba(255,159,64,1)',
                             fill: true,
@@ -396,6 +411,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Proposal Defence',
                             data: [40, 65, 100],
+                            counts: [20, 32, 50],
                             backgroundColor: 'rgba(75,192,192,0.4)',
                             borderColor: 'rgba(75,192,192,1)',
                             fill: true,
@@ -408,6 +424,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Candidature Defence',
                             data: [20, 45, 70, 85, 100],
+                            counts: [10, 22, 35, 42, 50],
                             backgroundColor: 'rgba(153,102,255,0.4)',
                             borderColor: 'rgba(153,102,255,1)',
                             fill: true,
@@ -420,6 +437,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Dissertation',
                             data: [10, 25, 50, 70, 90, 100],
+                            counts: [5, 12, 25, 35, 45, 50],
                             backgroundColor: 'rgba(255,159,64,0.4)',
                             borderColor: 'rgba(255,159,64,1)',
                             fill: true,
@@ -470,6 +488,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Proposal Defence',
                             data: [55, 75, 100],
+                            counts: [30, 45, 50],
                             backgroundColor: 'rgba(75,192,192,0.4)',
                             borderColor: 'rgba(75,192,192,1)',
                             fill: true,
@@ -482,6 +501,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Candidature Defence',
                             data: [35, 60, 80, 90, 100],
+                            counts: [20, 35, 45, 50, 55],
                             backgroundColor: 'rgba(153,102,255,0.4)',
                             borderColor: 'rgba(153,102,255,1)',
                             fill: true,
@@ -494,6 +514,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Dissertation',
                             data: [20, 40, 60, 72, 80, 100],
+                            counts: [10, 20, 30, 36, 40, 50],
                             backgroundColor: 'rgba(255,159,64,0.4)',
                             borderColor: 'rgba(255,159,64,1)',
                             fill: true,
@@ -544,6 +565,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Proposal Defence',
                             data: [36, 60, 100],
+                            counts: [18, 30, 50],
                             backgroundColor: 'rgba(75,192,192,0.4)',
                             borderColor: 'rgba(75,192,192,1)',
                             fill: true,
@@ -556,6 +578,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Candidature Defence',
                             data: [32, 50, 80, 90, 100],
+                            counts: [16, 25, 40, 45, 50],
                             backgroundColor: 'rgba(153,102,255,0.4)',
                             borderColor: 'rgba(153,102,255,1)',
                             fill: true,
@@ -568,6 +591,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                         {
                             label: 'Passed Dissertation',
                             data: [12, 30, 60, 80, 90, 100],
+                            counts: [6, 15, 30, 40, 45, 50],
                             backgroundColor: 'rgba(255,159,64,0.4)',
                             borderColor: 'rgba(255,159,64,1)',
                             fill: true,
@@ -619,7 +643,7 @@ function Charts({ selectedSemester, selectedProgram }) {
                     datasets: [
                         {
                             label: 'Passed Proposal Defence',
-                            data: [20, 50, 70],
+                            data: [20, 50, 100],
                             backgroundColor: 'rgba(75,192,192,0.4)',
                             borderColor: 'rgba(75,192,192,1)',
                             fill: true,
@@ -1152,6 +1176,45 @@ function Charts({ selectedSemester, selectedProgram }) {
 
     const lineOptions = {
         maintainAspectRatio: false,
+        scales: {
+            y: {
+                ticks: {
+                    callback: function (value) {
+                        return value + '%';
+                    },
+                },
+            },
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    // const totalStudentsPerSemester = [50, 50, 50]; // Replace with actual totals per semester
+
+                    label: function (context) {
+                        let label = '';
+
+                        const value = context.parsed.y; // Percentage value
+                        const actualCount = context.dataset.counts[context.dataIndex]; // Actual count from counts array
+                        label += value + '% (' + actualCount + ' students)';
+                        return label;
+                    },
+
+                    // label: function (context) {
+                    //     let label = context.dataset.label || '';
+
+                    //     if (label) {
+                    //         label += ': ';
+                    //     }
+                    //     const value = context.parsed.y; // Percentage value
+                    //     const semesterIndex = context.dataIndex;
+                    //     const totalStudents = totalStudentsPerSemester[semesterIndex];
+                    //     const actualCount = Math.round((value / 100) * totalStudents);
+                    //     label += value + '% (' + actualCount + ' students)';
+                    //     return label;
+                    // },
+                },
+            },
+        },
     };
 
     const barOptions = {
@@ -1164,7 +1227,18 @@ function Charts({ selectedSemester, selectedProgram }) {
                 right: 20,
             },
         },
-
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function (context) {
+                        let label = '';
+                        const value = context.parsed.y; // Get the y-value (number of students)
+                        label += value + ' students';
+                        return label;
+                    },
+                },
+            },
+        },
     };
 
     const doughnutOptions = {
@@ -1175,6 +1249,16 @@ function Charts({ selectedSemester, selectedProgram }) {
                 bottom: 60,
                 left: 20,
                 right: 20,
+            },
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: function (context) {
+                        const value = context.parsed; // Get the value (number of students)
+                        return value + ' students'; // Return only the value with 'students'
+                    },
+                },
             },
         },
     };
