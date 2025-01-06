@@ -411,10 +411,10 @@ const ProgressFlowchart = ({ studyPlan, intake, semesters }) => {
                                                                         {update.description || ""}
                                                                     </div>
                                                                     <div className={styles.admin}>
-                                                                        <i>{update.completion_date ? new Date(update.completion_date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</i>
+                                                                        Date of Change: <i>{update.completion_date ? new Date(update.completion_date).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</i>
                                                                     </div>
                                                                     <div className={styles.admin}>
-                                                                        Updated by {update.admin_name || "Admin"} [{update.updated_at ? new Date(update.updated_at).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}]
+                                                                        Updated by {update.admin_name || "Admin"} on <i>{update.updated_at ? new Date(update.updated_at).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</i>
                                                                     </div>
                                                                 </div>
                                                             );

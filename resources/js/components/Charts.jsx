@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 
 // Import Chart.js and the components you need
@@ -1097,8 +1097,8 @@ export const chartsData = {
     },
 };
 
-function Charts({ selectedSemester, selectedProgram }) {
-    const semesterData = {
+function Charts({ selectedSemester, selectedProgram, chartData }) {
+    const semesterData2 = {
         'MSE (ST)': {
             sem1: {
                 lineData1: {
@@ -2164,10 +2164,8 @@ function Charts({ selectedSemester, selectedProgram }) {
         },
     };
 
-    const data = semesterData[selectedProgram]?.[selectedSemester] || [];
-
-    if (!Object.keys(data).length) {
-        return <p>No data available for the selected program and semester.</p>;
+    if (!chartData || Object.keys(chartData).length === 0) {
+        return <p>No chart data available for the selected program and semester.</p>;
     }
 
     const {
@@ -2177,12 +2175,14 @@ function Charts({ selectedSemester, selectedProgram }) {
         doughnutData1,
         barData,
         doughnutData2,
-    } = data;
+    } = chartData;
 
     const lineOptions = {
         maintainAspectRatio: false,
         scales: {
             y: {
+                min: 0, // Start at 0%
+                max: 100, // End at 100%
                 ticks: {
                     callback: function (value) {
                         return value + '%';
@@ -2193,30 +2193,12 @@ function Charts({ selectedSemester, selectedProgram }) {
         plugins: {
             tooltip: {
                 callbacks: {
-                    // const totalStudentsPerSemester = [50, 50, 50]; // Replace with actual totals per semester
-
                     label: function (context) {
-                        let label = '';
-
                         const value = context.parsed.y; // Percentage value
-                        const actualCount = context.dataset.counts[context.dataIndex]; // Actual count from counts array
-                        label += value + '% (' + actualCount + ' students)';
-                        return label;
+                        const actualCount = context.dataset?.counts?.[context.dataIndex]; // Actual count
+                        const studentText = actualCount === 1 ? 'student' : 'students'; // Singular/Plural
+                        return `${value}% (${actualCount} ${studentText})`;
                     },
-
-                    // label: function (context) {
-                    //     let label = context.dataset.label || '';
-
-                    //     if (label) {
-                    //         label += ': ';
-                    //     }
-                    //     const value = context.parsed.y; // Percentage value
-                    //     const semesterIndex = context.dataIndex;
-                    //     const totalStudents = totalStudentsPerSemester[semesterIndex];
-                    //     const actualCount = Math.round((value / 100) * totalStudents);
-                    //     label += value + '% (' + actualCount + ' students)';
-                    //     return label;
-                    // },
                 },
             },
         },
@@ -2232,14 +2214,21 @@ function Charts({ selectedSemester, selectedProgram }) {
                 right: 20,
             },
         },
+        scales: {
+            y: {
+                beginAtZero: true, // Start at 0
+                ticks: {
+                    precision: 0, // Show whole numbers only
+                },
+            },
+        },
         plugins: {
             tooltip: {
                 callbacks: {
                     label: function (context) {
-                        let label = '';
-                        const value = context.parsed.y; // Get the y-value (number of students)
-                        label += value + ' students';
-                        return label;
+                        const count = context.parsed.y || 0; // Number of students
+                        const studentText = count === 1 ? 'student' : 'students'; // Singular/Plural
+                        return `${count} ${studentText}`;
                     },
                 },
             },
@@ -2260,8 +2249,16 @@ function Charts({ selectedSemester, selectedProgram }) {
             tooltip: {
                 callbacks: {
                     label: function (context) {
-                        const value = context.parsed; // Get the value (number of students)
-                        return value + ' students'; // Return only the value with 'students'
+                        const label = context.label || ''; // Get the label
+                        const value = context.raw; // Get the raw value of the data
+
+                        // If "No Data," only show the label without data
+                        if (label === 'No Data') {
+                            return '0';
+                        }
+
+                        const studentText = value === 1 ? 'student' : 'students'; // Singular/Plural
+                        return `${label}: ${value} ${studentText}`;
                     },
                 },
             },
@@ -2311,3 +2308,47 @@ function Charts({ selectedSemester, selectedProgram }) {
 }
 
 export default Charts;
+
+// // const data = semesterData[selectedProgram]?.[selectedSemester] || [];
+
+// // if (!Object.keys(data).length) {
+// //     return <p>No data available for the selected program and semester.</p>;
+// // }
+
+// // Fallback for missing or zero data
+// const isDataEmpty = (data) => {
+//     if (!data || Object.keys(data).length === 0) return true;
+
+//     // Check for all required keys and ensure datasets are not empty
+//     const keys = ['lineData1', 'lineData2', 'lineData3', 'doughnutData1', 'barData', 'doughnutData2'];
+
+//     return keys.every((key) => {
+//         const chart = data[key];
+//         if (!chart || !chart.datasets) return true; // If missing or no datasets, consider it empty
+
+//         return chart.datasets.every((dataset) => {
+//             return !dataset.data || dataset.data.length === 0 || dataset.data.every((value) => value === 0);
+//         });
+//     });
+// };
+
+
+// console.log('chartData: ', chartData);
+
+// if (!chartData || Object.keys(chartData).length === 0) {
+//     return <p>Loading charts...</p>;
+// }
+
+// if (isDataEmpty(chartData)) {
+//     return <p>No chart data available for the selected program and semester.</p>;
+// }
+
+
+// const {
+//     lineData1 = { labels: [], datasets: [] },
+//     lineData2 = { labels: [], datasets: [] },
+//     lineData3 = { labels: [], datasets: [] },
+//     doughnutData1 = { labels: [], datasets: [] },
+//     doughnutData2 = { labels: [], datasets: [] },
+//     barData = { labels: [], datasets: [] },
+// } = chartData || {};

@@ -33,9 +33,13 @@ export function exportToPDF(selectedProgram, selectedSemester) {
             // Add header for Program and Semester
             pdf.setFont("helvetica", "bold");
             pdf.setFontSize(14);
-            pdf.text(`Program: ${selectedProgram}`, marginLeft, marginTop);
+            pdf.text(`Program: ${selectedProgram.name}`, marginLeft, marginTop);
             pdf.setFontSize(14);
-            pdf.text(`Intake: ${selectedSemester}`, marginLeft, marginTop + 8);
+            pdf.text(
+                `Intake: Sem ${selectedSemester.intake_semester}, ${selectedSemester.intake_year}`,
+                marginLeft,
+                marginTop + 8
+            );
 
             // Adjust position for content
             const headerHeight = 12; // Space for header
@@ -116,7 +120,9 @@ export function exportToPDF(selectedProgram, selectedSemester) {
             }
 
             // Save the PDF
-            pdf.save(`${selectedProgram}_${selectedSemester}_analytics.pdf`);
+            pdf.save(
+                `${selectedProgram.name}_Sem ${selectedSemester.intake_semester}, ${selectedSemester.intake_year}_Analytics.pdf`
+            );
         })
         .catch((err) => {
             console.error("Error generating PDF:", err);
@@ -127,8 +133,8 @@ export function exportToPDF(selectedProgram, selectedSemester) {
 import ExcelJS from "exceljs";
 
 export async function exportToExcel(
-    statisticsData,
-    chartsData,
+    statistics,
+    chartData,
     selectedProgram,
     selectedSemester
 ) {
@@ -140,7 +146,7 @@ export async function exportToExcel(
     // Add Program and Semester Header
     worksheet.mergeCells(`A${rowIndex}:B${rowIndex}`);
     let titleHeaderRow = worksheet.getRow(rowIndex);
-    titleHeaderRow.getCell(1).value = `Program: ${selectedProgram}`;
+    titleHeaderRow.getCell(1).value = `Program: ${selectedProgram.name}`;
     titleHeaderRow.getCell(1).font = { bold: true, size: 16 };
     titleHeaderRow.getCell(1).alignment = {
         horizontal: "center",
@@ -150,7 +156,9 @@ export async function exportToExcel(
 
     worksheet.mergeCells(`A${rowIndex}:B${rowIndex}`);
     let subHeaderRow = worksheet.getRow(rowIndex);
-    subHeaderRow.getCell(1).value = `Intake: ${selectedSemester}`;
+    subHeaderRow.getCell(
+        1
+    ).value = `Intake: Sem ${selectedSemester.intake_semester}, ${selectedSemester.intake_year}`;
     subHeaderRow.getCell(1).font = { bold: true, size: 14 };
     subHeaderRow.getCell(1).alignment = {
         horizontal: "center",
@@ -159,10 +167,45 @@ export async function exportToExcel(
     rowIndex += 2; // Add extra space after headers
 
     // Get data for the selected program and semester
-    const programStatistics =
-        statisticsData[selectedProgram]?.[selectedSemester] || [];
+    const programStatistics = Array.isArray(statistics)
+        ? statistics
+        : Object.entries(statistics).map(([key, value]) => {
+              let label = key
+                  .replace(/_/g, " ")
+                  .replace(/\b\w/g, (char) => char.toUpperCase());
+              if (label === "Got Students") {
+                  label = "GoT Students"; // Correct the capitalization
+              }
+              return { label, value };
+          });
+
     const semesterCharts =
-        chartsData[selectedProgram]?.[selectedSemester] || {};
+        chartData && typeof chartData === "object" ? chartData : {};
+
+    console.log("statistics", statistics);
+    console.log("chartData", chartData);
+
+    Object.entries(semesterCharts).forEach(([key, chart]) => {
+        if (chart && chart.datasets && chart.labels) {
+            if (
+                [
+                    "Passed Proposal Defence",
+                    "Passed Candidature Defence",
+                    "Passed Dissertation",
+                ].includes(chart.datasets[0]?.label)
+            ) {
+                // Always recompute formattedData to avoid stale or cumulative values
+                chart.datasets[0].formattedData = chart.datasets[0].data.map(
+                    (percentage, index) => {
+                        const count = chart.datasets[0].counts[index] || 0; // Counts array
+                        const studentText =
+                            count === 1 ? "student" : "students"; // Singular/Plural
+                        return `${count} ${studentText} (${percentage}%)`; // Format value
+                    }
+                );
+            }
+        }
+    });
 
     // Add 'Statistics' Section
     worksheet.mergeCells(`A${rowIndex}:B${rowIndex}`);
@@ -225,11 +268,7 @@ export async function exportToExcel(
 
         // Add Chart Headers
         let chartHeaderRow = worksheet.getRow(rowIndex);
-        let headers = ["Label"];
-        chartData.datasets.forEach((dataset) => {
-            headers.push(dataset.label);
-        });
-        chartHeaderRow.values = headers;
+        chartHeaderRow.values = ["Label", "Number of Students"];
         chartHeaderRow.eachCell((cell) => {
             cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
             cell.fill = {
@@ -245,10 +284,28 @@ export async function exportToExcel(
         chartData.labels.forEach((label, index) => {
             let row = worksheet.getRow(rowIndex);
             let rowData = [label];
+
             chartData.datasets.forEach((dataset) => {
-                rowData.push(dataset.data[index]);
+                // Use formattedData if available, otherwise fall back to raw data
+                const value =
+                    dataset.formattedData && dataset.formattedData[index]
+                        ? dataset.formattedData[index]
+                        : dataset.data[index];
+                rowData.push(value);
             });
+
             row.values = rowData;
+
+            // Right-align all columns except the first
+            row.eachCell((cell, colNumber) => {
+                if (colNumber > 1) {
+                    cell.alignment = {
+                        horizontal: "right",
+                        vertical: "middle",
+                    }; // Right-align
+                }
+            });
+
             rowIndex++;
         });
 
@@ -266,5 +323,8 @@ export async function exportToExcel(
     const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    saveAs(blob, `${selectedProgram}_${selectedSemester}_analytics.xlsx`);
+    saveAs(
+        blob,
+        `${selectedProgram.name}_Sem ${selectedSemester.intake_semester}, ${selectedSemester.intake_year}_Analytics.xlsx`
+    );
 }
