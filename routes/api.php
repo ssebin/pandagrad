@@ -97,3 +97,7 @@ Route::post('/refresh', [AuthController::class, 'refresh']);
 Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
     return response()->json($request->user());
 });
+
+Route::get('/test-api', function () {
+    return response()->json(['message' => 'API is working']);
+});
