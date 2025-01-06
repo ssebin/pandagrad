@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use Illuminate\Support\Facades\Log;
 
 Route::get('/', function () {
     return view('welcome');
@@ -19,3 +20,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/{any}', function () {
     return view('welcome');
 })->where('any', '.*');
+
+Route::get('/test-log', function () {
+    Log::error('Test log entry!');
+    return response()->json(['message' => 'Log written!']);
+});
+
+Route::get('/test', function () {
+    return 'Laravel is running!';
+});
