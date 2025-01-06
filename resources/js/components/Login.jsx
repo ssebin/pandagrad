@@ -75,6 +75,7 @@ function Login() {
                         if (user.has_study_plan) {
                             navigate('/student/my-progress');
                         } else {
+                            alert('As this is your first time logging in, you will be redirected to the Registration page to set up your profile and study plan.');
                             navigate('/student/register');
                         }
 
@@ -102,7 +103,7 @@ function Login() {
     const handleGoogleLogin = () => {
         try {
             // Redirect the user to the Google login via the backend
-            window.location.href = "http://127.0.0.1:8000/auth/google";
+            window.location.href = `${import.meta.env.VITE_BASE_URL}/auth/google`;
         } catch (error) {
             console.error('Google Login failed:', error.response?.data || error.message);
             setError('Google login failed. Please try again.');

@@ -287,7 +287,7 @@ class StudentController extends Controller
             ]);
 
             // Check if the intake has been updated
-            if ($validatedData['intake_id'] !== $student->intake_id) {
+            if ($validatedData['intake_id'] && $validatedData['intake_id'] !== $student->intake_id) {
                 $intake_id = $validatedData['intake_id'];
 
                 // Fetch the Intake record
@@ -839,6 +839,7 @@ class StudentController extends Controller
                 // Get the latest update for this task
                 $latestUpdate = $task->progressUpdates->sortByDesc('updated_at')->first();
                 $taskStatus = $task->determineStatus($semesterEndDate);
+                Log::info('Task Name:', [$task->name]);
                 Log::info('Task Status:', [$taskStatus]);
 
                 // Check for delayed pending tasks
@@ -887,181 +888,6 @@ class StudentController extends Controller
         }
     }
 
-    // public function calculateAndUpdateProgress($studentId, $currentSemester)
-    // {
-    //     try {
-    //         $studyPlan = StudyPlan::with([
-    //             'tasks.progressUpdates' => function ($query) use ($studentId) {
-    //                 $query->where('student_id', $studentId);
-    //             },
-    //         ])->where('student_id', $studentId)->first();
-
-    //         if (!$studyPlan) {
-    //             return; // No study plan, nothing to calculate
-    //         }
-
-    //         // Log::info('Study Plan:', [$studyPlan]);
-    //         // Log::info('Current Semester:', [$currentSemester]);
-
-    //         // Get the intake of the student
-    //         $student = $studyPlan->student()->with('intake')->first();
-
-    //         if (!$student) {
-    //             Log::error('Student not found.');
-    //             return response()->json(['error' => 'Student not found'], 404);
-    //         }
-
-    //         $intake = $student->intake;
-
-    //         if (!$intake) {
-    //             Log::error('Intake not found.');
-    //             return response()->json(['error' => 'Intake not found'], 404);
-    //         }
-
-    //         // Get all semesters from the database
-    //         $semesters = Semester::all();
-
-    //         // Decode the semesters from the study plan
-    //         $studyPlanSemesters = json_decode($studyPlan->semesters, true);
-
-    //         // Total tasks
-    //         // $totalTasks = collect($studyPlanSemesters)->flatMap(function ($semester) {
-    //         //     return $semester['tasks'];
-    //         // })->count();
-
-    //         // Calculate task statuses and progress
-    //         //$fullyCompletedTasks = 0;
-    //         $delayedTasks = [
-    //             'slightlyDelayed' => false,
-    //             'veryDelayed' => false,
-    //         ];
-
-    //         $totalTaskWeight = 0;
-    //         $completedTaskWeight = 0;
-
-    //         // Build a mapping from task ID to earliest semester number
-    //         $taskSemesterMap = [];
-
-    //         foreach ($studyPlanSemesters as $studyPlanSemester) {
-    //             $semesterNumber = $studyPlanSemester['semester'];
-
-    //             // Calculate the academic year and type (odd/even) of the semester
-    //             [$academicYearStart, $databaseSemester] = $this->getAcademicYearAndDatabaseSemester($semesterNumber, $intake);
-
-    //             // Find the corresponding semester from the database
-    //             $semester = $semesters->firstWhere(function ($sem) use ($academicYearStart, $databaseSemester) {
-    //                 return $sem->academic_year === "{$academicYearStart}/" . ($academicYearStart + 1) &&
-    //                     $sem->semester == $databaseSemester;
-    //             });
-
-    //             if (!$semester) {
-    //                 Log::warning("Semester {$semesterNumber} not found in database.");
-    //                 continue;
-    //             }
-
-    //             $semesterEndDate = $semester->end_date;
-
-    //             foreach ($studyPlanSemester['tasks'] as $taskId) {
-    //                 // Find the task in the study plan's tasks
-    //                 $task = $studyPlan->tasks->find($taskId);
-
-    //                 if (!$task) {
-    //                     Log::warning("Task ID {$taskId} not found in study plan tasks.");
-    //                     continue;
-    //                 }
-
-    //                 // Add the task's weight to totalTaskWeight
-    //                 $totalTaskWeight += $task->task_weight ?? 0;
-    //                 log::info('Task: ', [$task->name]);
-
-    //                 // Get the latest update for this task
-    //                 $latestUpdate = $task->progressUpdates->sortByDesc('updated_at')->first();
-
-    //                 // Skip the task if there are no updates
-    //                 if (!$latestUpdate) {
-    //                     continue;
-    //                 }
-
-    //                 // Check the status of the latest update
-    //                 if ($latestUpdate->approved === 1) {
-    //                     // Determine task status
-    //                     $taskStatus = $task->determineStatus($semesterEndDate);
-    //                     // log::info('Task Status:', [$taskStatus]);
-
-    //                     // Count completed tasks
-    //                     if (in_array($taskStatus, ['onTrackCompleted', 'delayedCompleted'])) {
-    //                         $completedTaskWeight += $task->task_weight ?? 0;
-    //                         log::info('Fully Completed Task:', [$task->name]);
-    //                     }
-
-    //                     // Check for delayed pending tasks
-    //                     if ($taskStatus === 'delayedPending') {
-    //                         if ($semesterNumber < $currentSemester - 1) {
-    //                             $delayedTasks['veryDelayed'] = true;
-    //                             log::info('Very Delayed Pending Task:', [$task->name]);
-    //                         } elseif ($semesterNumber === $currentSemester - 1) {
-    //                             $delayedTasks['slightlyDelayed'] = true;
-    //                             log::info('Slightly Delayed Pending Task:', [$task->name]);
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //             // Handle cases where the student is beyond the study plan
-    //             $lastStudyPlanSemester = count($studyPlanSemesters);
-    //             if ($currentSemester > $lastStudyPlanSemester) {
-    //                 foreach ($studyPlanSemesters as $studyPlanSemester) {
-    //                     $semesterNumber = $studyPlanSemester['semester'];
-
-    //                     foreach ($studyPlanSemester['tasks'] as $taskId) {
-    //                         $task = $studyPlan->tasks->find($taskId);
-
-    //                         if (!$task || $task->progressUpdates->isEmpty()) {
-    //                             continue;
-    //                         }
-
-    //                         $latestUpdate = $task->progressUpdates->sortByDesc('updated_at')->first();
-    //                         if ($latestUpdate->approved !== 1) {
-    //                             continue;
-    //                         }
-
-    //                         if ($semesterNumber === $lastStudyPlanSemester) {
-    //                             $delayedTasks['slightlyDelayed'] = true;
-    //                         } elseif ($semesterNumber < $lastStudyPlanSemester) {
-    //                             $delayedTasks['veryDelayed'] = true;
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-
-    //         // Determine track_status
-    //         $trackStatus = 'On Track';
-    //         if ($delayedTasks['veryDelayed']) {
-    //             $trackStatus = 'Very Delayed';
-    //         } elseif ($delayedTasks['slightlyDelayed']) {
-    //             $trackStatus = 'Slightly Delayed';
-    //         }
-
-    //         log::info('Total Task Weight:', [$totalTaskWeight]);
-    //         log::info('Completed Task Weight:', [$completedTaskWeight]);
-
-    //         // Calculate progress percentage
-    //         $progressPercentage = $totalTaskWeight > 0 ? intval(($completedTaskWeight / $totalTaskWeight) * 100) : 0;
-
-    //         log::info('Progrss Percentage:', [$progressPercentage]);
-
-    //         // Update the student's progress and track_status
-    //         Student::where('id', $studentId)->update([
-    //             'progress' => $progressPercentage,
-    //             'track_status' => $trackStatus,
-    //         ]);
-
-    //         Log::info("Progress updated for Student ID {$studentId}: {$progressPercentage}% - {$trackStatus}");
-    //     } catch (\Exception $e) {
-    //         Log::error('Failed to calculate progress: ' . $e->getMessage());
-    //     }
-    // }
-
     private function getAcademicYearAndDatabaseSemester($semesterNumber, $intake)
     {
         if (!$intake) {
@@ -1097,32 +923,6 @@ class StudentController extends Controller
 
         return [$academicYearStart, $databaseSemester];
     }
-
-    // private function getAcademicYearAndDatabaseSemester($semesterNumber, $intake)
-    // {
-    //     if (!$intake) {
-    //         Log::error('Missing intake data.');
-    //         return [null, null];
-    //     }
-
-    //     // Extract intake semester and academic year
-    //     [$intakeSemester, $intakeYearRange] = explode(', ', $intake);
-    //     [$intakeYearStart] = explode('/', $intakeYearRange);
-    //     $intakeYearStart = (int) $intakeYearStart;
-    //     $intakeSemesterNumber = (int) explode(' ', $intakeSemester)[1]; // 1 for Sem 1, 2 for Sem 2
-
-    //     // Calculate total semesters passed
-    //     $totalSemestersPassed = ($semesterNumber - 1) + ($intakeSemesterNumber - 1);
-
-    //     // Determine the academic year offset
-    //     $yearOffset = floor($totalSemestersPassed / 2); // Every 2 semesters = 1 year
-    //     $academicYearStart = $intakeYearStart + $yearOffset;
-
-    //     // Determine if it's an odd (1) or even (2) semester
-    //     $databaseSemester = ($totalSemestersPassed % 2 === 0) ? 1 : 2;
-
-    //     return [$academicYearStart, $databaseSemester];
-    // }
 
     public function broadcastRequestUpdate($progressUpdate, $message = null)
     {
@@ -1201,10 +1001,10 @@ class StudentController extends Controller
                 'read_at' => $isCreatedByUser ? now() : null,
             ];
 
-            Notification::create($notificationData);
+            $notification = Notification::create($notificationData);
 
             $eventData = [
-                'id' => $progressUpdate->id,
+                'id' => $notification->id,
                 'status' => $progressUpdate->status ?? 'Pending',
                 'reason' => $progressUpdate->reason ?? '',
                 'progress_update_id' => $progressUpdate->id,
@@ -1315,32 +1115,6 @@ class StudentController extends Controller
             log::info('Supervisor Updated:', [$supervisorName]);
         }
 
-        // Define the mapping of update types to task IDs
-        // $taskMap = [
-        //     'bahasa_melayu_course' => 2,
-        //     'core_courses' => 3,
-        //     'elective_courses' => 4,
-        //     'research_methodology_course' => 5,
-        //     'proposal_defence' => 6,
-        //     'candidature_defence' => 7,
-        //     'dissertation_chapters_1_2_3' => 8,
-        //     'dissertation_all_chapters' => 9,
-        //     'dissertation_submission_examination' => 10,
-        //     'dissertation_submission_correction' => 11,
-        //     'committee_meeting' => 12,
-        //     'jkit_correction_approval' => 13,
-        //     'senate_approval' => 14,
-        //     'appointment_supervisor_form' => 15,
-        //     'residential_requirement' => 16,
-        //     'update_status' => null, // No task ID
-        //     'workshops_attended' => null, // No task ID
-        //     'change_study_plan' => null, // No task ID
-        //     'extension_candidature_period' => null, // No task ID
-        // ];
-
-        // // Determine task ID based on update type
-        // $taskId = $taskMap[$validatedData['update_type']] ?? null;
-
         $notMappedUpdateTypes = [
             'update_status',
             'workshops_attended',
@@ -1440,15 +1214,6 @@ class StudentController extends Controller
             'supervisor_id' => $validatedData['supervisor_id'] ?? null,
         ]);
 
-        // // Always recalculate the current task
-        // $this->updateCurrentTask($studentId);
-        // $currentSemester = $request->input('currentSemester');
-        // // Recalculate and update progress percentage
-        // $this->calculateAndUpdateProgress($studentId, $currentSemester);
-
-        // // Return success response
-        // return response()->json(['message' => 'Progress updated successfully']);
-
         $currentSemester = $request->input('currentSemester');
 
         // Admin-specific actions (only update related models if admin is updating)
@@ -1486,12 +1251,18 @@ class StudentController extends Controller
         if ($validatedData['update_type'] === 'change_study_plan') {
             // Validate that the study plan has the correct structure
             if (!isset($validatedData['semesters']) || empty($validatedData['semesters'])) {
-                log::error('Semesters data is required for changing the study plan.');
-                return response()->json(['message' => 'Semesters data is required for changing the study plan.'], 400);
+                $progressUpdate = ProgressUpdate::find($progressUpdateId);
+                if ($progressUpdate && !empty($progressUpdate->updated_study_plan)) {
+                    // Decode the JSON semesters data
+                    $validatedData['semesters'] = json_decode($progressUpdate->updated_study_plan, true);
+                    $updatedStudyPlan = $validatedData['semesters'];
+                } else {
+                    Log::error('Semesters data is required for changing the study plan.');
+                    return response()->json(['message' => 'Semesters data is required for changing the study plan.'], 400);
+                }
+            } else {
+                $updatedStudyPlan = json_decode($validatedData['semesters'], true);                
             }
-
-            $updatedStudyPlan = json_decode($validatedData['semesters'], true);
-            log::info('Updated Study Plan:', [$updatedStudyPlan]);
 
             if (!is_array($updatedStudyPlan) || empty($updatedStudyPlan)) {
                 log::error('Invalid semesters structure');
@@ -1701,45 +1472,16 @@ class StudentController extends Controller
         return $semesterCount + 1; // Add 1 to convert from 0-based index to human-readable semester number
     }
 
-    // private function calculateStudentSemester($intake, $currentSemester)
-    // {
-    //     if (!$currentSemester || !$intake) {
-    //         return null; // Missing data, return null
-    //     }
-
-    //     // Parse current semester and academic year
-    //     $currentSem = $currentSemester['semester']; // 1 or 2
-    //     $currentYearRange = $currentSemester['academic_year']; // E.g., "2024/2025"
-    //     [$currentYearStart] = explode('/', $currentYearRange);
-
-    //     // Parse intake semester and academic year
-    //     [$intakeSem, $intakeYearRange] = explode(', ', $intake);
-    //     [$intakeYearStart] = explode('/', $intakeYearRange);
-    //     $intakeSemNumber = (int) filter_var($intakeSem, FILTER_SANITIZE_NUMBER_INT); // Extract number from "Sem 1" or "Sem 2"
-
-    //     // Calculate the number of semesters completed
-    //     $semesterCount = ($currentYearStart - $intakeYearStart) * 2;
-
-    //     if ($currentSem === 2) {
-    //         $semesterCount += 1; // Add one if we are in the second semester of the current year
-    //     }
-
-    //     if ($intakeSemNumber === 2) {
-    //         $semesterCount -= 1; // Subtract one if the intake semester is the second semester
-    //     }
-
-    //     return $semesterCount + 1; // Add 1 to convert from 0-based index
-    // }
-
     public function approveUpdate($progressUpdateId)
     {
         $progressUpdate = ProgressUpdate::find($progressUpdateId);
 
         if (!$progressUpdate) {
+            log::error('Invalid request.');
             return response()->json(['message' => 'Invalid request.'], 400);
         }
 
-        if ($progressUpdate->approved == 1) {
+        if ($progressUpdate->approved === 1) {
             return response()->json(['message' => 'This update has already been approved.'], 400);
         }
 
@@ -1758,6 +1500,7 @@ class StudentController extends Controller
         $currentSemester = $currentSemesterData['semester'] ?? null;
 
         if (!$currentSemester) {
+            log::error('Could not determine the current semester.');
             return response()->json(['message' => 'Could not determine the current semester.'], 400);
         }
 
@@ -1770,17 +1513,19 @@ class StudentController extends Controller
 
         $intake = Intake::find($student->intake_id);
         if (!$intake) {
+            log::error('Invalid intake ID');
             // Handle the case where the intake is not found
             return response()->json(['error' => 'Invalid intake ID'], 400);
         }
         $studentSemester = $this->calculateStudentSemester($intake, $currentSemesterData);
+        Log::info('Student Semester:', [$studentSemester]);
 
         // Process admin-specific updates
         $this->processAdminUpdate($progressUpdate->toArray(), $progressUpdate->student_id, $studentSemester, $progressUpdateId);
 
         $this->broadcastRequestUpdate(
             $progressUpdate,
-            "{$adminName} approved {$studentName}'s update request."
+            "{$adminName} approved {$studentName}'s update."
         );
         return response()->json(['message' => 'Request approved and progress updated.']);
     }
@@ -1800,7 +1545,7 @@ class StudentController extends Controller
             return response()->json(['message' => 'Invalid request.'], 400);
         }
 
-        if ($progressUpdate->approved == 0) {
+        if ($progressUpdate->approved === 0) {
             return response()->json(['message' => 'This update has already been rejected.'], 400);
         }
 
@@ -1841,7 +1586,7 @@ class StudentController extends Controller
 
         $this->broadcastRequestUpdate(
             $progressUpdate,
-            "{$adminName} rejected {$studentName}'s update request."
+            "{$adminName} rejected {$studentName}'s update."
         );
 
         return response()->json(['message' => 'Request rejected.']);
@@ -1855,7 +1600,7 @@ class StudentController extends Controller
             return response()->json(['message' => 'Invalid request.'], 400);
         }
 
-        if ($progressUpdate->approved == null) {
+        if ($progressUpdate->approved === null) {
             return response()->json(['message' => 'This update has already been marked as pending.'], 400);
         }
 
@@ -1863,6 +1608,7 @@ class StudentController extends Controller
 
         if ($rollbackData) {
             $this->rollbackChanges($rollbackData, $progressUpdate->student_id);
+            StudyPlan::where('student_id', $progressUpdate->student_id)->first()->refresh();
         }
 
         // Get the admin's name
@@ -1883,22 +1629,26 @@ class StudentController extends Controller
         $currentSemester = $currentSemesterData['semester'] ?? null;
 
         if (!$currentSemester) {
+            log::error('Could not determine the current semester.');
             return response()->json(['message' => 'Could not determine the current semester.'], 400);
         }
 
         $intake = Intake::find($student->intake_id);
         if (!$intake) {
             // Handle the case where the intake is not found
+            log::error('Invalid intake ID');
             return response()->json(['error' => 'Invalid intake ID'], 400);
         }
         $currentSemester = $this->calculateStudentSemester($intake, $currentSemesterData);
+
+        $progressUpdate = ProgressUpdate::find($progressUpdateId);
 
         $this->updateCurrentTask($progressUpdate->student_id);
         $this->calculateAndUpdateProgress($progressUpdate->student_id, $currentSemester);
 
         $this->broadcastRequestUpdate(
             $progressUpdate,
-            "{$adminName} marked {$studentName}'s update request as pending."
+            "{$adminName} marked {$studentName}'s update as pending."
         );
 
         return response()->json(['message' => 'Request pending.']);
@@ -1938,27 +1688,27 @@ class StudentController extends Controller
             }
         }
 
-        if (isset($rollbackData['max_sem'])) {
+        if (array_key_exists('max_sem', $rollbackData)) {
             $student->max_sem = $rollbackData['max_sem'];
         }
 
-        if (isset($rollbackData['supervisor_id'])) {
+        if (array_key_exists('supervisor_id', $rollbackData)) {
             $student->supervisor_id = $rollbackData['supervisor_id'];
         }
 
-        if (isset($rollbackData['status'])) {
+        if (array_key_exists('status', $rollbackData)) {
             $student->status = $rollbackData['status'];
         }
 
-        if (isset($rollbackData['cgpa'])) {
-            $student->cgpa = $rollbackData['cgpa'];
+        if (array_key_exists('cgpa', $rollbackData)) {
+            $student->cgpa = $rollbackData['cgpa']; // Assigning null directly works fine
         }
 
-        if (isset($rollbackData['research'])) {
+        if (array_key_exists('research', $rollbackData)) {
             $student->research = $rollbackData['research'];
         }
 
-        if (isset($rollbackData['workshops_attended'])) {
+        if (array_key_exists('workshops_attended', $rollbackData)) {
             $student->workshops_attended = implode(', ', $rollbackData['workshops_attended']);
         }
 

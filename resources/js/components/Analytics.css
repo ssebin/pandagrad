@@ -155,7 +155,11 @@
     min-width: 90%;
     z-index: 1000;
     list-style-type: none;
-    margin-left: -10px;
+    margin-left: 0px;
+
+    position: absolute;
+    padding: 10px;
+    z-index: 10;
 }
 
 .dropdown-item {
@@ -165,6 +169,8 @@
     text-align: left;
     background: none;
     border: none;
+    display: block;
+    cursor: pointer;
 }
 
 .dropdown-item:hover {

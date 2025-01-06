@@ -80,7 +80,19 @@ function AllStudents() {
     const [selectedProgramId, setSelectedProgramId] = useState(null);
     const [selectedIntakeId, setSelectedIntakeId] = useState(null);
     const [selectedSupervisorId, setSelectedSupervisorId] = useState(null);
-    const [filteredStudentsData, setFilteredStudentsData] = useState({});
+    const [viewMode, setViewMode] = useState(() => {
+        // Initialize from localStorage if available, default to 'coordinator'
+        return localStorage.getItem('viewMode') || 'coordinator';
+    });
+    const filterButtonRef = useRef(null);
+
+    const toggleViewMode = () => {
+        setViewMode((prevMode) => {
+            const newMode = prevMode === 'coordinator' ? 'supervisor' : 'coordinator';
+            localStorage.setItem('viewMode', newMode); // Save new mode to localStorage
+            return newMode;
+        });
+    };
 
     const students = studentsData && Object.keys(studentsData).length > 0
         ? Object.values(studentsData).flat()
@@ -121,9 +133,16 @@ function AllStudents() {
         const handleClickOutside = (event) => {
             if (
                 filterPopupRef.current &&
-                !filterPopupRef.current.contains(event.target)
+                !filterPopupRef.current.contains(event.target) &&
+                filterButtonRef.current &&
+                !filterButtonRef.current.contains(event.target)
             ) {
                 setShowFilterPopup(false);
+            }
+
+            if (showAddStudentPopup && event.target.className === 'modal-overlay') {
+                setShowAddStudentPopup(false);
+                resetFormAndClosePopup();
             }
         };
 
@@ -131,7 +150,7 @@ function AllStudents() {
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, []);
+    }, [filterPopupRef, filterButtonRef]);
 
     useEffect(() => {
         // Generate colors only when tasks are available
@@ -153,18 +172,6 @@ function AllStudents() {
             fetchPrograms();
         }
     }, [programs]);
-
-    // useEffect(() => {
-    //     const newFilteredData = {};
-    //     for (const intakeKey in mappedStudentsData) {
-    //         const students = mappedStudentsData[intakeKey];
-    //         const filtered = filterStudents(students);
-    //         if (filtered.length > 0) {
-    //             newFilteredData[intakeKey] = filtered;
-    //         }
-    //     }
-    //     setFilteredStudentsData(newFilteredData);
-    // }, [mappedStudentsData, filters, searchKeyword]);
 
     const generateTaskColors = (tasks) => {
         const baseColors = [
@@ -204,6 +211,20 @@ function AllStudents() {
             return acc;
         }, {})
         : {};
+
+    const resetFormAndClosePopup = () => {
+        setStudent({
+            first_name: '',
+            last_name: '',
+            siswamail: '',
+            matric_number: '',
+            program_id: '',
+            intake_id: '',
+            supervisor_id: '',
+            status: '',
+        });
+        setShowAddStudentPopup(false);
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -252,20 +273,6 @@ function AllStudents() {
         setShowFilterPopup(false);
     };
 
-    const handleProgramChange = (e) => {
-        const programId = e.target.value;
-        setSelectedProgramId(programId); // Update the selected program ID
-        setSelectedIntakeId(null); // Reset the selected intake ID
-        setSelectedSupervisorId(null); // Reset the selected supervisor ID
-        fetchIntakes(programId); // Fetch intakes for the selected program
-    };
-
-    const handleIntakeChange = (e) => {
-        const intakeId = e.target.value;
-        setSelectedIntakeId(intakeId);
-        fetchTasks(intakeId); // Fetch tasks for the selected intake
-    };
-
     const mappedStudentsData = studentsData
         ? Object.keys(studentsData).reduce((mappedData, intakeKey) => {
             if (intakeKey == "Unspecified") {
@@ -275,15 +282,20 @@ function AllStudents() {
             // Filter out deactivated students for this intake
             const activeStudents = studentsData[intakeKey].filter(student => student.status !== 'Deactivated');
 
+            const filteredStudents =
+                viewMode === 'supervisor'
+                    ? activeStudents.filter((student) => student.supervisor_id === user.id)
+                    : activeStudents;
+
             // Skip this intake if there are no active students
-            if (activeStudents.length === 0) {
+            if (filteredStudents.length === 0) {
                 return mappedData;
             }
 
             // Map the active students to include taskCategory
-            const mappedStudents = activeStudents.map((student) => {
+            const mappedStudents = filteredStudents.map((student) => {
                 const task = tasks.find((t) => t.name === student.task);
-                const supervisor = supervisors.find(s => s.id === student.supervisor_id);
+                const supervisor = supervisors.find((s) => s.id === student.supervisor_id);
 
                 return {
                     ...student,
@@ -388,6 +400,12 @@ function AllStudents() {
         return null;
     };
 
+    const statusMapping = {
+        TF: 'Terminated',
+        TI: 'Terminated',
+        PL: 'Leave',
+    };
+
     // Extract unique categories
     // Extract unique categories sorted by task ID
     const uniqueTaskCategories = tasks
@@ -421,77 +439,83 @@ function AllStudents() {
                                 onChange={handleSearchInputChange}
                             />
                         </div>
-                        <button className="filter-button" onClick={() => setShowFilterPopup(!showFilterPopup)}>
-                            Filter <FaFilter className="arrow" />
-                        </button>
+                        <div className="filter-container">
+                            <button className="filter-button" onClick={() => setShowFilterPopup(!showFilterPopup)} ref={filterButtonRef}>
+                                Filter <FaFilter className="arrow" />
+                            </button>
+                            {showFilterPopup && (
+                                <div className="filter-popup" ref={filterPopupRef}>
+                                    {user?.role === 'admin' && (
+                                        <div className="filter-category">
+                                            <h4>Program</h4>
+                                            {programs.map((program) => (
+                                                <label key={program.id}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={tempFilters.programs.includes(program.id)}
+                                                        onChange={() => handleTempFilterChange('programs', program.id)}
+                                                    />
+                                                    {program.name}
+                                                </label>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div className="filter-category">
+                                        <h4>Current Task</h4>
+                                        {uniqueTaskCategories.map((category, index) => (
+                                            <label key={index}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={tempFilters.tasks.includes(category)}
+                                                    onChange={() => handleTempFilterChange('tasks', category)}
+                                                />
+                                                {category}
+                                            </label>
+                                        ))}
+                                    </div>
+                                    <div className="filter-category">
+                                        <h4>Progress</h4>
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={tempFilters.progress.includes('On Track')}
+                                                onChange={() => handleTempFilterChange('progress', 'On Track')}
+                                            />
+                                            On Track
+                                        </label>
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={tempFilters.progress.includes('Slightly Delayed')}
+                                                onChange={() => handleTempFilterChange('progress', 'Slightly Delayed')}
+                                            />
+                                            Slightly Delayed
+                                        </label>
+                                        <label>
+                                            <input
+                                                type="checkbox"
+                                                checked={tempFilters.progress.includes('Very Delayed')}
+                                                onChange={() => handleTempFilterChange('progress', 'Very Delayed')}
+                                            />
+                                            Very Delayed
+                                        </label>
+                                    </div>
+                                    <button className="apply-button" onClick={handleApplyFilters}>Apply</button>
+                                </div>
+                            )}
+                        </div>
                         {user.role == "admin" && (
                             <button className="add-student-button" onClick={() => setShowAddStudentPopup(true)}>
                                 <FaPlus className="add" /> Add a Student
                             </button>
                         )}
+                        {user.role === "lecturer_both" && (
+                            <button className="add-student-button" onClick={toggleViewMode}>
+                                {viewMode === 'coordinator' ? 'View as Supervisor' : 'View as Coordinator'}
+                            </button>
+                        )}
                     </div>
                 </div>
-                {showFilterPopup && (
-                    <div className="filter-popup" ref={filterPopupRef}>
-                        {user?.role === 'admin' && (
-                            <div className="filter-category">
-                                <h4>Program</h4>
-                                {programs.map((program) => (
-                                    <label key={program.id}>
-                                        <input
-                                            type="checkbox"
-                                            checked={tempFilters.programs.includes(program.id)}
-                                            onChange={() => handleTempFilterChange('programs', program.id)}
-                                        />
-                                        {program.name}
-                                    </label>
-                                ))}
-                            </div>
-                        )}
-                        <div className="filter-category">
-                            <h4>Current Task</h4>
-                            {uniqueTaskCategories.map((category, index) => (
-                                <label key={index}>
-                                    <input
-                                        type="checkbox"
-                                        checked={tempFilters.tasks.includes(category)}
-                                        onChange={() => handleTempFilterChange('tasks', category)}
-                                    />
-                                    {category}
-                                </label>
-                            ))}
-                        </div>
-                        <div className="filter-category">
-                            <h4>Progress</h4>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={tempFilters.progress.includes('On Track')}
-                                    onChange={() => handleTempFilterChange('progress', 'On Track')}
-                                />
-                                On Track
-                            </label>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={tempFilters.progress.includes('Slightly Delayed')}
-                                    onChange={() => handleTempFilterChange('progress', 'Slightly Delayed')}
-                                />
-                                Slightly Delayed
-                            </label>
-                            <label>
-                                <input
-                                    type="checkbox"
-                                    checked={tempFilters.progress.includes('Very Delayed')}
-                                    onChange={() => handleTempFilterChange('progress', 'Very Delayed')}
-                                />
-                                Very Delayed
-                            </label>
-                        </div>
-                        <button className="apply-button" onClick={handleApplyFilters}>Apply</button>
-                    </div>
-                )}
-
                 {showAddStudentPopup && (
                     <div className="add-student-popup">
                         <form onSubmit={handleAddStudent}>
@@ -572,12 +596,13 @@ function AllStudents() {
                                 <option value="Non-GoT">Non-GoT</option>
                                 <option value="PL">Personal Leave</option>
                                 <option value="Withdrawn">Withdrawn</option>
-                                <option value="TI">Terminated (I)</option>
-                                <option value="TF">Terminated (F)</option>
+                                <option value="TI">Terminated (Inactive)</option>
+                                <option value="TF">Terminated (Failed)</option>
+                                <option value="Deactivated">Deactivated</option>
                             </select>
 
                             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-                                <button type="button" className="cancel-button" onClick={() => setShowAddStudentPopup(false)}>Cancel</button>
+                                <button type="button" className="cancel-button" onClick={resetFormAndClosePopup}>Cancel</button>
                                 <button type="submit" className="add-button">Add</button>
                             </div>
                         </form>
@@ -616,7 +641,7 @@ function AllStudents() {
                                                                 )}
                                                             </h3>
                                                             <span className={`status ${statusClass}`}>
-                                                                {student.status || '-'}
+                                                                {statusMapping[student.status] || student.status || '-'}
                                                             </span>
                                                         </div>
                                                         <p className="semester">Semester {student.currentSemester} - {programName}</p>

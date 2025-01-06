@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { retrieveAndDecrypt } from "./storage.js";
 import Select, { components } from 'react-select';
 
-function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, student }) {
+function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, student, studyPlan }) {
     const { id } = useParams();
     const [updateType, setUpdateType] = useState('');
     const [evidence, setEvidence] = useState(null);
@@ -34,15 +34,17 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
 
     useEffect(() => {
         if (isOpen) {
-            const semestersArray = formData.semesters_no
-                ? Array.from({ length: parseInt(formData.semesters_no) }, (_, i) => ({ semester: i + 1, tasks: [] }))
-                : [];
-            setFormData((prev) => ({ ...prev, semesters: semestersArray }));
+            if (!formData.semesters || formData.semesters.length === 0) {
+                const semestersArray = formData.semesters_no
+                    ? Array.from({ length: parseInt(formData.semesters_no) }, (_, i) => ({ semester: i + 1, tasks: [] }))
+                    : [];
+                setFormData((prev) => ({ ...prev, semesters: semestersArray }));
+            }
         }
     }, [isOpen, formData.semesters_no]);
 
     useEffect(() => {
-        if (isOpen) {
+        if (!isOpen) {
             setUpdateType('');
             setEvidence(null);
             setLink('');
@@ -113,30 +115,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         })),
     }));
 
-    // Close dropdown when clicked outside
-    // useEffect(() => {
-    //     const handleClickOutside = (event) => {
-    //         // Loop through dropdown refs and check if the clicked element is outside any dropdown
-    //         dropdownRefs.current.forEach((dropdown, index) => {
-    //             if (dropdown && !dropdown.contains(event.target)) {
-    //                 setDropdownVisible((prev) => {
-    //                     const updatedVisibility = [...prev];
-    //                     updatedVisibility[index] = false; // Close the dropdown for this index
-    //                     return updatedVisibility;
-    //                 });
-    //             }
-    //         });
-    //     };
-
-    //     // Add event listener on mount
-    //     document.addEventListener('click', handleClickOutside);
-
-    //     // Clean up the event listener on unmount
-    //     return () => {
-    //         document.removeEventListener('click', handleClickOutside);
-    //     };
-    // }, []);
-
     const handleClickOutside = (e) => {
         Object.keys(dropdownRefs.current).forEach((index) => {
             if (
@@ -200,59 +178,92 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         setDropdownVisible([]);
 
         // Reset the form fields and number of semesters if the update type is 'change_study_plan'
-        if (updateType === 'change_study_plan') {
-            setNumSemesters(0); // Reset the number of semesters
-            setFormData(prev => ({
+        if (studyPlan && updateType === 'change_study_plan') {
+            const numSemesters = studyPlan.length;
+            setNumSemesters(numSemesters);
+
+            const allTasks = Object.values(tasksOptions).flat(); // Flatten tasksOptions
+
+            const initialSemesters = studyPlan.map((semesterData, index) => {
+                const semesterTasks = semesterData.tasks
+                    ? Object.keys(semesterData.tasks).map((taskKey) => {
+                        const taskDetail = semesterData.tasks[taskKey];
+                        const matchingTask = allTasks.find((task) => task.name === taskDetail.name);
+                        return matchingTask ? matchingTask.id : null;
+                    }).filter((id) => id !== null)
+                    : [];
+                return { semester: index + 1, tasks: semesterTasks };
+            });
+
+            console.log('Initial Semesters:', initialSemesters);
+
+            // Ensure formData includes all semesters
+            setFormData((prev) => ({
+                ...prev,
+                semesters_no: numSemesters,
+                semesters: initialSemesters, // Populate all semesters
+            }));
+
+            const initialSelectedTasks = initialSemesters.map((semester) =>
+                semester.tasks.map((taskId) => {
+                    const matchingTask = allTasks.find((task) => task.id === taskId);
+                    return matchingTask
+                        ? { value: matchingTask.id, label: matchingTask.name }
+                        : null;
+                }).filter((task) => task !== null)
+            );
+
+            setSelectedTasksPerSemester(initialSelectedTasks);
+            setTempSelectedTasks(
+                initialSelectedTasks.map((tasks) => tasks.map((task) => task.value))
+            );
+
+            setExtraFields({}); // Reset extra fields (status, grade, etc.)
+            setExtraFields((prev) => ({
+                ...prev,
+                num_semesters: numSemesters, // Update the extra field
+            }));
+            setProgressStatus("");
+            setEvidence(null);
+            setLink('');
+            setDescription('');
+        } else {
+            // Clear all fields if updateType is not 'change_study_plan'
+            setProgressStatus("");
+            setNumSemesters(0);
+            setFormData((prev) => ({
                 ...prev,
                 semesters_no: '',
-                semesters: [] // Clear the semester fields
+                semesters: [], // Clear the semester fields
             }));
-            setSelectedTasks([]); // Clear selected tasks
-            setTempSelectedTasks([]); // Clear temporary selected tasks
-            setExtraFields({}); // Reset extra fields (status, grade, etc.)
-            setProgressStatus("");
+            setExtraFields({});
+            setTempSelectedTasks([]);
+            setEvidence(null);
+            setLink('');
+            setDescription('');
+            setSelectedTasksPerSemester({});
+            setTempSelectedTasksPerSemester({});
+
+            if (fileInputRef.current) {
+                fileInputRef.current.value = '';
+            }
+            if (dateInputRef.current) {
+                dateInputRef.current.value = '';
+            }
         }
+    }, [updateType, studyPlan]); // Include studyPlan and updateType as dependencies
 
-        setProgressStatus("");
-        setNumSemesters(0);
-        setFormData(prev => ({
-            ...prev,
-            semesters_no: '',
-            semesters: [] // Clear the semester fields
-        }));
-        setExtraFields({});
+    useEffect(() => {
+        console.log('Updated Form Data:', formData);
+    }, [formData]);
 
-        // Reset other form-related states
-        setSelectedTasks([]);
-        setTempSelectedTasks([]);
+    useEffect(() => {
+        console.log('Form Data Updated:', formData);
+    }, [formData]);
 
-        setEvidence(null);
-        setLink('');
-        setDescription('');
-        setSelectedTasksPerSemester({});
-        setTempSelectedTasksPerSemester({});
-
-        if (fileInputRef.current) {
-            fileInputRef.current.value = '';
-        }
-        if (dateInputRef.current) {
-            dateInputRef.current.value = '';
-        }
-    }, [updateType]);
-
-    // useEffect(() => {
-    //     const allTasks = Object.values(tasksOptions).flat();
-    //     const selectedTasksFormatted = tempSelectedTasks.map((taskId) => {
-    //         const task = allTasks.find((t) => t.id === taskId);
-    //         if (task) {
-    //             return { value: task.id, label: task.name };
-    //         } else {
-    //             console.warn(`Task with id ${taskId} ${task} not found in allTasks`);
-    //             return null;
-    //         }
-    //     });
-    //     setSelectedTasks(selectedTasksFormatted);
-    // }, [tempSelectedTasks, tasksOptions]);
+    useEffect(() => {
+        console.log('Selected Tasks Per Semester:', selectedTasksPerSemester);
+    }, [selectedTasksPerSemester]);
 
     useEffect(() => {
         const allTasks = Object.values(tasksOptions).flat();
@@ -276,40 +287,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         setSelectedTasksPerSemester(updatedSelectedTasks);
     }, [tempSelectedTasksPerSemester, tasksOptions]);
 
-    // const fetchSupervisors = async () => {
-    //     try {
-    //         const response = await axios.get('/api/lecturers?role=supervisor');
-    //         setSupervisors(response.data);
-    //     } catch (error) {
-    //         console.error('Error fetching supervisors:', error);
-    //     }
-    // };
-
-    // const fetchStudyPlan = async () => {
-    //     try {
-    //         const response = await axios.get(`/api/students/${studentId}/study-plan`);
-    //         console.log('Study plan data:', response.data);
-    //         if (Array.isArray(response.data)) {
-    //             setStudyPlan(response.data);
-
-    //             // Map fetched study plan to formData.semesters
-    //             const mappedSemesters = response.data.map((semester) => ({
-    //                 semester: semester.semester,
-    //                 tasks: semester.tasks || [], // Default to empty array if no tasks
-    //             }));
-    //             console.log('Mapped semesters:', mappedSemesters);
-    //             setFormData((prev) => ({
-    //                 ...prev,
-    //                 semesters: mappedSemesters,
-    //             }));
-    //         } else {
-    //             console.error('Study plan data is undefined');
-    //         }
-    //     } catch (error) {
-    //         console.error('Error fetching study plan:', error);
-    //     }
-    // };
-
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData({ ...formData, [name]: value });
@@ -322,95 +299,34 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         }
     };
 
-    // const handleDropdownToggle = (index) => {
-    //     if (!formData.semesters[index]) {
-    //         console.error(`Semester data is not defined for index: ${index}`);
-    //         return; // Prevent further execution if the data is missing
-    //     }
-
-    //     // Load tasks into tempSelectedTasks when opening the dropdown
-    //     setTempSelectedTasks(formData.semesters[index].tasks || []);
-
-    //     // Toggle dropdown visibility
-    //     setDropdownVisible((prev) => {
-    //         // Create a copy of the visibility state, but ensure it's as long as the semesters
-    //         const updatedVisibility = new Array(formData.semesters.length).fill(false);
-
-    //         // Toggle visibility for the selected index
-    //         updatedVisibility[index] = !prev[index];
-    //         return updatedVisibility;
-    //     });
-    // };
-
-    const handleDropdownToggle = (index) => {
-        if (!formData.semesters[index]) {
-            console.error(`Semester data is not defined for index: ${index}`);
-            return; // Prevent further execution if the data is missing
-        }
-
-        if (!dropdownVisible[index]) {
-            // Load tasks into tempSelectedTasks when opening the dropdown
-            setTempSelectedTasks(formData.semesters[index].tasks || []);
-        }
-
-        // Toggle dropdown visibility
-        setDropdownVisible(prevState => ({
-            ...prevState,
-            [index]: !prevState[index],
-        }));
-    };
-
-
-    const [selectedTasks, setSelectedTasks] = useState([]); // Track selected tasks
-
     const handleSelectChange = (semesterIndex, selectedOptions) => {
         const sortedOptions = selectedOptions
             ? [...selectedOptions].sort((a, b) => a.value - b.value)
             : [];
 
-        setSelectedTasksPerSemester((prevSelectedTasks) => ({
-            ...prevSelectedTasks,
-            [semesterIndex]: sortedOptions || [],
-        }));
-
-        // Update tempSelectedTasksPerSemester if needed
-        const selectedIds = sortedOptions.map((option) => option.value);
-
-        // Update tempSelectedTasksPerSemester if needed
-        setTempSelectedTasksPerSemester((prevTempSelectedTasks) => ({
-            ...prevTempSelectedTasks,
-            [semesterIndex]: selectedIds,
-        }));
-
-        // Additionally, update formData.semesters
-        setFormData(prevFormData => {
-            const updatedSemesters = [...prevFormData.semesters];
-            updatedSemesters[semesterIndex] = {
-                ...updatedSemesters[semesterIndex],
-                tasks: selectedOptions || [], // Store the full task options if needed
-            };
-            return {
-                ...prevFormData,
-                semesters: updatedSemesters,
-            };
+        // Update selectedTasksPerSemester as an array
+        setSelectedTasksPerSemester((prevSelectedTasks) => {
+            const newSelectedTasks = [...prevSelectedTasks];
+            newSelectedTasks[semesterIndex] = sortedOptions || [];
+            return newSelectedTasks;
         });
-    };
 
-    // const handleSelectChange = (selectedOptions) => {
-    //     setSelectedTasks(selectedOptions || []);
-    //     // If you need to update tempSelectedTasks (array of IDs)
-    //     const selectedIds = selectedOptions ? selectedOptions.map((option) => option.value) : [];
-    //     setTempSelectedTasks(selectedIds);
-    //   };
+        // Update formData.semesters
+        setFormData((prevFormData) => {
+            const currentSemesters = prevFormData.semesters || [];
 
-    const handleTaskChange = (task) => {
-        //console.log('Task selected/deselected:', task);
-        setTempSelectedTasks((prevTasks) => {
-            if (prevTasks.includes(task.id)) {
-                return prevTasks.filter((id) => id !== task.id);
-            } else {
-                return [...prevTasks, task.id];
-            }
+            // Update the specific semester while preserving others
+            const updatedSemesters = currentSemesters.map((semester, idx) => {
+                if (idx === semesterIndex) {
+                    return {
+                        ...semester,
+                        tasks: sortedOptions.map((task) => task.value),
+                    };
+                }
+                return semester;
+            });
+
+            return { ...prevFormData, semesters: updatedSemesters };
         });
     };
 
@@ -425,41 +341,15 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
             tasks: [],
         }));
 
+        // Reset selected tasks per semester
+        const updatedSelectedTasks = Array.from({ length: num }, () => []);
+
         setFormData((prevFormData) => ({
             ...prevFormData,
             semesters: updatedSemesters,
         }));
 
-        //console.log('Number of Semesters Updated:', num, updatedSemesters);
-    };
-
-    const handleApplyButton = (index) => {
-        // Sort selected tasks by ID before saving to semester
-        const sortedTasks = [...tempSelectedTasks].sort((a, b) => a - b);
-
-        // Save the sorted tasks to the current semester
-        setFormData(prevFormData => {
-            const updatedSemesters = prevFormData.semesters.map((semester, i) => {
-                if (i === index) {
-                    return { ...semester, tasks: sortedTasks };
-                }
-                return semester;
-            });
-            const newFormData = { ...prevFormData, semesters: updatedSemesters };
-            //console.log('FormData after applying tasks:', newFormData);
-            return { ...prevFormData, semesters: updatedSemesters };
-        });
-
-        // Clear tempSelectedTasks after applying changes
-        setTempSelectedTasks([]);
-
-        // Close the dropdown
-        setDropdownVisible(prevState => ({
-            ...prevState,
-            [index]: false,
-        }));
-
-        console.log('Updated tasks for semester:', index + 1, sortedTasks);
+        setSelectedTasksPerSemester(updatedSelectedTasks);
     };
 
     const handleSave = async (currentEvidence) => {
@@ -495,6 +385,15 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
             case 'elective_courses':
                 if (!extraFields.cgpa) {
                     alert("Please provide the CGPA.");
+                    return;
+                }
+                const cgpa = parseFloat(extraFields.cgpa);
+                if (isNaN(cgpa) || cgpa < 0 || cgpa > 4.0) {
+                    alert("Please provide a valid CGPA between 0.0 and 4.0.");
+                    return;
+                }
+                if (!/^\d(\.\d{1,2})?$/.test(extraFields.cgpa)) {
+                    alert("Please provide a valid CGPA with at most 2 decimal places.");
                     return;
                 }
                 if (!extraFields.num_courses) {
@@ -611,9 +510,10 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
                 const allTaskIDs = allTasks.map(task => task.id);
 
                 // Gather all selected task IDs across semesters
-                const selectedTaskIDs = formData.semesters
-                    .flatMap(semester => semester.tasks.map(task => task.value));
-                //const selectedTaskIDs = formData.semesters.flatMap(semester => semester.tasks);
+                // const selectedTaskIDs = formData.semesters
+                //     .flatMap(semester => semester.tasks.map(task => task.value));
+                const selectedTaskIDs = formData.semesters.flatMap(semester => semester.tasks);
+                console.log('Selected Task IDs:', selectedTaskIDs);
 
                 // Check if all tasks are selected
                 const missingTaskIDs = allTaskIDs.filter(taskID => !selectedTaskIDs.includes(taskID));
@@ -637,8 +537,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
                     }
                     return {
                         semester: semester.semester,
-                        tasks: semester.tasks.map(task => task.value), // Extract task IDs
-                        //tasks: semester.tasks,
+                        tasks: semester.tasks, // Use tasks directly
                     };
                 });
 
@@ -744,7 +643,6 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
         setExtraFields({});
 
         // Reset other form-related states
-        setSelectedTasks([]);
         setTempSelectedTasks([]);
 
         // Call the onClose function passed as a prop to close the modal
@@ -788,8 +686,9 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
                             <option value="Non-GoT">Non-GoT</option>
                             <option value="PL">Personal Leave</option>
                             <option value="Withdrawn">Withdrawn</option>
-                            <option value="TI">Terminated (I)</option>
-                            <option value="TF">Terminated (F)</option>
+                            <option value="TI">Terminated (Inactive)</option>
+                            <option value="TF">Terminated (Failed)</option>
+                            <option value="Deactivated">Deactivated</option>
                         </select>
                     </>
                 );
@@ -810,6 +709,7 @@ function UpdateProgressModal({ studentId, isOpen, onClose, onUpdate, user, stude
                         <select
                             className={styles.input}
                             name="semesters_no"
+                            value={numSemesters}
                             onChange={(e) => {
                                 handleExtraFieldChange('num_semesters', e.target.value);
                                 handleInputChange(e);

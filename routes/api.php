@@ -12,6 +12,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\IntakeController;
+use App\Http\Controllers\StatisticsController;
 
 // Routes for authenticated users only
 Route::middleware('auth:sanctum')->group(function () {
@@ -83,6 +84,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tasks/{task}/versions', [TaskController::class, 'getTaskVersions']); // Get all versions of a task
     Route::get('/tasks/{task}/latest-version-number', [TaskController::class, 'getLatestVersionNumber']); // Get the latest version number of a task
     Route::post('/tasks/{task}/revert', [TaskController::class, 'revert']);
+
+    Route::get('/statistics', [StatisticsController::class, 'getStatistics']);
+    Route::get('/charts', [StatisticsController::class, 'getChartsData']);
 });
 
 // Public routes
@@ -92,4 +96,8 @@ Route::post('/refresh', [AuthController::class, 'refresh']);
 
 Route::middleware('auth:sanctum')->get('/me', function (Request $request) {
     return response()->json($request->user());
+});
+
+Route::get('/test-api', function () {
+    return response()->json(['message' => 'API is working']);
 });

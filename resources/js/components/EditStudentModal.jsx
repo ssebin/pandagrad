@@ -22,21 +22,16 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
 
     const intakes = selectedProgramId ? intakesByProgram[selectedProgramId] || [] : [];
 
-    const handleProgramChange = (e) => {
-        const programId = e.target.value;
-        setSelectedProgramId(programId); // Update the selected program ID
-        setSelectedSupervisorId(null); // Reset the selected supervisor ID
-        fetchIntakes(programId); // Fetch intakes for the selected program
-    };
-
     useEffect(() => {
-        if (initialStudent) {
-            setStudent(initialStudent);
-            setSelectedProgramId(initialStudent.program_id);
-            setSelectedSupervisorId(initialStudent.supervisor_id);
-            //fetchIntakes(initialStudent.program_id);
+        if (isOpen) {
+            if (initialStudent) {
+                setStudent(initialStudent);
+                setSelectedProgramId(initialStudent.program_id);
+                setSelectedSupervisorId(initialStudent.supervisor_id);
+                fetchIntakes(initialStudent.program_id);
+            }
         }
-    }, [initialStudent]);
+    }, [isOpen, initialStudent]);
 
 
     const calculateStudentSemester = (intake) => {
@@ -239,7 +234,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                             </select>
                         </>
                     )}
-                    {student.program_id && (
+                    {/* {student.program_id && (
                         <>
                             <label className={styles.label}>Supervisor<span style={{ color: 'red' }}> *</span></label>
                             <select
@@ -269,10 +264,10 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                         </>
                     )}
                     <label className={styles.label}>Research Topic</label>
-                    <input className={styles.input} type="text" name="research" value={student.research || ''} onChange={handleChange} />
+                    <input className={styles.input} type="text" name="research" value={student.research || ''} onChange={handleChange} /> */}
 
-                    <label className={styles.label}>CGPA</label>
-                    <input className={styles.input} type="number" step="0.01" name="cgpa" value={student.cgpa || ''} onChange={handleChange} />
+                    {/* <label className={styles.label}>CGPA</label>
+                    <input className={styles.input} type="number" step="0.01" name="cgpa" value={student.cgpa || ''} onChange={handleChange} /> */}
 
                     <label className={styles.label}>Nationality<span style={{ color: 'red' }}> *</span></label>
                     <select className={styles.select} name="nationality" value={student.nationality || ''} onChange={handleChange} required>
@@ -281,7 +276,7 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                         <option value="Non-Malaysian">Non-Malaysian</option>
                     </select>
 
-                    <label className={styles.label}>Student Status<span style={{ color: 'red' }}> *</span></label>
+                    {/* <label className={styles.label}>Student Status<span style={{ color: 'red' }}> *</span></label>
                     <select className={styles.select} name="status" value={student.status || ''} onChange={handleChange} required>
                         <option value="Active">Active</option>
                         <option value="Inactive">Inactive</option>
@@ -289,10 +284,10 @@ function EditStudentModal({ studentId, isOpen, onClose, onUpdate, currentSemeste
                         <option value="Non-GoT">Non-GoT</option>
                         <option value="PL">Personal Leave</option>
                         <option value="Withdrawn">Withdrawn</option>
-                        <option value="TI">Terminated (I)</option>
-                        <option value="TF">Terminated (F)</option>
+                        <option value="TI">Terminated (Inactive)</option>
+                        <option value="TF">Terminated (Failed)</option>
                         <option value="Deactivated">Deactivated</option>
-                    </select>
+                    </select> */}
 
                     <div className={styles.buttons}>
                         <button type="button" className={styles.cancelButton} onClick={onClose}>Cancel</button>

@@ -92,7 +92,7 @@ const Registration = () => {
             encryptAndStore('nationality', formData.nationality);
 
             // Send registration request
-            const response = await fetch('http://127.0.0.1:8000/api/student/register', {
+            const response = await fetch(`${import.meta.env.VITE_BASE_URL}/api/student/register`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${retrieveAndDecrypt('token')}`,

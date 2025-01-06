@@ -3,11 +3,22 @@ import { retrieveAndDecrypt } from "./storage";
 import "./TopNav.css";
 import { StudentContext } from './StudentContext';
 
-function TopNav({ userName, profilePic, updateProfilePicture }) {
+function TopNav({ userName, profilePic, updateProfilePicture, role }) {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
     const dropdownRef = useRef(null);
     const { fetchStudentsData } = useContext(StudentContext);
+
+    const roleMapping = {
+        admin: "Admin",
+        student: "Student",
+        lecturer_supervisor: "Supervisor",
+        lecturer_coordinator: "Coordinator",
+        lecturer_both: "Coordinator & Supervisor",
+    };
+
+    // Get display role or fallback to the original role
+    const displayRole = roleMapping[role] || role;
 
     // Determine the profile picture URL
     const userProfilePic =
@@ -74,10 +85,10 @@ function TopNav({ userName, profilePic, updateProfilePicture }) {
                     className="profile-pic"
                     onClick={toggleDropdown}
                 />
-                <span className="user-name">{userName}</span>
+                <span className="user-name">{userName} ({displayRole})</span>
                 {dropdownOpen && (
-                    <div className="dropdown-menu" ref={dropdownRef}>
-                        <label htmlFor="file-upload" className="dropdown-item">
+                    <div className="top-dropdown-menu" ref={dropdownRef}>
+                        <label htmlFor="file-upload" className="top-dropdown-item">
                             Change Profile Picture
                         </label>
                         <input

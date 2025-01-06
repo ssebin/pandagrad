@@ -56,12 +56,17 @@ class Task extends Model
 
         $semesterEnd = new DateTime($semesterEndDate);
 
-        if ($this->progressUpdates->isEmpty()) {
+        // Exclude progress updates marked as pending (approved === null)
+        $validProgressUpdates = $this->progressUpdates->filter(function ($update) {
+            return $update->approved !== null;
+        });
+
+        if ($validProgressUpdates->isEmpty()) {
             return $currentDate <= $semesterEnd ? 'onTrackPending' : 'delayedPending';
         }
 
         // Get the most recent valid update
-        $latestUpdate = $this->progressUpdates
+        $latestUpdate = $validProgressUpdates
             ->filter(function ($update) {
                 return $update->updated_at !== null && strtotime($update->updated_at) !== false;
             })
@@ -78,9 +83,7 @@ class Task extends Model
         $completionDate = $latestUpdate->completion_date
             ? new DateTime($latestUpdate->completion_date)
             : null;
-        //Log::info('Latest Update: ' . json_encode($latestUpdate)); // Log as JSON for better debugging
-        //Log::info('Completion Date: ' . ($completionDate ? $completionDate->format('Y-m-d H:i:s') : 'null'));
-        //Log::info('Semester End Date: ' . $semesterEnd->format('Y-m-d H:i:s'));
+        Log::info('Latest Update: ' . json_encode($latestUpdate)); // Log as JSON for better debugging
 
         // Special case: tasks with specific progress statuses
         if (in_array($progressStatus, ['Pending', 'In Progress'])) {

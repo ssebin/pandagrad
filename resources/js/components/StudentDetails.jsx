@@ -146,14 +146,20 @@ function StudentDetails() {
         ? student.status.toLowerCase().replace(/\s+/g, '-').trim()
         : 'no-status';
 
-    const studentStatus = student.status ? student.status : '-';
+    const statusMapping = {
+        TF: 'Terminated (Failed)',
+        TI: 'Terminated (Inactive)',
+        PL: 'Personal Leave',
+    };
+
+    const studentStatus = student.status ? (statusMapping[student.status] || student.status) : '-';
 
     return (
         <div className={styles.studentDetails}>
             {user.role !== 'student' && (
                 <>
                     <div className={styles.breadcrumbs}>
-                        <Link to={`${basePath}/all-students`}>My Students</Link>
+                        <Link to={`${basePath}/all-students`}>All Students</Link>
                         <span className={styles.breadcrumbSeparator}>&gt;</span>
                         <span>{student.first_name} {student.last_name}</span>
                     </div>
@@ -183,7 +189,7 @@ function StudentDetails() {
                     <div className={styles.progressBarContainer}>
                         <p style={{ color: solidColor }}>{student.progress}% <span className={styles.trackStatus} style={{ color: solidColor }}>({student.track_status})</span></p>
                     </div>
-                    <div className={styles.progressBar} style={{ width: `calc(25% + ${student.first_name.length + student.last_name.length + studentStatus.length}em)` }}>
+                    <div className={styles.progressBar}>
                         <div className={styles.progressCompleted} style={{ width: `${student.progress}%`, background: progressColor }}></div>
                     </div>
                 </div>
@@ -334,6 +340,7 @@ function StudentDetails() {
                 }}
                 user={user}
                 student={student}
+                studyPlan={studyPlan}
             />
         </div>
     );

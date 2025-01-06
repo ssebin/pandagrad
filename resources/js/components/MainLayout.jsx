@@ -15,6 +15,8 @@ function MainLayout() {
     const [profilePic, setProfilePic] = useState(user?.profile_pic || "");
     const MAX_VISIBLE_NOTIFICATIONS = 5;
 
+    const role = user?.role;
+
     const updateProfilePicture = (newProfilePic) => {
         setProfilePic(newProfilePic);
         const updatedUserData = { ...JSON.parse(retrieveAndDecrypt("user")), profile_pic: newProfilePic };
@@ -76,6 +78,7 @@ function MainLayout() {
                     userName={userName}
                     profilePic={profilePic}
                     updateProfilePicture={updateProfilePicture}
+                    role={role}
                 />
                 <div className="page-content">
                     <Outlet />
