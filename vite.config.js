@@ -1,8 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import laravel from 'laravel-vite-plugin';
+import path from 'path';
 
 export default defineConfig({
+    root: path.resolve(__dirname, 'resources'),
     plugins: [
         react(),
         laravel({
@@ -24,6 +26,8 @@ export default defineConfig({
         historyApiFallback: true,
     },
     build: {
-        outDir: 'build',
-    },
+        // Output directory for build files
+        outDir: path.resolve(__dirname, 'public/build'),
+        emptyOutDir: true,
+      },
 });
