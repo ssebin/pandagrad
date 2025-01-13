@@ -18,7 +18,7 @@ function ProgramStructures() {
 
     const handleAddProgram = (newProgram) => {
         fetchPrograms();
-        isModalOpen(false);
+        setIsModalOpen(false);
     };
 
     return (

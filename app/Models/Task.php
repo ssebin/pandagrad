@@ -56,9 +56,9 @@ class Task extends Model
 
         $semesterEnd = new DateTime($semesterEndDate);
 
-        // Exclude progress updates marked as pending (approved === null)
+        // Exclude progress updates marked as pending
         $validProgressUpdates = $this->progressUpdates->filter(function ($update) {
-            return $update->approved !== null;
+            return $update->approved === 1;
         });
 
         if ($validProgressUpdates->isEmpty()) {

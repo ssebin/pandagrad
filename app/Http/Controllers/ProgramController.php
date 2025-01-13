@@ -70,7 +70,17 @@ class ProgramController extends Controller
 
     public function destroy(Program $program)
     {
+        // Check if the program has any students associated with it
+        if ($program->students()->exists()) {
+            // Return a 400 Bad Request response with a custom message
+            return response()->json([
+                'message' => 'Cannot delete program: there are students associated with it.'
+            ], 400);
+        }
+
+        // If no students are associated, proceed to delete the program
         $program->delete();
+
         return response()->json(['message' => 'Program deleted successfully']);
     }
 }

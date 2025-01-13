@@ -177,23 +177,23 @@ function Analytics() {
     }, [selectedProgram, selectedSemester]);
 
     const hardcodedStats = {
-        'Sem 1, 2024/2025': [
-            { label: 'All Students', value: 75, icon: faUser },
-            { label: 'Active Students', value: 19, icon: faSmile, change: '-9' },
-            { label: 'GoT Students', value: 58, icon: faGraduationCap },
-            { label: 'Supervisors', value: 26, icon: faBriefcase },
-            { label: 'Dissertations', value: 42, icon: faFileAlt },
-        ],
+        'Sem 1, 2024/2025': {
+            all_students: 75,
+            active_students: 19,
+            got_students: 58,
+            supervisors: 26,
+            dissertations: 42,
+        },
     };
 
     const hardcodedCharts = {
         'Sem 1, 2024/2025': {
             lineData1: {
-                labels: ['Sem 2', 'Sem 3', 'Sem 4'],
+                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4'],
                 datasets: [
                     {
                         label: 'Passed Proposal Defence',
-                        data: [20, 50, 100],
+                        data: [0, 20, 50, 100],
                         counts: [10, 25, 50],
                         backgroundColor: 'rgba(75,192,192,0.4)',
                         borderColor: 'rgba(75,192,192,1)',
@@ -202,11 +202,11 @@ function Analytics() {
                 ],
             },
             lineData2: {
-                labels: ['Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7'],
+                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7'],
                 datasets: [
                     {
                         label: 'Passed Candidature Defence',
-                        data: [10, 30, 72, 92, 100],
+                        data: [0, 0, 10, 30, 72, 92, 100],
                         counts: [5, 15, 36, 46, 50],
                         backgroundColor: 'rgba(153,102,255,0.4)',
                         borderColor: 'rgba(153,102,255,1)',
@@ -215,11 +215,11 @@ function Analytics() {
                 ],
             },
             lineData3: {
-                labels: ['Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'],
+                labels: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'],
                 datasets: [
                     {
                         label: 'Passed Dissertation',
-                        data: [5, 15, 25, 40, 80, 100],
+                        data: [0, 0, 5, 15, 25, 40, 80, 100],
                         counts: [2, 7, 12, 20, 40, 50],
                         backgroundColor: 'rgba(255,159,64,0.4)',
                         borderColor: 'rgba(255,159,64,1)',
@@ -281,18 +281,54 @@ function Analytics() {
         ? hardcodedCharts['Sem 1, 2024/2025']
         : chartData;
 
-    const processLineData = (data, label, backgroundColor, borderColor, totalStudents) => {
+    const processLineData = (
+        data,
+        label,
+        backgroundColor,
+        borderColor,
+        totalStudents
+    ) => {
         if (!data || !data.labels || !data.datasets) return null;
 
-        const percentages = data.datasets.map((count) => Math.round((count / totalStudents) * 100));
+        // Build a map from semester numbers to counts
+        const semesterDataMap = {};
+        data.labels.forEach((label, index) => {
+            const semesterNumber = parseInt(label.replace("Sem ", ""));
+            semesterDataMap[semesterNumber] = data.datasets[index];
+        });
+
+        // Determine the maximum semester number to include all semesters up to the highest one
+        const maxSemester = Math.max(...Object.keys(semesterDataMap));
+
+        // Create sorted semesters from 1 to maxSemester
+        const sortedSemesters = Array.from(
+            { length: maxSemester },
+            (_, i) => i + 1
+        );
+
+        // Initialize new labels and counts arrays
+        const newLabels = [];
+        const newCounts = [];
+
+        // Populate the new labels and counts arrays, including semesters with 0 counts
+        sortedSemesters.forEach((semesterNumber) => {
+            newLabels.push(`Sem ${semesterNumber}`);
+            const count = semesterDataMap[semesterNumber] || 0;
+            newCounts.push(count);
+        });
+
+        // Calculate percentages based on the counts and total students
+        const percentages = newCounts.map((count) =>
+            Math.round((count / totalStudents) * 100)
+        );
 
         return {
-            labels: data.labels,
+            labels: newLabels,
             datasets: [
                 {
                     label: label,
                     data: percentages, // Percentage data
-                    counts: data.datasets, // Actual counts
+                    counts: newCounts, // Actual counts
                     backgroundColor: backgroundColor,
                     borderColor: borderColor,
                     fill: true,

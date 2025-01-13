@@ -52,7 +52,17 @@ class IntakeController extends Controller
 
     public function destroy(Intake $intake)
     {
+        // Check if the intake has any students associated with it
+        if ($intake->students()->exists()) {
+            // Return a 400 Bad Request response with a custom message
+            return response()->json([
+                'message' => 'Cannot delete intake: there are students associated with it.'
+            ], 400);
+        }
+
+        // If no students are associated, proceed to delete the intake
         $intake->delete();
+
         return response()->json(['message' => 'Intake deleted successfully']);
     }
 }

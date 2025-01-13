@@ -63,8 +63,21 @@ function EditProgramModal({ isOpen, onClose, programId, currentProgramName, onPr
             // Close the modal
             onClose();
         } catch (error) {
-            alert('An error occurred while deleting the program. Please try again.');
-            console.error('Error deleting program:', error);
+            // Check if the error is from the server response
+            if (error.response) {
+                const { status, data } = error.response;
+
+                if (status === 400) {
+                    // Display the message from the backend
+                    alert(data.message);
+                } else {
+                    alert('An error occurred: ' + data.message);
+                }
+            } else {
+                // Handle errors that do not have a response (e.g., network errors)
+                alert('An error occurred while deleting the program. Please try again.');
+                console.error('Error deleting program:', error);
+            }
         }
     };
 

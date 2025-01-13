@@ -836,8 +836,13 @@ class StudentController extends Controller
 
                 $semesterEndDate = $semester->end_date;
 
-                // Get the latest update for this task
-                $latestUpdate = $task->progressUpdates->sortByDesc('updated_at')->first();
+                // Filter progress updates to include only those that are approved
+                $approvedUpdates = $task->progressUpdates->filter(function ($update) {
+                    return $update->approved === 1;
+                });
+
+                // Get the latest approved update
+                $latestUpdate = $approvedUpdates->sortByDesc('updated_at')->first();
                 $taskStatus = $task->determineStatus($semesterEndDate);
                 Log::info('Task Name:', [$task->name]);
                 Log::info('Task Status:', [$taskStatus]);
@@ -1261,7 +1266,7 @@ class StudentController extends Controller
                     return response()->json(['message' => 'Semesters data is required for changing the study plan.'], 400);
                 }
             } else {
-                $updatedStudyPlan = json_decode($validatedData['semesters'], true);                
+                $updatedStudyPlan = json_decode($validatedData['semesters'], true);
             }
 
             if (!is_array($updatedStudyPlan) || empty($updatedStudyPlan)) {
@@ -1553,6 +1558,7 @@ class StudentController extends Controller
 
         if ($rollbackData) {
             $this->rollbackChanges($rollbackData, $progressUpdate->student_id);
+            StudyPlan::where('student_id', $progressUpdate->student_id)->first()->refresh();
         }
 
         $admin = auth()->user();
@@ -1580,6 +1586,8 @@ class StudentController extends Controller
             return response()->json(['error' => 'Invalid intake ID'], 400);
         }
         $currentSemester = $this->calculateStudentSemester($intake, $currentSemesterData);
+
+        $progressUpdate = ProgressUpdate::find($progressUpdateId);
 
         $this->updateCurrentTask($progressUpdate->student_id);
         $this->calculateAndUpdateProgress($progressUpdate->student_id, $currentSemester);

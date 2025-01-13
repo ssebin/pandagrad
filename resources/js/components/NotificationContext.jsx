@@ -45,8 +45,6 @@ const fetchUnreadNotifications = async (addPopupNotification) => {
 
                 // Check if the notification ID has already been displayed
                 if (!displayedNotifications.has(notification.id)) {
-                    // Mark as displayed
-                    newDisplayedIds.add(notification.id);
 
                     addPopupNotification({
                         id: notification.id || uuidv4(), // Ensure unique ID
@@ -79,13 +77,18 @@ export const NotificationProvider = ({ children }) => {
 
     const addPopupNotification = (notification) => {
         const newNotification = { ...notification, id: uuidv4() };
-
         setPopupNotifications((prev) => [...prev, newNotification]);
-        setVisibleNotifications((prev) => {
-            const nextVisible = [...prev, newNotification].slice(0, MAX_VISIBLE_NOTIFICATIONS);
-            return nextVisible;
-        });
     };
+
+    useEffect(() => {
+        // When there's room, move notifications from the queue to the visible notifications
+        if (visibleNotifications.length < MAX_VISIBLE_NOTIFICATIONS && popupNotifications.length > 0) {
+            const availableSlots = MAX_VISIBLE_NOTIFICATIONS - visibleNotifications.length;
+            const notificationsToAdd = popupNotifications.slice(0, availableSlots);
+            setVisibleNotifications((prev) => [...prev, ...notificationsToAdd]);
+            setPopupNotifications((prev) => prev.slice(notificationsToAdd.length));
+        }
+    }, [popupNotifications, visibleNotifications]);
 
     const clearAllNotifications = () => {
         console.log("Clearing all notifications");

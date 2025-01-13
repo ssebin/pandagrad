@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Student;
 use App\Models\Task;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class StatisticsController extends Controller
 {
@@ -117,7 +118,39 @@ class StatisticsController extends Controller
         $intake = DB::table('intakes')->where('id', $intakeId)->first();
         $semesters = DB::table('semesters')->get();
 
-        $semesterCounts = [];
+        // Calculate completion semesters for all students
+        $completionSemesters = [];
+        foreach ($progressUpdates as $update) {
+            $completionSemester = $this->calculateCompletionSemester(
+                $intake,
+                $semesters,
+                $update->completion_date
+            );
+            $completionSemesters[] = $completionSemester;
+        }
+
+        // Extract semester numbers from the semesters table
+        $semestersArray = $semesters->toArray();
+        $semesterNumbersArray = array_column($semestersArray, 'number');
+
+        // Determine the maximum semester number
+        if (!empty($completionSemesters)) {
+            $maxSemester = max($completionSemesters);
+        } elseif (!empty($semesterNumbersArray)) {
+            // If no students have completed, use the highest semester number from the semesters table
+            $maxSemester = max($semesterNumbersArray);
+        } else {
+            // If there are no semesters defined, default to 1
+            $maxSemester = 1;
+        }
+
+        // Create an array of semester numbers from 1 to maxSemester
+        $semesterNumbers = range(1, $maxSemester);
+
+        // Initialize semester counts for all semesters to zero
+        $semesterCounts = array_fill_keys($semesterNumbers, 0);
+
+        // Count the number of completions per semester
         foreach ($progressUpdates as $update) {
             $completionSemester = $this->calculateCompletionSemester(
                 $intake,
@@ -125,23 +158,37 @@ class StatisticsController extends Controller
                 $update->completion_date
             );
 
-            if (!isset($semesterCounts[$completionSemester])) {
-                $semesterCounts[$completionSemester] = 0;
+            if (isset($semesterCounts[$completionSemester])) {
+                $semesterCounts[$completionSemester]++;
+            } else {
+                // Handle any unexpected semester numbers
+                $semesterCounts[$completionSemester] = 1;
             }
-            $semesterCounts[$completionSemester]++;
         }
 
-        // Calculate cumulative data
+        // Build cumulative counts over the semesters in order
         $cumulativeCounts = [];
         $total = 0;
-        foreach ($semesterCounts as $sem => $count) {
+        foreach ($semesterNumbers as $sem) {
+            $count = isset($semesterCounts[$sem]) ? $semesterCounts[$sem] : 0;
             $total += $count;
             $cumulativeCounts[$sem] = $total;
         }
 
+        // Prepare labels in the 'Sem X' format
+        $labels = array_map(function ($sem) {
+            return 'Sem ' . $sem;
+        }, $semesterNumbers);
+
+        // Prepare datasets aligned with the labels
+        $datasets = [];
+        foreach ($semesterNumbers as $sem) {
+            $datasets[] = $cumulativeCounts[$sem];
+        }
+
         return [
-            'labels' => array_keys($cumulativeCounts),
-            'datasets' => array_values($cumulativeCounts),
+            'labels' => $labels,
+            'datasets' => $datasets,
         ];
     }
 
@@ -153,7 +200,7 @@ class StatisticsController extends Controller
                 $academicYear = intval(explode('/', $semester->academic_year)[0]);
 
                 $semesterIndex = $semester->semester + (($academicYear - $intakeYear) * 2);
-                return "Sem {$semesterIndex}";
+                return (int)$semesterIndex;
             }
         }
         return null;

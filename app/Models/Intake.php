@@ -21,4 +21,9 @@ class Intake extends Model
     {
         return $this->hasMany(Task::class);
     }
+
+    public function students()
+    {
+        return $this->hasMany(Student::class);
+    }
 }
