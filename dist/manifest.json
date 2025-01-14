@@ -44,11 +44,6 @@
     "isDynamicEntry": true,
     "src": "node_modules/jspdf/node_modules/dompurify/dist/purify.es.js"
   },
-  "resources/css/app.css": {
-    "file": "assets/app-4ed993c7.js",
-    "isEntry": true,
-    "src": "resources/css/app.css"
-  },
   "resources/js/index.css": {
     "file": "assets/index-39603fb8.css",
     "src": "resources/js/index.css"
