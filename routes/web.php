@@ -16,10 +16,6 @@ Route::get('auth/google/callback', [AuthController::class, 'handleGoogleCallback
 // Logout route
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-// Route::get('/{any}', function () {
-//     return view('welcome');
-// })->where('any', '.*');
-
-Route::fallback(function () {
-    return response()->json(['message' => 'API route not found'], 404);
-});
+Route::get('/{any}', function () {
+    return view('welcome');
+})->where('any', '.*');
