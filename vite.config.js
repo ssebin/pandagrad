@@ -13,6 +13,7 @@ export default defineConfig({
     build: {
         outDir: "public/build", // Outputs to Laravel's public/build directory
         emptyOutDir: true, // Cleans the output directory before building
+        manifest: true,
     },
     server: {
         host: "127.0.0.1",
