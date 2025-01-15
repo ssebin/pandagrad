@@ -14,7 +14,7 @@ export default defineConfig({
         outDir: "public/build", // Ensure this matches Laravel's expectations
         manifest: true, // Generate a manifest.json file
         rollupOptions: {
-            input: "/resources/js/app.jsx", // Adjust based on your app's entry point
+            input: "resources/js/index.jsx", 
         },
     },
     base: "/build/",
