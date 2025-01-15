@@ -4,7 +4,7 @@ import { encryptAndStore, retrieveAndDecrypt } from "./storage";
 import { useNavigate } from "react-router-dom";
 
 const instance = axios.create({
-    baseURL: import.meta.env.VITE_BASE_URL,
+    baseURL: "https://pandagrad.com",
     headers: {
         "Content-Type": "application/json",
     },

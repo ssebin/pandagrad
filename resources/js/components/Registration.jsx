@@ -92,7 +92,7 @@ const Registration = () => {
             encryptAndStore('nationality', formData.nationality);
 
             // Send registration request
-            const response = await fetch(`${import.meta.env.VITE_BASE_URL}/api/student/register`, {
+            const response = await fetch(`https://pandagrad.com/api/student/register`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${retrieveAndDecrypt('token')}`,

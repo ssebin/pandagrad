@@ -311,7 +311,7 @@ const StudyPlanRegistration = () => {
             semesters: updatedSemesters,
         };
 
-        fetch(`${import.meta.env.VITE_BASE_URL}/api/student/study-plan`, {
+        fetch(`https://pandagrad.com/api/student/study-plan`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${retrieveAndDecrypt('token')}`,

@@ -36,7 +36,7 @@ function ProcessLogin() {
             encryptAndStore('role', role);
 
             // Fetch user data from the backend using the token
-            fetch(`${import.meta.env.VITE_BASE_URL}/api/me`, {
+            fetch(`https://pandagrad.com/api/me`, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {

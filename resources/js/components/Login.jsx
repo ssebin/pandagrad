@@ -103,7 +103,7 @@ function Login() {
     const handleGoogleLogin = () => {
         try {
             // Redirect the user to the Google login via the backend
-            window.location.href = `${import.meta.env.VITE_BASE_URL}/auth/google`;
+            window.location.href = `https://pandagrad.com/auth/google`;
         } catch (error) {
             console.error('Google Login failed:', error.response?.data || error.message);
             setError('Google login failed. Please try again.');
