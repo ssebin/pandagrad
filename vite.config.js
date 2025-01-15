@@ -11,8 +11,8 @@ export default defineConfig({
         }),
     ],
     build: {
-        outDir: "public/build", // Outputs to Laravel's public/build directory
-        emptyOutDir: true, // Cleans the output directory before building
+        outDir: "public/build", 
+        emptyOutDir: true,
         manifest: true,
     },
     base: "/build/",
