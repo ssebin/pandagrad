@@ -64,7 +64,7 @@
             <p>Your new {{ ucfirst($role) }} account has been created at PandaGrad.</p>
             <p>PandaGrad is a platform for FSKTM postgraduate students to manage their postgraduate journey.</p>
             <br>
-            <p>Please use Google SSO to log in to <a href="https://www.pandagrad.com" target="_blank">www.pandagrad.com</a> with your email:</p>
+            <p>Please use Google SSO to log in to <a href="https://pandagrad.com" target="_blank">pandagrad.com</a> with your email:</p>
             <p><strong>{{ $email }}</strong></p>
             <br>
             <p>If you have any questions, feel free to contact us at <a href="mailto:support@pandagrad.com">support@pandagrad.com</a>.</p>
