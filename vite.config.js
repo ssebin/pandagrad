@@ -11,10 +11,13 @@ export default defineConfig({
         }),
     ],
     build: {
-        outDir: "public/build", // Outputs to Laravel's public/build directory
-        emptyOutDir: true, // Cleans the output directory before building
-        manifest: true,
+        outDir: "public/build", // Ensure this matches Laravel's expectations
+        manifest: true, // Generate a manifest.json file
+        rollupOptions: {
+            input: "/resources/js/app.jsx", // Adjust based on your app's entry point
+        },
     },
+    base: "/build/",
     server: {
         host: "127.0.0.1",
         port: 5173,
