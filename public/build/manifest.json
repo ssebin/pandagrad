@@ -32,7 +32,7 @@
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2"
   },
   "node_modules/canvg/lib/index.es.js": {
-    "file": "assets/index.es-5dcaffa8.js",
+    "file": "assets/index.es-87660d13.js",
     "imports": [
       "resources/js/index.jsx"
     ],
@@ -71,7 +71,7 @@
       "node_modules/jspdf/node_modules/dompurify/dist/purify.es.js",
       "node_modules/canvg/lib/index.es.js"
     ],
-    "file": "assets/index-2a29c45c.js",
+    "file": "assets/index-b359c141.js",
     "isEntry": true,
     "src": "resources/js/index.jsx"
   }
