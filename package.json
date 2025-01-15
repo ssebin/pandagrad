@@ -3,7 +3,7 @@
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "heroku-postbuild": "npm install && npm run build && echo 'Build folder contents:' && ls -l && mv build public/build"
+        "heroku-postbuild": "npm install && npm run build && cp -R ./build ./public/"
     },
     "devDependencies": {
         "@types/react": "^18.3.5",
