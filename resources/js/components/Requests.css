@@ -27,8 +27,16 @@
 }
 
 /* Customize column widths */
+.requests-table th:nth-child(1), .requests-table td:nth-child(3) {
+    width: 100px;
+}
+
+.requests-table th:nth-child(2), .requests-table td:nth-child(3) {
+    width: 200px;
+}
+
 .requests-table th:nth-child(3), .requests-table td:nth-child(3) {
-    width: 200px; /* Wider column for student name */
+    min-width: 200px; /* Wider column for student name */
 }
 
 .requests-table th:nth-child(4), .requests-table td:nth-child(4) {

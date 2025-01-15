@@ -384,7 +384,7 @@ select {
 .logoText {
     font-size: 28px;
     font-weight: bold;
-    color: #192E59;
+    color: #192e59;
     margin-bottom: 10px;
 }
 
@@ -414,7 +414,9 @@ select {
 }
 
 select {
-    background: #fff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="gray"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right 10px center;
+    background: #fff
+        url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="gray"><path d="M7 10l5 5 5-5z"/></svg>')
+        no-repeat right 10px center;
     background-size: 30px;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -423,7 +425,7 @@ select {
 
 input:focus,
 select:focus {
-    border-color: #192E59;
+    border-color: #192e59;
 }
 
 .inputWithIcon {
@@ -432,7 +434,7 @@ select:focus {
 
 .inputWithIcon input,
 .inputWithIcon select {
-    padding-left: 44px; 
+    padding-left: 44px;
 }
 
 .inputWithIcon .icon {
@@ -447,7 +449,7 @@ select:focus {
 
 .loginButton {
     width: 100%;
-    background: #192E59;
+    background: #192e59;
     color: white;
     padding: 10px 0;
     font-size: 16px;
@@ -459,7 +461,7 @@ select:focus {
 }
 
 .loginButton:hover {
-    background-color: rgb(1, 1, 75); 
+    background-color: rgb(1, 1, 75);
 }
 
 .signupText {
@@ -469,7 +471,7 @@ select:focus {
 }
 
 .signupText a {
-    color: #FF416C;
+    color: #ff416c;
     text-decoration: none;
     font-weight: bold;
 }
@@ -570,14 +572,107 @@ select:focus {
 .description {
     position: relative;
     font-size: 18px;
-    color: white; 
+    color: white;
     z-index: 1000;
 }
 
 .facultyLogo {
     width: 220px;
     margin: 0 auto 40px;
-    z-index: 2; 
-    position: relative; 
+    z-index: 2;
+    position: relative;
     display: block;
+}
+
+@media (max-width: 768px) {
+    .loginContainer {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+        min-height: 100vh;
+        background: url("/images/fsktm.jpg") no-repeat center center/cover;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        position: relative;
+    }
+
+    .loginContainer::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(25, 46, 89, 0.7);
+        z-index: 1;
+    }
+
+    .leftSection,
+    .rightSection {
+        flex: none;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 2; /* Place content above the overlay */
+        position: relative; 
+    }
+
+    .leftSection {
+        display: none; /* Hide the left section entirely */
+    }
+
+    .rightSection {
+        background: transparent;
+        box-shadow: none;
+        padding: 20px;
+    }
+
+    .facultyLogo {
+        width: 100px;
+        margin-bottom: 20px;
+    }
+
+    .logo {
+        width: 60px;
+        margin-bottom: 10px;
+    }
+
+    .logoText {
+        font-size: 24px;
+        color: white;
+    }
+
+    .tagline {
+        font-size: 14px;
+        margin-bottom: 20px;
+        color: white;
+    }
+
+    .formGroup {
+        margin-bottom: 10px;
+    }
+
+    .loginButton {
+        margin-top: 15px;
+    }
+
+    .signupText {
+        font-size: 12px;
+        color: white;
+    }
+
+    .divider {
+        margin: 15px 0;
+    }
+
+    .googleLoginButton {
+        font-size: 12px;
+    }
+
+    .mobileOnly {
+        display: block;
+    }
 }

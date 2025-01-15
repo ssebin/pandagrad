@@ -122,7 +122,7 @@ function Login() {
                     </p>
                 </div>
             </div>
-            <div className={styles.rightSection}>
+            <div className={`${styles.rightSection} ${styles.mobileOnly}`}>
                 <div className={styles.contentWrapper}>
                     <img src="/images/logo.png" alt="Logo" className={styles.logo} />
                     <h1 className={styles.logoText}>PandaGrad</h1>
