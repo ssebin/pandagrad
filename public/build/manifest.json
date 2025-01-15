@@ -32,7 +32,7 @@
     "src": "node_modules/@fortawesome/fontawesome-free/webfonts/fa-v4compatibility.woff2"
   },
   "node_modules/canvg/lib/index.es.js": {
-    "file": "assets/index.es-87660d13.js",
+    "file": "assets/index.es-748a500d.js",
     "imports": [
       "resources/js/index.jsx"
     ],
@@ -50,7 +50,7 @@
     "src": "resources/css/app.css"
   },
   "resources/js/index.css": {
-    "file": "assets/index-39603fb8.css",
+    "file": "assets/index-b3e2ef78.css",
     "src": "resources/js/index.css"
   },
   "resources/js/index.jsx": {
@@ -65,13 +65,13 @@
       "assets/fa-v4compatibility-30f6abf6.ttf"
     ],
     "css": [
-      "assets/index-39603fb8.css"
+      "assets/index-b3e2ef78.css"
     ],
     "dynamicImports": [
       "node_modules/jspdf/node_modules/dompurify/dist/purify.es.js",
       "node_modules/canvg/lib/index.es.js"
     ],
-    "file": "assets/index-b359c141.js",
+    "file": "assets/index-23eebb61.js",
     "isEntry": true,
     "src": "resources/js/index.jsx"
   }
